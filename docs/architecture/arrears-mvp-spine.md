@@ -6,6 +6,9 @@ This repository starts with a narrow arrears-to-notice-readiness domain spine. I
 
 - `src/domain/model.ts` defines the shared entities for the arrears MVP wedge: tenancy, ledger inputs, notice-preparation records, routing metadata, referral flags, audit entries, and source references.
 - `src/workflow/arrearsHeroWorkflow.ts` defines the hero workflow states from intake through notice readiness.
+- `src/modules/output` owns output selection and package shells without implying filing or live official submission.
+- `src/modules/handoff` owns official handoff guidance shells for user/operator action outside the product boundary.
+- `src/modules/touchpoints` owns touchpoint classification placeholders and metadata lookup shells.
 - `Matter` is the aggregate anchor for workflow coordination, but it does not absorb every concern into one status field.
 
 ## Explicit separation
@@ -14,7 +17,7 @@ Three dimensions stay separate on purpose:
 
 - `forumPath`: the target forum or pathway shape for the matter.
 - `outputMode`: the kind of package the system is preparing.
-- `officialHandoffState`: whether work has been handed to an operator or external official process.
+- `officialHandoff`: the handoff posture for user/operator action outside the product.
 
 This separation prevents a workflow-ready matter from being misread as filed, submitted, or officially accepted.
 

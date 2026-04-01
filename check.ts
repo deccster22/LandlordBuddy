@@ -3,6 +3,9 @@ import { readFileSync } from "node:fs";
 
 import {
   GUARDED_INSERTION_POINTS,
+  createForumPathState,
+  createOfficialHandoffStateRecord,
+  createOutputModeState,
   officialHandoffStates,
   outputModes,
   validateMatterSeparation,
@@ -15,9 +18,11 @@ const matter: Matter = {
   propertyId: "property-1",
   status: "NOTICE_PREPARATION",
   workflowState: "NOTICE_DRAFTING_READY",
-  forumPath: "NSW_CIVIL_RENT_ARREARS",
-  outputMode: "SELF_SERVICE_PACK",
-  officialHandoffState: "READY_FOR_OPERATOR",
+  forumPath: createForumPathState({
+    path: "VIC_VCAT_RENT_ARREARS"
+  }),
+  outputMode: createOutputModeState("PRINTABLE_OUTPUT"),
+  officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
   arrearsStatus: {
     asAt: "2026-04-02T10:00:00Z",
     outstandingAmount: { amountMinor: 125000, currency: "AUD" },
@@ -36,8 +41,8 @@ const matter: Matter = {
 };
 
 assert.deepEqual(validateMatterSeparation(matter), []);
-assert.ok(outputModes.includes(matter.outputMode));
-assert.ok(officialHandoffStates.includes(matter.officialHandoffState));
+assert.ok(outputModes.includes(matter.outputMode.mode));
+assert.ok(officialHandoffStates.includes(matter.officialHandoff.stage));
 
 const workflowModuleSource = readFileSync(
   new URL("./src/workflow/arrearsHeroWorkflow.ts", import.meta.url),
