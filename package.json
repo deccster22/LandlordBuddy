@@ -1,0 +1,18 @@
+{
+  "name": "landlordbuddy",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check:spine": "node --experimental-strip-types check.ts",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "node lint-boundaries.mjs",
+    "format:check": "node format-check.mjs",
+    "test": "node --experimental-strip-types run-all-tests.mjs",
+    "verify": "npm run typecheck && npm run lint && npm run format:check && npm run test"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "typescript": "^6.0.2"
+  }
+}
