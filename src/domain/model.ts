@@ -1,38 +1,16 @@
-export const forumPaths = [
-  "NSW_CIVIL_RENT_ARREARS",
-  "QLD_QCAT_RENT_ARREARS",
-  "VIC_VCAT_RENT_ARREARS",
-  "OTHER_OR_UNRESOLVED"
-] as const;
+﻿import type {
+  CarryForwardControl,
+  ControlSeverity
+} from "./posture.js";
+import { validatePreparationSeparation } from "./preparation.js";
+import type {
+  ForumPathState,
+  OfficialHandoffStateRecord,
+  OutputModeState
+} from "./preparation.js";
 
-export type ForumPath = (typeof forumPaths)[number];
-
-export const outputModes = [
-  "SELF_SERVICE_PACK",
-  "PROFESSIONAL_REVIEW_PACK",
-  "READ_ONLY_SUMMARY"
-] as const;
-
-export type OutputMode = (typeof outputModes)[number];
-
-export const officialHandoffStates = [
-  "NOT_STARTED",
-  "READY_FOR_OPERATOR",
-  "HANDED_OFF",
-  "ACKNOWLEDGED_BY_OPERATOR",
-  "COMPLETED_OUTSIDE_SYSTEM"
-] as const;
-
-export type OfficialHandoffState = (typeof officialHandoffStates)[number];
-
-export const controlSeverities = [
-  "INFO",
-  "WARNING",
-  "SLOWDOWN",
-  "REFERRAL"
-] as const;
-
-export type ControlSeverity = (typeof controlSeverities)[number];
+export * from "./posture.js";
+export * from "./preparation.js";
 
 export const sourceSensitivities = [
   "LOW",
@@ -42,6 +20,71 @@ export const sourceSensitivities = [
 ] as const;
 
 export type SourceSensitivity = (typeof sourceSensitivities)[number];
+
+export const evidencePrivacyClasses = [
+  "TENANCY_OPERATIONAL",
+  "PERSONAL",
+  "SENSITIVE_REVIEW",
+  "PRIVILEGE_REVIEW"
+] as const;
+
+export type EvidencePrivacyClass = (typeof evidencePrivacyClasses)[number];
+
+export const evidenceRetentionClasses = [
+  "UNCLASSIFIED_PENDING_POLICY",
+  "ARREARS_MVP_WORKING",
+  "REVIEW_REQUIRED"
+] as const;
+
+export type EvidenceRetentionClass = (typeof evidenceRetentionClasses)[number];
+
+export const evidenceHoldStatuses = [
+  "NONE",
+  "PRESERVE",
+  "REVIEW_REQUIRED"
+] as const;
+
+export type EvidenceHoldStatus = (typeof evidenceHoldStatuses)[number];
+
+export const evidenceUploadStatuses = [
+  "NOT_STARTED",
+  "LOCAL_VALIDATION_READY",
+  "LOCAL_VALIDATION_BLOCKED",
+  "PENDING_EXTERNAL_UPLOAD",
+  "EXTERNAL_STATUS_UNCONFIRMED"
+] as const;
+
+export type EvidenceUploadStatus = (typeof evidenceUploadStatuses)[number];
+
+export const attachmentSeparationStatuses = [
+  "SEPARATE",
+  "COMBINED",
+  "REVIEW_REQUIRED",
+  "UNKNOWN"
+] as const;
+
+export type AttachmentSeparationStatus = (typeof attachmentSeparationStatuses)[number];
+
+export const proofOfSendingStatuses = [
+  "NOT_LINKED",
+  "LINKED",
+  "REVIEW_REQUIRED",
+  "NOT_APPLICABLE"
+] as const;
+
+export type ProofOfSendingStatus = (typeof proofOfSendingStatuses)[number];
+
+export const evidenceValidationFlagKinds = [
+  "FILE_TYPE",
+  "FILE_SIZE",
+  "FILENAME_CLARITY",
+  "ATTACHMENT_SEPARATION",
+  "PROOF_LINKAGE",
+  "PRIVACY_REVIEW",
+  "RETENTION_REVIEW"
+] as const;
+
+export type EvidenceValidationFlagKind = (typeof evidenceValidationFlagKinds)[number];
 
 export const matterStatuses = [
   "INTAKE",
@@ -91,9 +134,14 @@ export interface AuditLogEntry {
   id: EntityId;
   at: DateTimeString;
   actor: string;
+  actorType?: "SYSTEM" | "USER" | "OPERATOR" | "EXTERNAL_CHANNEL";
   event: string;
   severity: ControlSeverity;
+  matterId?: EntityId;
+  subjectType?: "MATTER" | "EVIDENCE_ITEM" | "OUTPUT_PACKAGE" | "HANDOFF_GUIDANCE" | "WORKFLOW";
+  subjectId?: EntityId;
   detail?: string;
+  metadata?: Record<string, string | number | boolean | null>;
   sourceReferenceIds: EntityId[];
 }
 
@@ -174,8 +222,8 @@ export interface NoticeDraft {
   version: number;
   preparedAt?: DateTimeString;
   draftStatus: "NOT_STARTED" | "IN_PROGRESS" | "READY_FOR_REVIEW";
-  forumPath: ForumPath;
-  outputMode: OutputMode;
+  forumPath: ForumPathState;
+  outputMode: OutputModeState;
   unresolvedIssueIds: EntityId[];
   sourceReferenceIds: EntityId[];
 }
@@ -196,6 +244,28 @@ export interface ServiceEvent {
   sourceReferenceIds: EntityId[];
 }
 
+export interface EvidenceFileMetadata {
+  originalFileName?: string;
+  normalizedFileName?: string;
+  mediaType?: string;
+  extension?: string;
+  sizeBytes?: number;
+}
+
+export interface ProofOfSendingLink {
+  status: ProofOfSendingStatus;
+  relatedEvidenceItemIds: EntityId[];
+  notes?: string;
+}
+
+export interface EvidenceValidationFlag {
+  code: string;
+  kind: EvidenceValidationFlagKind;
+  severity: ControlSeverity;
+  summary: string;
+  deterministic: boolean;
+}
+
 export interface EvidenceItem {
   id: EntityId;
   matterId: EntityId;
@@ -210,6 +280,16 @@ export interface EvidenceItem {
   title: string;
   storageLocator?: string;
   relevance: "CORE" | "SUPPORTING" | "GUARDED";
+  file: EvidenceFileMetadata;
+  attachmentSeparationStatus: AttachmentSeparationStatus;
+  proofOfSendingLink: ProofOfSendingLink;
+  privacyClass: EvidencePrivacyClass;
+  retentionClass: EvidenceRetentionClass;
+  holdStatus: EvidenceHoldStatus;
+  uploadStatus: EvidenceUploadStatus;
+  sourceSensitivity: SourceSensitivity;
+  validationFlags: EvidenceValidationFlag[];
+  auditEventIds: EntityId[];
   sourceReferenceIds: EntityId[];
 }
 
@@ -225,9 +305,9 @@ export interface PaymentPlanRecord {
 export interface RoutingDecision {
   id: EntityId;
   matterId: EntityId;
-  forumPath: ForumPath;
-  outputMode: OutputMode;
-  officialHandoffState: OfficialHandoffState;
+  forumPath: ForumPathState;
+  outputMode: OutputModeState;
+  officialHandoff: OfficialHandoffStateRecord;
   severity: ControlSeverity;
   rationale: string;
   guardedReason?: string;
@@ -237,9 +317,12 @@ export interface RoutingDecision {
 export interface OutputPackage {
   id: EntityId;
   matterId: EntityId;
-  outputMode: OutputMode;
+  outputMode: OutputModeState;
+  officialHandoff?: OfficialHandoffStateRecord;
   noticeDraftId?: EntityId;
   evidenceItemIds: EntityId[];
+  touchpointIds: EntityId[];
+  carryForwardControls: CarryForwardControl[];
   generatedAt?: DateTimeString;
   completeness: "PARTIAL" | "READY_FOR_REVIEW";
 }
@@ -266,9 +349,9 @@ export interface Matter {
   propertyId: EntityId;
   status: MatterStatus;
   workflowState: WorkflowState;
-  forumPath: ForumPath;
-  outputMode: OutputMode;
-  officialHandoffState: OfficialHandoffState;
+  forumPath: ForumPathState;
+  outputMode: OutputModeState;
+  officialHandoff: OfficialHandoffStateRecord;
   arrearsStatus: ArrearsStatus;
   priorNoticeIds: EntityId[];
   evidenceItemIds: EntityId[];
@@ -303,23 +386,14 @@ export const GUARDED_INSERTION_POINTS = Object.freeze({
   evidenceTiming: "Keep timing-specific rules guarded and operator-reviewable.",
   handServiceProof: "Do not encode final proof sufficiency thresholds.",
   privacyRetention: "Keep retention and deletion handling behind future privacy engine work.",
-  portalBehavior: "Authenticated portal behavior remains official handoff only."
+  portalBehavior: "Authenticated portal behavior remains official handoff only.",
+  touchpointFreshness: "Live official surface behavior and cadence remain freshness-sensitive."
 });
 
 export function validateMatterSeparation(matter: Matter): string[] {
-  const issues: string[] = [];
-
-  if (!forumPaths.includes(matter.forumPath)) {
-    issues.push("Matter forumPath must be one of the supported forum paths.");
-  }
-
-  if (!outputModes.includes(matter.outputMode)) {
-    issues.push("Matter outputMode must be one of the supported output modes.");
-  }
-
-  if (!officialHandoffStates.includes(matter.officialHandoffState)) {
-    issues.push("Matter officialHandoffState must be one of the supported handoff states.");
-  }
-
-  return issues;
+  return validatePreparationSeparation({
+    forumPath: matter.forumPath,
+    outputMode: matter.outputMode,
+    officialHandoff: matter.officialHandoff
+  });
 }
