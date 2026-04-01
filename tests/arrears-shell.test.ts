@@ -93,3 +93,39 @@ test("timeline shell preserves guarded milestone placeholders and notice gate sh
   assert.equal(evidenceMilestone?.kind, "GUARDED_PLACEHOLDER");
   assert.match(evidenceMilestone?.notes.join(" ") ?? "", /no final evidence-deadline sentence/i);
 });
+test("timeline shell keeps the no-early-notice gate closed until threshold is met", () => {
+  const arrears = calculateArrearsStatusShell({
+    charges: [charge({ dueDate: "2026-03-27", periodStartDate: "2026-03-20", periodEndDate: "2026-03-26" })],
+    payments: [],
+    thresholdRule,
+    asAt: "2026-04-02T10:00:00.000Z"
+  });
+
+  const timeline = buildTimelineEngineShell({ arrears });
+  const paymentPlanMilestone = timeline.milestones.find((milestone) => milestone.category === "PAYMENT_PLAN");
+
+  assert.equal(arrears.thresholdState.kind, "BELOW_THRESHOLD");
+  assert.equal(timeline.noEarlyNoticeGate.canPrepareNotice, false);
+  assert.match(timeline.noEarlyNoticeGate.reason, /early notice is not available/i);
+  assert.equal(paymentPlanMilestone?.kind, "GUARDED_PLACEHOLDER");
+  assert.equal(paymentPlanMilestone?.status, "PENDING");
+  assert.equal(paymentPlanMilestone?.reminderHooks[0]?.status, "PENDING");
+});
+
+test("timeline shell blocks payment-plan placeholder progression when arrears inputs are invalid", () => {
+  const arrears = calculateArrearsStatusShell({
+    charges: [],
+    payments: [],
+    asAt: "2026-04-02T10:00:00.000Z"
+  });
+
+  const timeline = buildTimelineEngineShell({ arrears });
+  const paymentPlanMilestone = timeline.milestones.find((milestone) => milestone.category === "PAYMENT_PLAN");
+
+  assert.equal(arrears.thresholdState.kind, "BLOCKED_INVALID");
+  assert.equal(timeline.noEarlyNoticeGate.canPrepareNotice, false);
+  assert.match(timeline.noEarlyNoticeGate.reason, /core arrears inputs are insufficient/i);
+  assert.equal(paymentPlanMilestone?.status, "BLOCKED");
+  assert.equal(paymentPlanMilestone?.reminderHooks[0]?.status, "BLOCKED");
+});
+
