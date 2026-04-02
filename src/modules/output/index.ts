@@ -12,6 +12,11 @@ import {
   buildOfficialHandoffGuidanceShell,
   type OfficialHandoffGuidanceShell
 } from "../handoff/index.js";
+import type { NoticeReadinessResult } from "../notice-readiness/index.js";
+import {
+  deriveOutputPackageReadinessContent,
+  type OutputPackageReadinessContent
+} from "./readinessAdapter.js";
 import {
   listTouchpointsForForumPath,
   lookupTouchpointMetadata,
@@ -25,6 +30,7 @@ export interface OutputSelectionInput {
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
   touchpointIds?: string[];
+  noticeReadiness?: NoticeReadinessResult;
 }
 
 export interface OutputSelection {
@@ -34,6 +40,7 @@ export interface OutputSelection {
   officialHandoff: OfficialHandoffStateRecord;
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
+  readinessContent?: OutputPackageReadinessContent;
 }
 
 interface OutputPackageBase {
@@ -68,8 +75,12 @@ export type OutputPackageShell =
 
 export function selectOutputShell(input: OutputSelectionInput): OutputSelection {
   const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
+  const readinessContent = input.noticeReadiness
+    ? deriveOutputPackageReadinessContent(input.noticeReadiness)
+    : undefined;
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
+    ...(readinessContent ? [readinessContent.carryForwardControls] : []),
     ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls)
   );
 
@@ -79,7 +90,8 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
     outputMode: input.outputMode,
     officialHandoff: input.officialHandoff,
     touchpoints,
-    carryForwardControls
+    carryForwardControls,
+    ...(readinessContent ? { readinessContent } : {})
   };
 }
 
@@ -102,22 +114,13 @@ export function generateOutputPackageShell(
       return {
         ...base,
         kind: "PRINTABLE_OUTPUT",
-        sectionKeys: [
-          "matter-summary",
-          "arrears-snapshot",
-          "source-index",
-          "review-hold-points"
-        ]
+        sectionKeys: buildPrintableSectionKeys(selection.readinessContent)
       };
     case "PREP_PACK_COPY_READY":
       return {
         ...base,
         kind: "PREP_PACK_COPY_READY",
-        blockKeys: [
-          "copy-ready-facts",
-          "supporting-evidence-index",
-          "guarded-review-flags"
-        ]
+        blockKeys: buildPrepPackBlockKeys(selection.readinessContent)
       };
     case "OFFICIAL_HANDOFF_GUIDANCE":
       return {
@@ -146,4 +149,80 @@ function resolveTouchpoints(
     const touchpoint = lookupTouchpointMetadata(touchpointId);
     return touchpoint ? [touchpoint] : [];
   });
+}
+
+function buildPrintableSectionKeys(
+  readinessContent?: OutputPackageReadinessContent
+): string[] {
+  if (!readinessContent) {
+    return [
+      "matter-summary",
+      "arrears-snapshot",
+      "source-index",
+      "review-hold-points"
+    ];
+  }
+
+  const sectionKeys = [
+    "matter-summary",
+    "arrears-snapshot",
+    "readiness-summary",
+    "source-index"
+  ];
+
+  if (readinessContent.showBlockerSummary) {
+    sectionKeys.push("blocker-summary");
+  }
+
+  if (readinessContent.showReviewHoldPoints) {
+    sectionKeys.push("review-hold-points");
+  }
+
+  if (readinessContent.showGuardedIssueSection) {
+    sectionKeys.push("guarded-review-flags");
+  }
+
+  if (readinessContent.showReferralStop) {
+    sectionKeys.push("referral-stop");
+  }
+
+  return sectionKeys;
+}
+
+function buildPrepPackBlockKeys(
+  readinessContent?: OutputPackageReadinessContent
+): string[] {
+  if (!readinessContent) {
+    return [
+      "copy-ready-facts",
+      "supporting-evidence-index",
+      "guarded-review-flags"
+    ];
+  }
+
+  const blockKeys = ["readiness-summary"];
+
+  if (readinessContent.showBlockerSummary) {
+    blockKeys.push("blocker-summary");
+  }
+
+  if (readinessContent.showReviewHoldPoints) {
+    blockKeys.push("review-hold-points");
+  }
+
+  if (readinessContent.showGuardedIssueSection) {
+    blockKeys.push("guarded-review-flags");
+  }
+
+  if (readinessContent.showReferralStop) {
+    blockKeys.push("referral-stop");
+  }
+
+  if (readinessContent.allowCopyReadyFacts) {
+    blockKeys.push("copy-ready-facts");
+  }
+
+  blockKeys.push("supporting-evidence-index");
+
+  return blockKeys;
 }

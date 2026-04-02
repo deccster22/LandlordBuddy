@@ -28,7 +28,7 @@ This checklist is for QA and Product review of the current non-blocked implement
 ### Notice-readiness
 
 - Confirm every issue retains a stable `code`, `category`, `field`, `message`, and `outcome`.
-- Confirm `deterministicPass`, `routeOut`, and summary counts remain derivable from the issues list rather than hidden state.
+- Confirm `noDeterministicFailures`, `readyForProgression`, and summary counts remain derivable from the issues list rather than hidden state.
 - Confirm guarded insertion-point text is retained for guarded issues.
 - Confirm hard-stop posture does not erase warning or slowdown visibility.
 
@@ -86,3 +86,4 @@ The repo currently carries two related concepts that QA should keep separate:
 - authenticated portal behavior beyond handoff-only posture
 - privacy retention engine behavior pending `AG-BR04A`
 - final trust-copy behavior
+

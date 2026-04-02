@@ -12,8 +12,16 @@ import {
 import { buildOfficialHandoffGuidanceShell } from "../src/modules/handoff/index.js";
 import {
   generateOutputPackageShell,
-  selectOutputShell
+  selectOutputShell,
+  type OfficialHandoffGuidancePackageShell,
+  type OutputSelectionInput,
+  type PrepPackOutputPackageShell,
+  type PrintableOutputPackageShell
 } from "../src/modules/output/index.js";
+import {
+  validateUnpaidRentNoticeReadiness,
+  type UnpaidRentNoticeReadinessInput
+} from "../src/modules/notice-readiness/index.js";
 import {
   listTouchpointsForForumPath,
   lookupTouchpointMetadata,
@@ -49,6 +57,67 @@ function buildMatter(overrides: Partial<Matter> = {}): Matter {
     sourceReferenceIds: [],
     ...overrides
   };
+}
+
+function buildNoticeReadinessInput(): UnpaidRentNoticeReadinessInput {
+  return {
+    arrearsThresholdStatus: "threshold_met",
+    arrearsAmount: 1850,
+    paidToDate: "2026-03-20",
+    noticeNumber: "NTV-204",
+    serviceMethod: "EMAIL",
+    interstateRouteOut: false,
+    guarded: {
+      serviceProofSufficiency: "cleared",
+      documentaryEvidenceCompleteness: "cleared",
+      handServiceReview: "not_applicable",
+      mixedClaimRoutingInteraction: "cleared"
+    }
+  };
+}
+
+function buildOutputPackageInput(
+  overrides: Partial<OutputSelectionInput> = {}
+): OutputSelectionInput {
+  return {
+    matterId: "matter-1",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    outputMode: createOutputModeState("PRINTABLE_OUTPUT"),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    ...overrides
+  };
+}
+
+function expectPrintablePackage(
+  outputPackage: ReturnType<typeof generateOutputPackageShell>
+): PrintableOutputPackageShell {
+  if (outputPackage.kind !== "PRINTABLE_OUTPUT") {
+    throw new Error("Expected PRINTABLE_OUTPUT package shell.");
+  }
+
+  return outputPackage;
+}
+
+function expectPrepPack(
+  outputPackage: ReturnType<typeof generateOutputPackageShell>
+): PrepPackOutputPackageShell {
+  if (outputPackage.kind !== "PREP_PACK_COPY_READY") {
+    throw new Error("Expected PREP_PACK_COPY_READY package shell.");
+  }
+
+  return outputPackage;
+}
+
+function expectOfficialHandoffGuidance(
+  outputPackage: ReturnType<typeof generateOutputPackageShell>
+): OfficialHandoffGuidancePackageShell {
+  if (outputPackage.kind !== "OFFICIAL_HANDOFF_GUIDANCE") {
+    throw new Error("Expected OFFICIAL_HANDOFF_GUIDANCE package shell.");
+  }
+
+  return outputPackage;
 }
 
 test("matter separation rejects a flattened or misplaced state object", () => {
@@ -174,4 +243,128 @@ test("official handoff guidance shell preserves boundary codes and guarded refer
   assert.ok(guidance.guidanceBlockKeys.includes("freshness-check"));
   assert.ok(guidance.guidanceBlockKeys.includes("referral-stop"));
   assert.ok(guidance.carryForwardControls.some((control) => control.code === "MIXED_CLAIM_GUARDED"));
+});
+
+test("ready-for-review packages surface readiness summary while keeping warning-only review flags visible", () => {
+  const readinessInput = buildNoticeReadinessInput();
+  readinessInput.guarded = {
+    ...readinessInput.guarded,
+    documentaryEvidenceCompleteness: "guarded"
+  };
+
+  const noticeReadiness = validateUnpaidRentNoticeReadiness(readinessInput);
+  const printable = expectPrintablePackage(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PRINTABLE_OUTPUT"),
+    noticeReadiness
+  })));
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    noticeReadiness
+  })));
+
+  assert.equal(noticeReadiness.outcome, "READY_FOR_REVIEW");
+  assert.ok(printable.sectionKeys.includes("readiness-summary"));
+  assert.ok(printable.sectionKeys.includes("guarded-review-flags"));
+  assert.ok(!printable.sectionKeys.includes("blocker-summary"));
+  assert.ok(!printable.sectionKeys.includes("referral-stop"));
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
+  assert.ok(!prepPack.blockKeys.includes("referral-stop"));
+  assert.ok(
+    prepPack.carryForwardControls.some(
+      (control) => control.code === "DOCUMENTARY_EVIDENCE_GUARDED"
+        && control.severity === "WARNING"
+    )
+  );
+});
+
+test("blocked readiness packages add blocker content without implying progression", () => {
+  const readinessInput = buildNoticeReadinessInput();
+  readinessInput.arrearsAmount = null;
+  readinessInput.guarded = {
+    ...readinessInput.guarded,
+    documentaryEvidenceCompleteness: "guarded"
+  };
+
+  const noticeReadiness = validateUnpaidRentNoticeReadiness(readinessInput);
+  const printable = expectPrintablePackage(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PRINTABLE_OUTPUT"),
+    noticeReadiness
+  })));
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    noticeReadiness
+  })));
+
+  assert.equal(noticeReadiness.outcome, "BLOCKED");
+  assert.ok(printable.sectionKeys.includes("readiness-summary"));
+  assert.ok(printable.sectionKeys.includes("blocker-summary"));
+  assert.ok(printable.sectionKeys.includes("review-hold-points"));
+  assert.ok(printable.sectionKeys.includes("guarded-review-flags"));
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("blocker-summary"));
+  assert.ok(prepPack.blockKeys.includes("review-hold-points"));
+  assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
+  assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+});
+
+test("review-required readiness carries slowdown posture into prep-pack and handoff guidance", () => {
+  const readinessInput = buildNoticeReadinessInput();
+  readinessInput.guarded = {
+    ...readinessInput.guarded,
+    serviceProofSufficiency: "guarded"
+  };
+
+  const noticeReadiness = validateUnpaidRentNoticeReadiness(readinessInput);
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    noticeReadiness
+  })));
+  const handoffGuidance = expectOfficialHandoffGuidance(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
+    noticeReadiness
+  })));
+
+  assert.equal(noticeReadiness.outcome, "REVIEW_REQUIRED");
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("review-hold-points"));
+  assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
+  assert.ok(prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(
+    prepPack.carryForwardControls.some(
+      (control) => control.code === "SERVICE_PROOF_GUARDED"
+        && control.severity === "SLOWDOWN"
+    )
+  );
+  assert.ok(handoffGuidance.guidance.guidanceBlockKeys.includes("slowdown-review"));
+  assert.ok(!handoffGuidance.guidance.guidanceBlockKeys.includes("referral-stop"));
+});
+
+test("refer-out readiness surfaces referral-stop content in prep-pack and handoff guidance", () => {
+  const readinessInput = buildNoticeReadinessInput();
+  readinessInput.interstateRouteOut = true;
+
+  const noticeReadiness = validateUnpaidRentNoticeReadiness(readinessInput);
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    noticeReadiness
+  })));
+  const handoffGuidance = expectOfficialHandoffGuidance(generateOutputPackageShell(buildOutputPackageInput({
+    outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
+    noticeReadiness
+  })));
+
+  assert.equal(noticeReadiness.outcome, "REFER_OUT");
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("review-hold-points"));
+  assert.ok(prepPack.blockKeys.includes("referral-stop"));
+  assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(
+    prepPack.carryForwardControls.some(
+      (control) => control.code === "INTERSTATE_ROUTE_OUT"
+        && control.severity === "REFERRAL"
+    )
+  );
+  assert.ok(handoffGuidance.guidance.guidanceBlockKeys.includes("referral-stop"));
 });
