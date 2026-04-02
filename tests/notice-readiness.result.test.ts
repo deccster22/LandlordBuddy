@@ -28,7 +28,7 @@ test("threshold-met inputs with cleared guarded hooks are ready for review", () 
 
   assert.equal(result.outcome, "READY_FOR_REVIEW");
   assert.equal(result.readyForProgression, true);
-  assert.equal(result.deterministicPass, true);
+  assert.equal(result.noDeterministicFailures, true);
   assert.deepEqual(result.summary, {
     hardStopCount: 0,
     slowdownCount: 0,
@@ -46,10 +46,68 @@ test("missing mandatory fields block readiness", () => {
 
   assert.equal(result.outcome, "BLOCKED");
   assert.equal(result.readyForProgression, false);
-  assert.equal(result.deterministicPass, false);
+  assert.equal(result.noDeterministicFailures, false);
   assert.equal(result.summary.hardStopCount, 1);
   assert.equal(result.primaryReason, "Arrears amount is required for notice readiness.");
   assert.ok(result.hardStops.some((issue) => issue.code === "MISSING_ARREARS_AMOUNT"));
+});
+
+test("below-threshold arrears stay blocked at notice readiness", () => {
+  const input = buildBaseInput();
+  input.arrearsThresholdStatus = "below_threshold";
+
+  const result = validateUnpaidRentNoticeReadiness(input);
+
+  assert.equal(result.outcome, "BLOCKED");
+  assert.equal(result.readyForProgression, false);
+  assert.equal(result.noDeterministicFailures, false);
+  assert.equal(result.summary.hardStopCount, 1);
+  assert.equal(
+    result.primaryReason,
+    "Below-threshold arrears cannot proceed through the standard unpaid-rent notice path."
+  );
+  assert.ok(result.hardStops.some((issue) => issue.code === "ARREARS_BELOW_THRESHOLD"));
+});
+
+test("blocked-invalid and unconfirmed threshold posture stay blocked", () => {
+  const cases: Array<{
+    label: string;
+    thresholdStatus?: UnpaidRentNoticeReadinessInput["arrearsThresholdStatus"];
+  }> = [
+    {
+      label: "blocked-invalid",
+      thresholdStatus: "blocked_invalid"
+    },
+    {
+      label: "unconfirmed"
+    }
+  ];
+
+  for (const testCase of cases) {
+    const input = buildBaseInput();
+
+    if (testCase.thresholdStatus) {
+      input.arrearsThresholdStatus = testCase.thresholdStatus;
+    } else {
+      delete input.arrearsThresholdStatus;
+    }
+
+    const result = validateUnpaidRentNoticeReadiness(input);
+
+    assert.equal(result.outcome, "BLOCKED", testCase.label);
+    assert.equal(result.readyForProgression, false, testCase.label);
+    assert.equal(result.noDeterministicFailures, false, testCase.label);
+    assert.equal(result.summary.hardStopCount, 1, testCase.label);
+    assert.equal(
+      result.primaryReason,
+      "Arrears threshold status must be confirmed before notice readiness can proceed.",
+      testCase.label
+    );
+    assert.ok(
+      result.hardStops.some((issue) => issue.code === "ARREARS_THRESHOLD_UNCONFIRMED"),
+      testCase.label
+    );
+  }
 });
 
 test("interstate matters are referred out", () => {
@@ -60,7 +118,7 @@ test("interstate matters are referred out", () => {
 
   assert.equal(result.outcome, "REFER_OUT");
   assert.equal(result.readyForProgression, false);
-  assert.equal(result.deterministicPass, false);
+  assert.equal(result.noDeterministicFailures, false);
   assert.equal(result.summary.referralCount, 1);
   assert.equal(
     result.primaryReason,
@@ -83,14 +141,14 @@ test("mixed-claim routing stays guarded and reviewable", () => {
 
   assert.equal(result.outcome, "REVIEW_REQUIRED");
   assert.equal(result.readyForProgression, false);
-  assert.equal(result.deterministicPass, true);
+  assert.equal(result.noDeterministicFailures, true);
   assert.equal(result.summary.slowdownCount, 1);
   assert.ok(mixedClaimIssue);
   assert.equal(mixedClaimIssue?.guarded, true);
   assert.ok(mixedClaimIssue?.guardedInsertionPoint);
 });
 
-test("warning-only guarded issues remain ready for review", () => {
+test("documentary evidence completeness stays a warning so warning-only cases remain ready", () => {
   const input = buildBaseInput();
   input.guarded = {
     ...input.guarded,
@@ -104,7 +162,7 @@ test("warning-only guarded issues remain ready for review", () => {
 
   assert.equal(result.outcome, "READY_FOR_REVIEW");
   assert.equal(result.readyForProgression, true);
-  assert.equal(result.deterministicPass, true);
+  assert.equal(result.noDeterministicFailures, true);
   assert.equal(result.summary.warningCount, 1);
   assert.ok(warningIssue);
   assert.equal(warningIssue?.guarded, true);
@@ -122,6 +180,7 @@ test("hand delivery defaults to review required until explicitly cleared", () =>
   const result = validateUnpaidRentNoticeReadiness(input);
 
   assert.equal(result.outcome, "REVIEW_REQUIRED");
+  assert.equal(result.noDeterministicFailures, true);
   assert.equal(result.summary.slowdownCount, 1);
   assert.ok(result.slowdowns.some((issue) => issue.code === "HAND_SERVICE_REVIEW_GUARDED"));
 });

@@ -89,7 +89,7 @@ export interface NoticeReadinessSummary {
 
 export interface NoticeReadinessResult {
   outcome: NoticeReadinessOutcome;
-  deterministicPass: boolean;
+  noDeterministicFailures: boolean;
   hardStops: Issue[];
   slowdowns: Issue[];
   warnings: Issue[];
@@ -199,6 +199,8 @@ export function validateUnpaidRentNoticeReadiness(
     });
   }
 
+  // Documentary completeness stays visible as a warning so future contributors
+  // do not collapse it into the stricter service-proof or routing slowdown lane.
   if (!isGuardedClearedOrNotApplicable(guarded.documentaryEvidenceCompleteness)) {
     issues.push({
       code: "DOCUMENTARY_EVIDENCE_GUARDED",
@@ -223,6 +225,7 @@ export function validateUnpaidRentNoticeReadiness(
     });
   }
 
+  // Hand delivery stays conservative until review posture is explicitly cleared.
   const handServiceReviewStatus = guarded.handServiceReview
     ?? (input.serviceMethod === "HAND_DELIVERY" ? "required" : "not_applicable");
 
@@ -248,7 +251,7 @@ export function validateUnpaidRentNoticeReadiness(
 
   return {
     outcome,
-    deterministicPass: issues.every((issue) => issue.category === "guarded"),
+    noDeterministicFailures: issues.every((issue) => issue.category === "guarded"),
     hardStops,
     slowdowns,
     warnings,
