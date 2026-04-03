@@ -18,6 +18,10 @@ import {
   type OutputPackageReadinessContent
 } from "./readinessAdapter.js";
 import {
+  buildStructuralTrustBinding,
+  type StructuralTrustBinding
+} from "./trustBindings.js";
+import {
   listTouchpointsForForumPath,
   lookupTouchpointMetadata,
   type TouchpointMetadata
@@ -50,6 +54,7 @@ interface OutputPackageBase {
   officialHandoff: OfficialHandoffStateRecord;
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
+  trustBinding: StructuralTrustBinding;
   officialSystemAction: "NOT_INCLUDED";
 }
 
@@ -110,30 +115,61 @@ export function generateOutputPackageShell(
   };
 
   switch (selection.outputMode.mode) {
-    case "PRINTABLE_OUTPUT":
+    case "PRINTABLE_OUTPUT": {
+      const sectionKeys = buildPrintableSectionKeys(selection.readinessContent);
+
       return {
         ...base,
         kind: "PRINTABLE_OUTPUT",
-        sectionKeys: buildPrintableSectionKeys(selection.readinessContent)
+        sectionKeys,
+        trustBinding: buildStructuralTrustBinding({
+          kind: "PRINTABLE_OUTPUT",
+          ...(input.noticeReadiness
+            ? { readinessOutcome: input.noticeReadiness.outcome }
+            : {}),
+          sectionKeys,
+          touchpoints: selection.touchpoints,
+          carryForwardControls: selection.carryForwardControls
+        })
       };
-    case "PREP_PACK_COPY_READY":
+    }
+    case "PREP_PACK_COPY_READY": {
+      const blockKeys = buildPrepPackBlockKeys(selection.readinessContent);
+
       return {
         ...base,
         kind: "PREP_PACK_COPY_READY",
-        blockKeys: buildPrepPackBlockKeys(selection.readinessContent)
+        blockKeys,
+        trustBinding: buildStructuralTrustBinding({
+          kind: "PREP_PACK_COPY_READY",
+          ...(input.noticeReadiness
+            ? { readinessOutcome: input.noticeReadiness.outcome }
+            : {}),
+          blockKeys,
+          touchpoints: selection.touchpoints,
+          carryForwardControls: selection.carryForwardControls
+        })
       };
-    case "OFFICIAL_HANDOFF_GUIDANCE":
+    }
+    case "OFFICIAL_HANDOFF_GUIDANCE": {
+      const guidance = buildOfficialHandoffGuidanceShell({
+        matterId: selection.matterId,
+        forumPath: selection.forumPath,
+        officialHandoff: selection.officialHandoff,
+        carryForwardControls: selection.carryForwardControls,
+        touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id),
+        ...(input.noticeReadiness
+          ? { readinessOutcome: input.noticeReadiness.outcome }
+          : {})
+      });
+
       return {
         ...base,
         kind: "OFFICIAL_HANDOFF_GUIDANCE",
-        guidance: buildOfficialHandoffGuidanceShell({
-          matterId: selection.matterId,
-          forumPath: selection.forumPath,
-          officialHandoff: selection.officialHandoff,
-          carryForwardControls: selection.carryForwardControls,
-          touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id)
-        })
+        guidance,
+        trustBinding: guidance.trustBinding
       };
+    }
   }
 }
 
@@ -226,3 +262,5 @@ function buildPrepPackBlockKeys(
 
   return blockKeys;
 }
+
+export * from "./trustBindings.js";
