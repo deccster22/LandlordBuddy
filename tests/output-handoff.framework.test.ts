@@ -173,6 +173,11 @@ test("output shells stay distinct and never imply official submission", () => {
   assert.equal(printable.officialSystemAction, "NOT_INCLUDED");
   assert.equal(prepPack.officialSystemAction, "NOT_INCLUDED");
   assert.equal(handoffGuidance.officialSystemAction, "NOT_INCLUDED");
+  assert.ok(printable.trustBinding.boundaryStatementKeys.includes("boundary.no-product-submission"));
+  assert.ok(prepPack.trustBinding.boundaryStatementKeys.includes("boundary.no-product-submission"));
+  assert.ok(
+    handoffGuidance.trustBinding.boundaryStatementKeys.includes("boundary.no-product-submission")
+  );
 });
 
 test("output selection carries guarded metadata forward from touchpoints and caller inputs", () => {
@@ -243,6 +248,19 @@ test("official handoff guidance shell preserves boundary codes and guarded refer
   assert.ok(guidance.guidanceBlockKeys.includes("freshness-check"));
   assert.ok(guidance.guidanceBlockKeys.includes("referral-stop"));
   assert.ok(guidance.carryForwardControls.some((control) => control.code === "MIXED_CLAIM_GUARDED"));
+  assert.equal(
+    guidance.trustBinding.boundaryStatementKeysByCode.PREP_AND_HANDOFF_ONLY,
+    "boundary.prep-and-handoff-only"
+  );
+  assert.ok(
+    guidance.trustBinding.boundaryStatementKeys.includes("boundary.handoff-not-completed-official-step")
+  );
+  assert.ok(
+    guidance.trustBinding.visibleSourceTypeLabels.some(
+      (label) => label.sourceType === "LIVE_PORTAL_OR_FORM_BEHAVIOR"
+        && label.labelKey === "source-label.live-portal-or-form-behavior"
+    )
+  );
 });
 
 test("ready-for-review packages surface readiness summary while keeping warning-only review flags visible", () => {
@@ -271,6 +289,13 @@ test("ready-for-review packages surface readiness summary while keeping warning-
   assert.ok(prepPack.blockKeys.includes("copy-ready-facts"));
   assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
   assert.ok(!prepPack.blockKeys.includes("referral-stop"));
+  assert.ok(prepPack.trustBinding.progressionAffordanceKeys.includes("progression.copy-ready-facts"));
+  assert.ok(
+    prepPack.trustBinding.surfaceBindings.some(
+      (binding) => binding.surfaceKey === "copy-ready-facts"
+        && binding.emphasisZone === "REVIEW"
+    )
+  );
   assert.ok(
     prepPack.carryForwardControls.some(
       (control) => control.code === "DOCUMENTARY_EVIDENCE_GUARDED"
@@ -307,6 +332,25 @@ test("blocked readiness packages add blocker content without implying progressio
   assert.ok(prepPack.blockKeys.includes("review-hold-points"));
   assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
   assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.deepEqual(prepPack.trustBinding.progressionAffordanceKeys, []);
+  assert.ok(prepPack.trustBinding.reviewStateKeys.includes("review-state.blocked"));
+  assert.ok(
+    prepPack.trustBinding.surfaceBindings.some(
+      (binding) => binding.surfaceKey === "blocker-summary"
+        && binding.emphasisZone === "BLOCKER"
+    )
+  );
+  assert.ok(
+    prepPack.trustBinding.surfaceBindings.some(
+      (binding) => binding.surfaceKey === "review-hold-points"
+        && binding.emphasisZone === "REVIEW"
+    )
+  );
+  assert.ok(
+    !prepPack.trustBinding.surfaceBindings.some(
+      (binding) => binding.surfaceKey === "copy-ready-facts"
+    )
+  );
 });
 
 test("review-required readiness carries slowdown posture into prep-pack and handoff guidance", () => {
@@ -331,6 +375,7 @@ test("review-required readiness carries slowdown posture into prep-pack and hand
   assert.ok(prepPack.blockKeys.includes("review-hold-points"));
   assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
   assert.ok(prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(prepPack.trustBinding.progressionAffordanceKeys.includes("progression.copy-ready-facts"));
   assert.ok(
     prepPack.carryForwardControls.some(
       (control) => control.code === "SERVICE_PROOF_GUARDED"
@@ -339,6 +384,11 @@ test("review-required readiness carries slowdown posture into prep-pack and hand
   );
   assert.ok(handoffGuidance.guidance.guidanceBlockKeys.includes("slowdown-review"));
   assert.ok(!handoffGuidance.guidance.guidanceBlockKeys.includes("referral-stop"));
+  assert.ok(
+    handoffGuidance.guidance.trustBinding.reviewStateKeys.includes(
+      "review-state.slowdown-review-required"
+    )
+  );
 });
 
 test("refer-out readiness surfaces referral-stop content in prep-pack and handoff guidance", () => {
@@ -360,6 +410,14 @@ test("refer-out readiness surfaces referral-stop content in prep-pack and handof
   assert.ok(prepPack.blockKeys.includes("review-hold-points"));
   assert.ok(prepPack.blockKeys.includes("referral-stop"));
   assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.deepEqual(prepPack.trustBinding.progressionAffordanceKeys, []);
+  assert.ok(prepPack.trustBinding.reviewStateKeys.includes("review-state.refer-out"));
+  assert.ok(
+    prepPack.trustBinding.surfaceBindings.some(
+      (binding) => binding.surfaceKey === "referral-stop"
+        && binding.emphasisZone === "REFERRAL"
+    )
+  );
   assert.ok(
     prepPack.carryForwardControls.some(
       (control) => control.code === "INTERSTATE_ROUTE_OUT"
@@ -367,4 +425,7 @@ test("refer-out readiness surfaces referral-stop content in prep-pack and handof
     )
   );
   assert.ok(handoffGuidance.guidance.guidanceBlockKeys.includes("referral-stop"));
+  assert.ok(
+    handoffGuidance.guidance.trustBinding.trustCueKeys.includes("trust-cue.referral-stop")
+  );
 });

@@ -5,6 +5,7 @@ import type {
 } from "../../domain/posture.js";
 import type {
   NoticeReadinessIssue,
+  NoticeReadinessOutcome,
   NoticeReadinessResult
 } from "../notice-readiness/index.js";
 
@@ -17,6 +18,11 @@ export interface OutputPackageReadinessContent {
   showReferralStop: boolean;
   allowCopyReadyFacts: boolean;
 }
+
+const copyReadyFactOutcomes = new Set<NoticeReadinessOutcome>([
+  "READY_FOR_REVIEW",
+  "REVIEW_REQUIRED"
+]);
 
 export function deriveOutputPackageReadinessContent(
   readiness: NoticeReadinessResult
@@ -35,14 +41,18 @@ export function deriveOutputPackageReadinessContent(
       || readiness.outcome === "REVIEW_REQUIRED"
       || readiness.outcome === "REFER_OUT",
     showGuardedIssueSection:
-      readiness.warnings.length > 0
-      || readiness.slowdowns.length > 0
-      || readiness.referrals.some((issue) => issue.category === "guarded"),
+      hasGuardedIssues(readiness.warnings)
+      || hasGuardedIssues(readiness.slowdowns)
+      || hasGuardedIssues(readiness.referrals),
     showReferralStop: readiness.outcome === "REFER_OUT",
-    allowCopyReadyFacts:
-      readiness.outcome === "READY_FOR_REVIEW"
-      || readiness.outcome === "REVIEW_REQUIRED"
+    // Copy-ready facts are a deliberate trust boundary: blocked and refer-out
+    // packages may stay reviewable, but they must not imply copy-ready progress.
+    allowCopyReadyFacts: copyReadyFactOutcomes.has(readiness.outcome)
   };
+}
+
+function hasGuardedIssues(issues: readonly NoticeReadinessIssue[]): boolean {
+  return issues.some((issue) => issue.category === "guarded");
 }
 
 function mapIssueToCarryForwardControl(

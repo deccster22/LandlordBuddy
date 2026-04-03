@@ -7,6 +7,11 @@ import {
   mergeCarryForwardControls,
   type CarryForwardControl
 } from "../../domain/posture.js";
+import type { NoticeReadinessOutcome } from "../notice-readiness/index.js";
+import {
+  buildStructuralTrustBinding,
+  type StructuralTrustBinding
+} from "../output/trustBindings.js";
 import {
   listTouchpointsForForumPath,
   lookupTouchpointMetadata,
@@ -19,6 +24,7 @@ export interface OfficialHandoffGuidanceInput {
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
   touchpointIds?: string[];
+  readinessOutcome?: NoticeReadinessOutcome;
 }
 
 export interface OfficialHandoffGuidanceShell {
@@ -30,6 +36,7 @@ export interface OfficialHandoffGuidanceShell {
   guidanceBlockKeys: string[];
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
+  trustBinding: StructuralTrustBinding;
 }
 
 export const officialHandoffBoundaryCodes = Object.freeze([
@@ -46,16 +53,28 @@ export function buildOfficialHandoffGuidanceShell(
     input.carryForwardControls ?? [],
     ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls)
   );
+  const boundaryCodes = [...officialHandoffBoundaryCodes];
+  const guidanceBlockKeys = buildGuidanceBlockKeys(touchpoints, carryForwardControls);
 
   return {
     kind: "OFFICIAL_HANDOFF_GUIDANCE",
     matterId: input.matterId,
     forumPath: input.forumPath,
     officialHandoff: input.officialHandoff,
-    boundaryCodes: [...officialHandoffBoundaryCodes],
-    guidanceBlockKeys: buildGuidanceBlockKeys(touchpoints, carryForwardControls),
+    boundaryCodes,
+    guidanceBlockKeys,
     touchpoints,
-    carryForwardControls
+    carryForwardControls,
+    trustBinding: buildStructuralTrustBinding({
+      kind: "OFFICIAL_HANDOFF_GUIDANCE",
+      ...(input.readinessOutcome
+        ? { readinessOutcome: input.readinessOutcome }
+        : {}),
+      blockKeys: guidanceBlockKeys,
+      touchpoints,
+      carryForwardControls,
+      boundaryCodes
+    })
   };
 }
 
