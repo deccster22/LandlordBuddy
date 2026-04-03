@@ -1,7 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import type { CarryForwardControl } from "../src/domain/posture.js";
+import {
+  createOfficialHandoffStateRecord,
+  type CarryForwardControl
+} from "../src/domain/model.js";
 import type {
   NoticeReadinessIssue,
   NoticeReadinessOutcome,
@@ -155,6 +158,7 @@ test("structural trust binding maps boundary codes, source labels, and referral 
 
   const trustBinding = buildStructuralTrustBinding({
     kind: "OFFICIAL_HANDOFF_GUIDANCE",
+    officialHandoff: createOfficialHandoffStateRecord("HANDED_OFF"),
     readinessOutcome: "REFER_OUT",
     blockKeys: [
       "handoff-boundary",
@@ -203,5 +207,15 @@ test("structural trust binding maps boundary codes, source labels, and referral 
   );
   assert.ok(
     trustBinding.boundaryStatementKeys.includes("boundary.handoff-not-completed-official-step")
+  );
+  assert.equal(trustBinding.reviewHandoffState.readiness.outcome, "REFER_OUT");
+  assert.equal(trustBinding.reviewHandoffState.handoff.posture, "REFERRAL_STOP");
+  assert.equal(
+    trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "REFER_OUTSIDE_STANDARD_PATH"
+  );
+  assert.equal(
+    trustBinding.reviewHandoffState.handoff.productExecution,
+    "NOT_EXECUTED_BY_PRODUCT"
   );
 });
