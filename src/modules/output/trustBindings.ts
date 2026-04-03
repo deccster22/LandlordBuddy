@@ -128,10 +128,28 @@ const surfaceTrustTemplateByKey: Readonly<Record<string, StructuralTrustSurfaceT
       trustCueKeys: ["trust-cue.visible-source-labels"],
       emphasisZone: "GENERAL"
     },
+    "sequencing-summary": {
+      trustSurfaceKeys: [
+        "surface.sequencing-summary",
+        "surface.timeline-sequencing-visibility"
+      ],
+      boundaryStatementKeys: ["boundary.readiness-not-filing"],
+      trustCueKeys: ["trust-cue.sequencing-summary-visible"],
+      emphasisZone: "GENERAL"
+    },
     "blocker-summary": {
       trustSurfaceKeys: ["surface.blocker-summary", "surface.progression-held"],
       boundaryStatementKeys: ["boundary.readiness-not-filing"],
       trustCueKeys: ["trust-cue.blocker-summary"],
+      emphasisZone: "BLOCKER"
+    },
+    "sequencing-blocked": {
+      trustSurfaceKeys: [
+        "surface.sequencing-blocked",
+        "surface.upstream-prerequisites-unsatisfied"
+      ],
+      boundaryStatementKeys: ["boundary.readiness-not-filing"],
+      trustCueKeys: ["trust-cue.sequencing-blocked"],
       emphasisZone: "BLOCKER"
     },
     "review-hold-points": {
@@ -140,10 +158,34 @@ const surfaceTrustTemplateByKey: Readonly<Record<string, StructuralTrustSurfaceT
       trustCueKeys: ["trust-cue.review-hold"],
       emphasisZone: "REVIEW"
     },
+    "dependency-hold-points": {
+      trustSurfaceKeys: ["surface.dependency-hold-points", "surface.next-step-holds"],
+      boundaryStatementKeys: ["boundary.readiness-not-filing"],
+      trustCueKeys: ["trust-cue.dependency-hold-points"],
+      emphasisZone: "REVIEW"
+    },
     "guarded-review-flags": {
       trustSurfaceKeys: ["surface.guarded-review-flags", "surface.unresolved-doctrine"],
       boundaryStatementKeys: [],
       trustCueKeys: ["trust-cue.guarded-review-flags"],
+      emphasisZone: "REVIEW"
+    },
+    "sequencing-guarded": {
+      trustSurfaceKeys: [
+        "surface.sequencing-guarded",
+        "surface.guarded-sequencing-visible"
+      ],
+      boundaryStatementKeys: [],
+      trustCueKeys: ["trust-cue.sequencing-guarded"],
+      emphasisZone: "REVIEW"
+    },
+    "external-step-summary": {
+      trustSurfaceKeys: [
+        "surface.external-step-summary",
+        "surface.external-handoff-dependent"
+      ],
+      boundaryStatementKeys: ["boundary.handoff-not-completed-official-step"],
+      trustCueKeys: ["trust-cue.external-step-summary"],
       emphasisZone: "REVIEW"
     },
     "referral-stop": {
@@ -425,8 +467,24 @@ function buildReviewStateKeys(input: {
     reviewStateKeys.push("review-state.official-step-external");
   }
 
+  if (input.surfaceKeys.includes("sequencing-blocked")) {
+    reviewStateKeys.push("review-state.sequencing-blocked");
+  }
+
+  if (input.surfaceKeys.includes("dependency-hold-points")) {
+    reviewStateKeys.push("review-state.dependency-holds-visible");
+  }
+
   if (input.surfaceKeys.includes("guarded-review-flags")) {
     reviewStateKeys.push("review-state.guarded-items-visible");
+  }
+
+  if (input.surfaceKeys.includes("sequencing-guarded")) {
+    reviewStateKeys.push("review-state.sequencing-guarded");
+  }
+
+  if (input.surfaceKeys.includes("external-step-summary")) {
+    reviewStateKeys.push("review-state.official-step-external");
   }
 
   return dedupeStrings(reviewStateKeys);
@@ -474,3 +532,4 @@ function dedupeStrings(values: readonly string[]): string[] {
 function normalizeCodeKey(value: string): string {
   return value.toLowerCase().replace(/[^a-z0-9]+/gu, "-").replace(/^-|-$/gu, "");
 }
+
