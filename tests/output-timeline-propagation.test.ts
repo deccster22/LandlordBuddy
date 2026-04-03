@@ -15,6 +15,10 @@ import {
   type PrepPackOutputPackageShell,
   type PrintableOutputPackageShell
 } from "../src/modules/output/index.js";
+import {
+  validateUnpaidRentNoticeReadiness,
+  type UnpaidRentNoticeReadinessInput
+} from "../src/modules/notice-readiness/index.js";
 import { deriveOutputPackageTimelineContent } from "../src/modules/output/timelineAdapter.js";
 import { buildTimelineEngineShell } from "../src/modules/timeline/index.js";
 
@@ -68,6 +72,23 @@ function buildOutputPackageInput(mode: "PRINTABLE_OUTPUT" | "PREP_PACK_COPY_READ
     }),
     outputMode: createOutputModeState(mode),
     officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF")
+  };
+}
+
+function buildNoticeReadinessInput(): UnpaidRentNoticeReadinessInput {
+  return {
+    arrearsThresholdStatus: "threshold_met",
+    arrearsAmount: 1850,
+    paidToDate: "2026-03-20",
+    noticeNumber: "NTV-204",
+    serviceMethod: "EMAIL",
+    interstateRouteOut: false,
+    guarded: {
+      serviceProofSufficiency: "cleared",
+      documentaryEvidenceCompleteness: "cleared",
+      handServiceReview: "not_applicable",
+      mixedClaimRoutingInteraction: "cleared"
+    }
   };
 }
 
@@ -149,6 +170,58 @@ test("below-threshold prep packs surface blocked sequencing and suppress copy-re
   assert.ok(prepPack.trustBinding.reviewStateKeys.includes("review-state.sequencing-blocked"));
   assert.ok(prepPack.trustBinding.reviewStateKeys.includes("review-state.dependency-holds-visible"));
   assert.ok(prepPack.timelineContent?.reviewCueKeys.includes("timeline-review.blocked"));
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.sequencing.posture,
+    "BLOCKED_UPSTREAM"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "BLOCKED_UPSTREAM"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "RESOLVE_BLOCKER"
+  );
+});
+
+test("blocked readiness and blocked sequencing stay distinct from referral-stop posture", () => {
+  const timeline = buildTimeline({
+    charges: [charge({
+      dueDate: "2026-03-27",
+      periodStartDate: "2026-03-20",
+      periodEndDate: "2026-03-26"
+    })]
+  });
+  const readinessInput = buildNoticeReadinessInput();
+  readinessInput.arrearsAmount = null;
+  const noticeReadiness = validateUnpaidRentNoticeReadiness(readinessInput);
+  const prepPack = expectPrepPack(generateOutputPackageShell({
+    ...buildOutputPackageInput("PREP_PACK_COPY_READY"),
+    noticeReadiness,
+    timeline
+  }));
+
+  assert.equal(prepPack.trustBinding.reviewHandoffState.readiness.outcome, "BLOCKED");
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.readiness.reviewRequirement,
+    "BLOCKED"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.sequencing.posture,
+    "BLOCKED_UPSTREAM"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "BLOCKED_UPSTREAM"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "RESOLVE_BLOCKER"
+  );
+  assert.notEqual(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "REFERRAL_STOP"
+  );
 });
 
 test("threshold-met printable outputs carry guarded and external sequencing posture as structural surfaces", () => {
@@ -245,4 +318,24 @@ test("handoff guidance carries timeline-derived guarded and external cues withou
     )
   );
   assert.equal(handoff.officialSystemAction, "NOT_INCLUDED");
+  assert.equal(
+    handoff.guidance.trustBinding.reviewHandoffState.sequencing.posture,
+    "GUARDED_AND_EXTERNAL_VISIBLE"
+  );
+  assert.equal(
+    handoff.guidance.trustBinding.reviewHandoffState.sequencing.externalOfficialDependencyVisible,
+    true
+  );
+  assert.equal(
+    handoff.guidance.trustBinding.reviewHandoffState.handoff.posture,
+    "GUARDED_REVIEW_REQUIRED"
+  );
+  assert.equal(
+    handoff.guidance.trustBinding.reviewHandoffState.handoff.officialStep,
+    "NOT_INCLUDED"
+  );
+  assert.equal(
+    handoff.guidance.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "COMPLETE_GUARDED_REVIEW"
+  );
 });

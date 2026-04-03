@@ -302,6 +302,22 @@ test("ready-for-review packages surface readiness summary while keeping warning-
         && control.severity === "WARNING"
     )
   );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "EXTERNAL_NEXT_ACTION_PENDING"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.owner,
+    "USER_OR_OPERATOR"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.boundary,
+    "OUTSIDE_LANDLORD_BUDDY"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.officialDependency,
+    "EXTERNAL_OFFICIAL_STEP"
+  );
 });
 
 test("blocked readiness packages add blocker content without implying progression", () => {
@@ -351,6 +367,23 @@ test("blocked readiness packages add blocker content without implying progressio
       (binding) => binding.surfaceKey === "copy-ready-facts"
     )
   );
+  assert.equal(prepPack.trustBinding.reviewHandoffState.readiness.outcome, "BLOCKED");
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "BLOCKED_UPSTREAM"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.productPreparation.status,
+    "BLOCKED"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "RESOLVE_BLOCKER"
+  );
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.ownership.nextAction.boundary,
+    "INSIDE_LANDLORD_BUDDY"
+  );
 });
 
 test("review-required readiness carries slowdown posture into prep-pack and handoff guidance", () => {
@@ -388,6 +421,22 @@ test("review-required readiness carries slowdown posture into prep-pack and hand
     handoffGuidance.guidance.trustBinding.reviewStateKeys.includes(
       "review-state.slowdown-review-required"
     )
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.handoff.posture,
+    "GUARDED_REVIEW_REQUIRED"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.handoff.officialStep,
+    "NOT_INCLUDED"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "COMPLETE_GUARDED_REVIEW"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.ownership.nextAction.officialDependency,
+    "NONE"
   );
 });
 
@@ -427,5 +476,21 @@ test("refer-out readiness surfaces referral-stop content in prep-pack and handof
   assert.ok(handoffGuidance.guidance.guidanceBlockKeys.includes("referral-stop"));
   assert.ok(
     handoffGuidance.guidance.trustBinding.trustCueKeys.includes("trust-cue.referral-stop")
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.handoff.posture,
+    "REFERRAL_STOP"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.ownership.productPreparation.status,
+    "STOPPED_REFER_OUT"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "REFER_OUTSIDE_STANDARD_PATH"
+  );
+  assert.equal(
+    handoffGuidance.guidance.trustBinding.reviewHandoffState.ownership.nextAction.boundary,
+    "OUTSIDE_LANDLORD_BUDDY"
   );
 });

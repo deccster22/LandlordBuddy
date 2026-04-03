@@ -23,6 +23,10 @@ import {
   type OutputPackageTimelineContent
 } from "./timelineAdapter.js";
 import {
+  deriveRendererState,
+  type RendererState
+} from "./rendererStateAdapter.js";
+import {
   buildStructuralTrustBinding,
   type StructuralTrustBinding
 } from "./trustBindings.js";
@@ -62,6 +66,7 @@ interface OutputPackageBase {
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
   trustBinding: StructuralTrustBinding;
+  rendererState: RendererState;
   officialSystemAction: "NOT_INCLUDED";
   timelineContent?: OutputPackageTimelineContent;
 }
@@ -134,20 +139,29 @@ export function generateOutputPackageShell(
         selection.readinessContent,
         selection.timelineContent
       );
+      const trustBinding = buildStructuralTrustBinding({
+        kind: "PRINTABLE_OUTPUT",
+        officialHandoff: selection.officialHandoff,
+        ...(input.noticeReadiness
+          ? { readinessOutcome: input.noticeReadiness.outcome }
+          : {}),
+        sectionKeys,
+        touchpoints: selection.touchpoints,
+        carryForwardControls: selection.carryForwardControls
+      });
+      const rendererState = deriveRendererState({
+        ...(input.noticeReadiness ? { noticeReadiness: input.noticeReadiness } : {}),
+        ...(selection.timelineContent ? { timelineContent: selection.timelineContent } : {}),
+        reviewHandoffState: trustBinding.reviewHandoffState,
+        trustBinding
+      });
 
       return {
         ...base,
         kind: "PRINTABLE_OUTPUT",
         sectionKeys,
-        trustBinding: buildStructuralTrustBinding({
-          kind: "PRINTABLE_OUTPUT",
-          ...(input.noticeReadiness
-            ? { readinessOutcome: input.noticeReadiness.outcome }
-            : {}),
-          sectionKeys,
-          touchpoints: selection.touchpoints,
-          carryForwardControls: selection.carryForwardControls
-        })
+        trustBinding,
+        rendererState
       };
     }
     case "PREP_PACK_COPY_READY": {
@@ -155,20 +169,29 @@ export function generateOutputPackageShell(
         selection.readinessContent,
         selection.timelineContent
       );
+      const trustBinding = buildStructuralTrustBinding({
+        kind: "PREP_PACK_COPY_READY",
+        officialHandoff: selection.officialHandoff,
+        ...(input.noticeReadiness
+          ? { readinessOutcome: input.noticeReadiness.outcome }
+          : {}),
+        blockKeys,
+        touchpoints: selection.touchpoints,
+        carryForwardControls: selection.carryForwardControls
+      });
+      const rendererState = deriveRendererState({
+        ...(input.noticeReadiness ? { noticeReadiness: input.noticeReadiness } : {}),
+        ...(selection.timelineContent ? { timelineContent: selection.timelineContent } : {}),
+        reviewHandoffState: trustBinding.reviewHandoffState,
+        trustBinding
+      });
 
       return {
         ...base,
         kind: "PREP_PACK_COPY_READY",
         blockKeys,
-        trustBinding: buildStructuralTrustBinding({
-          kind: "PREP_PACK_COPY_READY",
-          ...(input.noticeReadiness
-            ? { readinessOutcome: input.noticeReadiness.outcome }
-            : {}),
-          blockKeys,
-          touchpoints: selection.touchpoints,
-          carryForwardControls: selection.carryForwardControls
-        })
+        trustBinding,
+        rendererState
       };
     }
     case "OFFICIAL_HANDOFF_GUIDANCE": {
@@ -182,6 +205,9 @@ export function generateOutputPackageShell(
           ? { timelineContent: selection.timelineContent }
           : {}),
         ...(input.noticeReadiness
+          ? { noticeReadiness: input.noticeReadiness }
+          : {}),
+        ...(input.noticeReadiness
           ? { readinessOutcome: input.noticeReadiness.outcome }
           : {})
       });
@@ -190,7 +216,8 @@ export function generateOutputPackageShell(
         ...base,
         kind: "OFFICIAL_HANDOFF_GUIDANCE",
         guidance,
-        trustBinding: guidance.trustBinding
+        trustBinding: guidance.trustBinding,
+        rendererState: guidance.rendererState
       };
     }
   }
@@ -347,3 +374,4 @@ function shouldIncludeCopyReadyFacts(
 
 export * from "./trustBindings.js";
 export * from "./timelineAdapter.js";
+export * from "./rendererStateAdapter.js";

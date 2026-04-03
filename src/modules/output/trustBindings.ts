@@ -3,6 +3,11 @@ import {
   type CarryForwardControl,
   type VisibleSourceType
 } from "../../domain/posture.js";
+import type { OfficialHandoffStateRecord } from "../../domain/preparation.js";
+import {
+  deriveReviewHandoffState,
+  type ReviewHandoffState
+} from "../handoff/reviewState.js";
 import type { NoticeReadinessOutcome } from "../notice-readiness/index.js";
 import type { TouchpointMetadata } from "../touchpoints/index.js";
 
@@ -62,6 +67,7 @@ export interface StructuralTrustBinding {
   kind: StructuralTrustBindingKind;
   schemaKey: string;
   readinessOutcome: StructuralTrustReadinessOutcome;
+  reviewHandoffState: ReviewHandoffState;
   boundaryStatementKeys: string[];
   boundaryStatementKeysByCode: Record<string, string>;
   readinessSummarySupportKeys: string[];
@@ -74,6 +80,7 @@ export interface StructuralTrustBinding {
 
 export interface StructuralTrustBindingInput {
   kind: StructuralTrustBindingKind;
+  officialHandoff: OfficialHandoffStateRecord;
   readinessOutcome?: NoticeReadinessOutcome;
   sectionKeys?: readonly string[];
   blockKeys?: readonly string[];
@@ -277,6 +284,11 @@ export function buildStructuralTrustBinding(
     kind: input.kind,
     schemaKey: buildSchemaKey(input.kind, readinessOutcome),
     readinessOutcome,
+    reviewHandoffState: deriveReviewHandoffState({
+      readinessOutcome,
+      officialHandoff: input.officialHandoff,
+      surfaceKeys
+    }),
     boundaryStatementKeys: dedupeStrings([
       ...buildPackageBoundaryStatementKeys(input.kind),
       ...Object.values(boundaryStatementKeysByCode),

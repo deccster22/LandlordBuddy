@@ -7,7 +7,14 @@ import {
   mergeCarryForwardControls,
   type CarryForwardControl
 } from "../../domain/posture.js";
-import type { NoticeReadinessOutcome } from "../notice-readiness/index.js";
+import type {
+  NoticeReadinessOutcome,
+  NoticeReadinessResult
+} from "../notice-readiness/index.js";
+import {
+  deriveRendererState,
+  type RendererState
+} from "../output/rendererStateAdapter.js";
 import type { OutputPackageTimelineContent } from "../output/timelineAdapter.js";
 import {
   buildStructuralTrustBinding,
@@ -26,6 +33,7 @@ export interface OfficialHandoffGuidanceInput {
   carryForwardControls?: CarryForwardControl[];
   touchpointIds?: string[];
   readinessOutcome?: NoticeReadinessOutcome;
+  noticeReadiness?: NoticeReadinessResult;
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -39,6 +47,7 @@ export interface OfficialHandoffGuidanceShell {
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
   trustBinding: StructuralTrustBinding;
+  rendererState: RendererState;
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -63,6 +72,24 @@ export function buildOfficialHandoffGuidanceShell(
     carryForwardControls,
     input.timelineContent
   );
+  const readinessOutcome = input.noticeReadiness?.outcome ?? input.readinessOutcome;
+  const trustBinding = buildStructuralTrustBinding({
+    kind: "OFFICIAL_HANDOFF_GUIDANCE",
+    officialHandoff: input.officialHandoff,
+    ...(readinessOutcome
+      ? { readinessOutcome }
+      : {}),
+    blockKeys: guidanceBlockKeys,
+    touchpoints,
+    carryForwardControls,
+    boundaryCodes
+  });
+  const rendererState = deriveRendererState({
+    ...(input.noticeReadiness ? { noticeReadiness: input.noticeReadiness } : {}),
+    ...(input.timelineContent ? { timelineContent: input.timelineContent } : {}),
+    reviewHandoffState: trustBinding.reviewHandoffState,
+    trustBinding
+  });
 
   return {
     kind: "OFFICIAL_HANDOFF_GUIDANCE",
@@ -74,16 +101,8 @@ export function buildOfficialHandoffGuidanceShell(
     touchpoints,
     carryForwardControls,
     ...(input.timelineContent ? { timelineContent: input.timelineContent } : {}),
-    trustBinding: buildStructuralTrustBinding({
-      kind: "OFFICIAL_HANDOFF_GUIDANCE",
-      ...(input.readinessOutcome
-        ? { readinessOutcome: input.readinessOutcome }
-        : {}),
-      blockKeys: guidanceBlockKeys,
-      touchpoints,
-      carryForwardControls,
-      boundaryCodes
-    })
+    trustBinding,
+    rendererState
   };
 }
 
@@ -158,3 +177,5 @@ function buildGuidanceBlockKeys(
 
   return blockKeys;
 }
+
+export * from "./reviewState.js";
