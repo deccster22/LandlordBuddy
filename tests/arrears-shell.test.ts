@@ -1,9 +1,20 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import type { PaymentRecord, RentCharge } from "../src/domain/model.js";
+import { GUARDED_INSERTION_POINTS, type PaymentRecord, type RentCharge } from "../src/domain/model.js";
 import { buildThresholdState, calculateArrearsStatusShell } from "../src/modules/arrears/index.js";
-import { buildTimelineEngineShell, timelineMilestoneCategories } from "../src/modules/timeline/index.js";
+import {
+  buildTimelineEngineShell,
+  timelineMilestoneCategories,
+  type TimelineMilestone,
+  type TimelineMilestoneCategory,
+  type TimelineNoticeReadinessInput,
+  type TimelineShell
+} from "../src/modules/timeline/index.js";
+import {
+  validateUnpaidRentNoticeReadiness,
+  type UnpaidRentNoticeReadinessInput
+} from "../src/modules/notice-readiness/index.js";
 
 const charge = (overrides: Partial<RentCharge> = {}): RentCharge => ({
   id: "charge-1",
@@ -76,7 +87,7 @@ test("arrears shell computes paid-to date, overdue amount, and threshold eligibi
   assert.equal(result.ruleVersion, thresholdRule.version);
 });
 
-test("timeline shell preserves guarded milestone placeholders and notice gate shape", () => {
+test("timeline shell exposes deterministic, guarded, and external milestone posture when threshold is met", () => {
   const arrears = calculateArrearsStatusShell({
     charges: [charge()],
     payments: [],
@@ -86,14 +97,32 @@ test("timeline shell preserves guarded milestone placeholders and notice gate sh
 
   const timeline = buildTimelineEngineShell({ arrears });
   const categories = timeline.milestones.map((milestone) => milestone.category);
-  const evidenceMilestone = timeline.milestones.find((milestone) => milestone.category === "EVIDENCE");
+  const thresholdMilestone = findMilestone(timeline, "ARREARS_THRESHOLD");
+  const paymentPlanMilestone = findMilestone(timeline, "PAYMENT_PLAN");
+  const evidenceMilestone = findMilestone(timeline, "EVIDENCE");
+  const hearingMilestone = findMilestone(timeline, "HEARING");
 
   assert.deepEqual(categories, [...timelineMilestoneCategories]);
   assert.equal(timeline.noEarlyNoticeGate.canPrepareNotice, true);
-  assert.equal(evidenceMilestone?.kind, "GUARDED_PLACEHOLDER");
-  assert.match(evidenceMilestone?.notes.join(" ") ?? "", /no final evidence-deadline sentence/i);
+  assert.equal(thresholdMilestone.kind, "DETERMINISTIC_MILESTONE");
+  assert.equal(thresholdMilestone.status, "ELIGIBLE");
+  assert.equal(thresholdMilestone.confidence, "DETERMINISTIC");
+  assert.deepEqual(thresholdMilestone.dependsOn, []);
+  assert.equal(paymentPlanMilestone.kind, "GUARDED_PLACEHOLDER");
+  assert.equal(paymentPlanMilestone.status, "GUARDED");
+  assert.equal(paymentPlanMilestone.dependsOn[1]?.status, "GUARDED");
+  assert.equal(evidenceMilestone.kind, "GUARDED_PLACEHOLDER");
+  assert.equal(evidenceMilestone.status, "GUARDED");
+  assert.equal(evidenceMilestone.guardedInsertionPoint, GUARDED_INSERTION_POINTS.evidenceTiming);
+  assert.match(evidenceMilestone.notes.join(" "), /no final evidence-deadline sentence/i);
+  assert.equal(hearingMilestone.status, "EXTERNAL");
+  assert.equal(hearingMilestone.sourceSensitivity, "EXTERNAL_OFFICIAL_INSTRUCTION");
+  assert.equal(hearingMilestone.reminderHooks[0]?.status, "EXTERNAL");
+  assert.match(hearingMilestone.visibilityReason, /external and handoff-dependent/i);
+  assert.match(hearingMilestone.notes.join(" "), /outside the product boundary/i);
 });
-test("timeline shell keeps the no-early-notice gate closed until threshold is met", () => {
+
+test("timeline shell blocks downstream milestones until threshold is met", () => {
   const arrears = calculateArrearsStatusShell({
     charges: [charge({ dueDate: "2026-03-27", periodStartDate: "2026-03-20", periodEndDate: "2026-03-26" })],
     payments: [],
@@ -102,17 +131,28 @@ test("timeline shell keeps the no-early-notice gate closed until threshold is me
   });
 
   const timeline = buildTimelineEngineShell({ arrears });
-  const paymentPlanMilestone = timeline.milestones.find((milestone) => milestone.category === "PAYMENT_PLAN");
+  const thresholdMilestone = findMilestone(timeline, "ARREARS_THRESHOLD");
+  const noticeMilestone = findMilestone(timeline, "NOTICE");
+  const paymentPlanMilestone = findMilestone(timeline, "PAYMENT_PLAN");
+  const evidenceMilestone = findMilestone(timeline, "EVIDENCE");
+  const hearingMilestone = findMilestone(timeline, "HEARING");
 
   assert.equal(arrears.thresholdState.kind, "BELOW_THRESHOLD");
   assert.equal(timeline.noEarlyNoticeGate.canPrepareNotice, false);
   assert.match(timeline.noEarlyNoticeGate.reason, /early notice is not available/i);
-  assert.equal(paymentPlanMilestone?.kind, "GUARDED_PLACEHOLDER");
-  assert.equal(paymentPlanMilestone?.status, "PENDING");
-  assert.equal(paymentPlanMilestone?.reminderHooks[0]?.status, "PENDING");
+  assert.equal(thresholdMilestone.status, "PENDING");
+  assert.equal(noticeMilestone.kind, "ADVISORY_MILESTONE");
+  assert.equal(noticeMilestone.status, "BLOCKED");
+  assert.equal(paymentPlanMilestone.kind, "GUARDED_PLACEHOLDER");
+  assert.equal(paymentPlanMilestone.status, "BLOCKED");
+  assert.equal(paymentPlanMilestone.dependsOn[0]?.status, "PENDING");
+  assert.equal(paymentPlanMilestone.reminderHooks[0]?.status, "BLOCKED");
+  assert.equal(evidenceMilestone.status, "BLOCKED");
+  assert.equal(hearingMilestone.status, "BLOCKED");
+  assert.equal(hearingMilestone.dependsOn[2]?.status, "PENDING");
 });
 
-test("timeline shell blocks payment-plan placeholder progression when arrears inputs are invalid", () => {
+test("timeline shell keeps blocked-invalid posture distinct from guarded and external downstream states", () => {
   const arrears = calculateArrearsStatusShell({
     charges: [],
     payments: [],
@@ -120,12 +160,108 @@ test("timeline shell blocks payment-plan placeholder progression when arrears in
   });
 
   const timeline = buildTimelineEngineShell({ arrears });
-  const paymentPlanMilestone = timeline.milestones.find((milestone) => milestone.category === "PAYMENT_PLAN");
+  const thresholdMilestone = findMilestone(timeline, "ARREARS_THRESHOLD");
+  const paymentPlanMilestone = findMilestone(timeline, "PAYMENT_PLAN");
+  const evidenceMilestone = findMilestone(timeline, "EVIDENCE");
+  const hearingMilestone = findMilestone(timeline, "HEARING");
 
   assert.equal(arrears.thresholdState.kind, "BLOCKED_INVALID");
   assert.equal(timeline.noEarlyNoticeGate.canPrepareNotice, false);
   assert.match(timeline.noEarlyNoticeGate.reason, /core arrears inputs are insufficient/i);
-  assert.equal(paymentPlanMilestone?.status, "BLOCKED");
-  assert.equal(paymentPlanMilestone?.reminderHooks[0]?.status, "BLOCKED");
+  assert.equal(thresholdMilestone.status, "BLOCKED");
+  assert.match(thresholdMilestone.visibilityReason, /cannot be confirmed/i);
+  assert.equal(paymentPlanMilestone.status, "BLOCKED");
+  assert.equal(paymentPlanMilestone.dependsOn[0]?.status, "BLOCKED");
+  assert.match(paymentPlanMilestone.visibilityReason, /core arrears inputs are insufficient/i);
+  assert.equal(evidenceMilestone.status, "BLOCKED");
+  assert.equal(hearingMilestone.status, "BLOCKED");
 });
 
+test("notice milestone can show readiness-driven progression without implying official completion", () => {
+  const arrears = calculateArrearsStatusShell({
+    charges: [charge()],
+    payments: [],
+    thresholdRule,
+    asAt: "2026-04-02T10:00:00.000Z"
+  });
+  const noticeReadiness = toTimelineNoticeReadiness(
+    validateUnpaidRentNoticeReadiness(buildBaseReadinessInput())
+  );
+
+  const timeline = buildTimelineEngineShell({ arrears, noticeReadiness });
+  const noticeMilestone = findMilestone(timeline, "NOTICE");
+
+  assert.equal(noticeMilestone.kind, "ADVISORY_MILESTONE");
+  assert.equal(noticeMilestone.status, "ELIGIBLE");
+  assert.equal(noticeMilestone.dependsOn[1]?.status, "SATISFIED");
+  assert.match(timeline.noEarlyNoticeGate.reason, /still not an official filing step/i);
+  assert.match(noticeMilestone.notes.join(" "), /not be read as an official filing step/i);
+});
+
+test("review-required notice posture stays distinct from guarded and external downstream milestones", () => {
+  const arrears = calculateArrearsStatusShell({
+    charges: [charge()],
+    payments: [],
+    thresholdRule,
+    asAt: "2026-04-02T10:00:00.000Z"
+  });
+  const readinessInput = buildBaseReadinessInput();
+  readinessInput.guarded = {
+    ...readinessInput.guarded,
+    serviceProofSufficiency: "guarded"
+  };
+
+  const noticeReadinessResult = validateUnpaidRentNoticeReadiness(readinessInput);
+  const timeline = buildTimelineEngineShell({
+    arrears,
+    noticeReadiness: toTimelineNoticeReadiness(noticeReadinessResult)
+  });
+  const noticeMilestone = findMilestone(timeline, "NOTICE");
+  const paymentPlanMilestone = findMilestone(timeline, "PAYMENT_PLAN");
+  const hearingMilestone = findMilestone(timeline, "HEARING");
+
+  assert.equal(noticeReadinessResult.outcome, "REVIEW_REQUIRED");
+  assert.equal(noticeMilestone.status, "PENDING");
+  assert.equal(noticeMilestone.dependsOn[1]?.status, "GUARDED");
+  assert.match(noticeMilestone.visibilityReason, /guarded notice-readiness review/i);
+  assert.equal(paymentPlanMilestone.status, "GUARDED");
+  assert.equal(hearingMilestone.status, "EXTERNAL");
+});
+
+function buildBaseReadinessInput(): UnpaidRentNoticeReadinessInput {
+  return {
+    arrearsThresholdStatus: "threshold_met",
+    arrearsAmount: 1850,
+    paidToDate: "2026-03-20",
+    noticeNumber: "NTV-204",
+    serviceMethod: "EMAIL",
+    interstateRouteOut: false,
+    guarded: {
+      serviceProofSufficiency: "cleared",
+      documentaryEvidenceCompleteness: "cleared",
+      handServiceReview: "not_applicable",
+      mixedClaimRoutingInteraction: "cleared"
+    }
+  };
+}
+
+function toTimelineNoticeReadiness(input: {
+  outcome: TimelineNoticeReadinessInput["outcome"];
+  readyForProgression: boolean;
+}): TimelineNoticeReadinessInput {
+  return {
+    outcome: input.outcome,
+    readyForProgression: input.readyForProgression
+  };
+}
+
+function findMilestone(
+  timeline: TimelineShell,
+  category: TimelineMilestoneCategory
+): TimelineMilestone {
+  const milestone = timeline.milestones.find((candidate) => candidate.category === category);
+
+  assert.ok(milestone, `Expected ${category} milestone to exist.`);
+
+  return milestone;
+}
