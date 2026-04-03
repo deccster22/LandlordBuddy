@@ -13,10 +13,15 @@ import {
   type OfficialHandoffGuidanceShell
 } from "../handoff/index.js";
 import type { NoticeReadinessResult } from "../notice-readiness/index.js";
+import type { TimelineShell } from "../timeline/index.js";
 import {
   deriveOutputPackageReadinessContent,
   type OutputPackageReadinessContent
 } from "./readinessAdapter.js";
+import {
+  deriveOutputPackageTimelineContent,
+  type OutputPackageTimelineContent
+} from "./timelineAdapter.js";
 import {
   buildStructuralTrustBinding,
   type StructuralTrustBinding
@@ -35,6 +40,7 @@ export interface OutputSelectionInput {
   carryForwardControls?: CarryForwardControl[];
   touchpointIds?: string[];
   noticeReadiness?: NoticeReadinessResult;
+  timeline?: TimelineShell;
 }
 
 export interface OutputSelection {
@@ -45,6 +51,7 @@ export interface OutputSelection {
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
   readinessContent?: OutputPackageReadinessContent;
+  timelineContent?: OutputPackageTimelineContent;
 }
 
 interface OutputPackageBase {
@@ -56,6 +63,7 @@ interface OutputPackageBase {
   carryForwardControls: CarryForwardControl[];
   trustBinding: StructuralTrustBinding;
   officialSystemAction: "NOT_INCLUDED";
+  timelineContent?: OutputPackageTimelineContent;
 }
 
 export interface PrintableOutputPackageShell extends OutputPackageBase {
@@ -83,9 +91,13 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
   const readinessContent = input.noticeReadiness
     ? deriveOutputPackageReadinessContent(input.noticeReadiness)
     : undefined;
+  const timelineContent = input.timeline
+    ? deriveOutputPackageTimelineContent(input.timeline)
+    : undefined;
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
     ...(readinessContent ? [readinessContent.carryForwardControls] : []),
+    ...(timelineContent ? [timelineContent.carryForwardControls] : []),
     ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls)
   );
 
@@ -96,7 +108,8 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
     officialHandoff: input.officialHandoff,
     touchpoints,
     carryForwardControls,
-    ...(readinessContent ? { readinessContent } : {})
+    ...(readinessContent ? { readinessContent } : {}),
+    ...(timelineContent ? { timelineContent } : {})
   };
 }
 
@@ -111,12 +124,16 @@ export function generateOutputPackageShell(
     officialHandoff: selection.officialHandoff,
     touchpoints: selection.touchpoints,
     carryForwardControls: selection.carryForwardControls,
-    officialSystemAction: "NOT_INCLUDED" as const
+    officialSystemAction: "NOT_INCLUDED" as const,
+    ...(selection.timelineContent ? { timelineContent: selection.timelineContent } : {})
   };
 
   switch (selection.outputMode.mode) {
     case "PRINTABLE_OUTPUT": {
-      const sectionKeys = buildPrintableSectionKeys(selection.readinessContent);
+      const sectionKeys = buildPrintableSectionKeys(
+        selection.readinessContent,
+        selection.timelineContent
+      );
 
       return {
         ...base,
@@ -134,7 +151,10 @@ export function generateOutputPackageShell(
       };
     }
     case "PREP_PACK_COPY_READY": {
-      const blockKeys = buildPrepPackBlockKeys(selection.readinessContent);
+      const blockKeys = buildPrepPackBlockKeys(
+        selection.readinessContent,
+        selection.timelineContent
+      );
 
       return {
         ...base,
@@ -158,6 +178,9 @@ export function generateOutputPackageShell(
         officialHandoff: selection.officialHandoff,
         carryForwardControls: selection.carryForwardControls,
         touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id),
+        ...(selection.timelineContent
+          ? { timelineContent: selection.timelineContent }
+          : {}),
         ...(input.noticeReadiness
           ? { readinessOutcome: input.noticeReadiness.outcome }
           : {})
@@ -188,9 +211,10 @@ function resolveTouchpoints(
 }
 
 function buildPrintableSectionKeys(
-  readinessContent?: OutputPackageReadinessContent
+  readinessContent?: OutputPackageReadinessContent,
+  timelineContent?: OutputPackageTimelineContent
 ): string[] {
-  if (!readinessContent) {
+  if (!readinessContent && !timelineContent) {
     return [
       "matter-summary",
       "arrears-snapshot",
@@ -199,26 +223,47 @@ function buildPrintableSectionKeys(
     ];
   }
 
-  const sectionKeys = [
-    "matter-summary",
-    "arrears-snapshot",
-    "readiness-summary",
-    "source-index"
-  ];
+  const sectionKeys = ["matter-summary", "arrears-snapshot"];
 
-  if (readinessContent.showBlockerSummary) {
+  if (readinessContent?.showReadinessSummary) {
+    sectionKeys.push("readiness-summary");
+  }
+
+  if (timelineContent?.showSequencingSummary) {
+    sectionKeys.push("sequencing-summary");
+  }
+
+  sectionKeys.push("source-index");
+
+  if (readinessContent?.showBlockerSummary) {
     sectionKeys.push("blocker-summary");
   }
 
-  if (readinessContent.showReviewHoldPoints) {
+  if (timelineContent?.showBlockedSequencingSummary) {
+    sectionKeys.push("sequencing-blocked");
+  }
+
+  if (readinessContent?.showReviewHoldPoints) {
     sectionKeys.push("review-hold-points");
   }
 
-  if (readinessContent.showGuardedIssueSection) {
+  if (timelineContent?.showDependencyHoldPoints) {
+    sectionKeys.push("dependency-hold-points");
+  }
+
+  if (readinessContent?.showGuardedIssueSection) {
     sectionKeys.push("guarded-review-flags");
   }
 
-  if (readinessContent.showReferralStop) {
+  if (timelineContent?.showGuardedSequencingSummary) {
+    sectionKeys.push("sequencing-guarded");
+  }
+
+  if (timelineContent?.showExternalStepSummary) {
+    sectionKeys.push("external-step-summary");
+  }
+
+  if (readinessContent?.showReferralStop) {
     sectionKeys.push("referral-stop");
   }
 
@@ -226,9 +271,10 @@ function buildPrintableSectionKeys(
 }
 
 function buildPrepPackBlockKeys(
-  readinessContent?: OutputPackageReadinessContent
+  readinessContent?: OutputPackageReadinessContent,
+  timelineContent?: OutputPackageTimelineContent
 ): string[] {
-  if (!readinessContent) {
+  if (!readinessContent && !timelineContent) {
     return [
       "copy-ready-facts",
       "supporting-evidence-index",
@@ -236,25 +282,49 @@ function buildPrepPackBlockKeys(
     ];
   }
 
-  const blockKeys = ["readiness-summary"];
+  const blockKeys: string[] = [];
 
-  if (readinessContent.showBlockerSummary) {
+  if (readinessContent?.showReadinessSummary) {
+    blockKeys.push("readiness-summary");
+  }
+
+  if (timelineContent?.showSequencingSummary) {
+    blockKeys.push("sequencing-summary");
+  }
+
+  if (readinessContent?.showBlockerSummary) {
     blockKeys.push("blocker-summary");
   }
 
-  if (readinessContent.showReviewHoldPoints) {
+  if (timelineContent?.showBlockedSequencingSummary) {
+    blockKeys.push("sequencing-blocked");
+  }
+
+  if (readinessContent?.showReviewHoldPoints) {
     blockKeys.push("review-hold-points");
   }
 
-  if (readinessContent.showGuardedIssueSection) {
+  if (timelineContent?.showDependencyHoldPoints) {
+    blockKeys.push("dependency-hold-points");
+  }
+
+  if (readinessContent?.showGuardedIssueSection) {
     blockKeys.push("guarded-review-flags");
   }
 
-  if (readinessContent.showReferralStop) {
+  if (timelineContent?.showGuardedSequencingSummary) {
+    blockKeys.push("sequencing-guarded");
+  }
+
+  if (timelineContent?.showExternalStepSummary) {
+    blockKeys.push("external-step-summary");
+  }
+
+  if (readinessContent?.showReferralStop) {
     blockKeys.push("referral-stop");
   }
 
-  if (readinessContent.allowCopyReadyFacts) {
+  if (shouldIncludeCopyReadyFacts(readinessContent, timelineContent)) {
     blockKeys.push("copy-ready-facts");
   }
 
@@ -263,4 +333,17 @@ function buildPrepPackBlockKeys(
   return blockKeys;
 }
 
+function shouldIncludeCopyReadyFacts(
+  readinessContent?: OutputPackageReadinessContent,
+  timelineContent?: OutputPackageTimelineContent
+): boolean {
+  if (readinessContent) {
+    return readinessContent.allowCopyReadyFacts
+      && (timelineContent?.allowCopyReadyFactsWhenTimelineReady ?? true);
+  }
+
+  return timelineContent?.allowCopyReadyFactsWhenTimelineReady ?? true;
+}
+
 export * from "./trustBindings.js";
+export * from "./timelineAdapter.js";
