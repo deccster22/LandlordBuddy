@@ -1,3 +1,5 @@
+import type { ServiceMethod } from "../../domain/model.js";
+
 export const noticeReadinessOutcomes = [
   "READY_FOR_REVIEW",
   "BLOCKED",
@@ -75,7 +77,7 @@ export interface UnpaidRentNoticeReadinessInput {
   arrearsAmount?: number | null;
   paidToDate?: string | null;
   noticeNumber?: string | null;
-  serviceMethod?: "EMAIL" | "POST" | "HAND_DELIVERY" | "COURIER" | "PORTAL_OR_OFFICIAL_SYSTEM" | "UNKNOWN" | null;
+  serviceMethod?: ServiceMethod | null;
   interstateRouteOut?: boolean;
   guarded?: NoticeReadinessGuardedHooks;
 }
@@ -325,3 +327,4 @@ function isHigherPriorityIssue(candidate: Issue, current: Issue): boolean {
 function isGuardedClearedOrNotApplicable(value: string | undefined): boolean {
   return value === "cleared" || value === "not_applicable";
 }
+

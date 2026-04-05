@@ -124,3 +124,25 @@ This acceptance pack is satisfied only when all of the following are true:
 - guarded areas are explicitly classified and not omitted
 - blocked items remain listed module by module
 - `npm run verify` passes
+
+### BR02 registry-first scaffold
+
+Acceptance criteria:
+
+- `src/modules/br02` preserves registry-first definitions for date rules, service methods, validator severities, evidence timing precedence, freshness monitors, audit shape, and QA inventory hooks.
+- `src/domain/model.ts` preserves BR02-capable shared object shapes for `ServiceEvent`, `ConsentProof`, and `EvidenceTimingState` without flattening them into prose-only notes.
+- One service-event row is modeled per renter per attempt.
+- Consent proof remains standalone and reusable per renter/scope variation.
+- Registered post remains the preferred deterministic postal path.
+- Email service requires linked consent proof before deterministic handling.
+- Hand service remains guarded and reviewable.
+- Evidence timing remains dual-step plus override, and the 7-day step is modeled as prep structure rather than fake universal deadline truth.
+- Freshness and stale-state posture remain structural and non-authoritative when stale.
+- BR02 audit events and QA hooks stay explicit and source-linkable.
+
+Blocked areas for this module:
+
+- final hand-service proof sufficiency doctrine
+- final hearing-specific timing variance doctrine
+- live official refresh cadence for registered-post assumptions
+- portal-specific implementation details

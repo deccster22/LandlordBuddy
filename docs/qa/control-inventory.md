@@ -79,3 +79,14 @@ These remain intentionally outside deterministic pass or fail criteria in this p
 - privacy retention engine behavior pending `AG-BR04A`
 - final trust-copy and pricing validation outcomes
 
+
+## BR02 registry-first scaffold
+
+| Rule | Current module surface | Testable invariant | Current QA anchor |
+| --- | --- | --- | --- |
+| BR02 no-early-notice gate shape | `src/modules/br02/index.ts`, `src/modules/br02/registries.ts` | BR02 service/timing assessment preserves the threshold gate as a `hard-stop` until threshold posture is met. | `tests/br02-registry-scaffold.test.ts` |
+| BR02 service-method distinction | `src/modules/br02/registries.ts` | Registered post, email, and hand delivery remain distinct registry entries with different posture, proof, and consent requirements. | `tests/br02-registry-scaffold.test.ts` |
+| BR02 consent-proof gate | `src/modules/br02/index.ts`, `src/domain/model.ts` | Email service requires linked consent proof, while consent proof remains standalone and reusable per renter/scope variation. | `tests/br02-registry-scaffold.test.ts` |
+| BR02 dual-step evidence timing plus override | `src/modules/br02/index.ts`, `src/modules/br02/registries.ts` | Evidence timing state keeps service-event baseline plus required 7-day prep step, with hearing-specific override taking priority when present. | `tests/br02-registry-scaffold.test.ts` |
+| BR02 stale-state posture | `src/modules/br02/registries.ts`, `src/modules/br02/index.ts` | Freshness monitors mark stale generic timing surfaces as non-authoritative and do not convert them into universal deadline truth. | `tests/br02-registry-scaffold.test.ts` |
+| BR02 audit and QA hooks | `src/modules/br02/audit.ts`, `src/modules/br02/qa.ts` | Audit shape preserves subject, severity, outcome, rule linkage, and freshness metadata; QA hooks map those controls into acceptance coverage. | `tests/br02-registry-scaffold.test.ts` |

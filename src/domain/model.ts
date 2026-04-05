@@ -1,4 +1,4 @@
-﻿import type {
+import type {
   CarryForwardControl,
   ControlSeverity
 } from "./posture.js";
@@ -138,7 +138,16 @@ export interface AuditLogEntry {
   event: string;
   severity: ControlSeverity;
   matterId?: EntityId;
-  subjectType?: "MATTER" | "EVIDENCE_ITEM" | "OUTPUT_PACKAGE" | "HANDOFF_GUIDANCE" | "WORKFLOW";
+  subjectType?:
+    | "MATTER"
+    | "EVIDENCE_ITEM"
+    | "OUTPUT_PACKAGE"
+    | "HANDOFF_GUIDANCE"
+    | "WORKFLOW"
+    | "SERVICE_EVENT"
+    | "CONSENT_PROOF"
+    | "EVIDENCE_TIMING"
+    | "FRESHNESS_MONITOR";
   subjectId?: EntityId;
   detail?: string;
   metadata?: Record<string, string | number | boolean | null>;
@@ -216,6 +225,83 @@ export interface PriorNoticeRecord {
   sourceReferenceIds: EntityId[];
 }
 
+export const serviceMethodCodes = [
+  "EMAIL",
+  "POST",
+  "REGISTERED_POST",
+  "ORDINARY_POST",
+  "HAND_DELIVERY",
+  "COURIER",
+  "PORTAL_OR_OFFICIAL_SYSTEM",
+  "UNKNOWN"
+] as const;
+
+export type ServiceMethod = (typeof serviceMethodCodes)[number];
+
+export const rulePostures = [
+  "DETERMINISTIC",
+  "GUARDED",
+  "EXTERNAL"
+] as const;
+
+export type RulePosture = (typeof rulePostures)[number];
+
+export const serviceEventScopes = [
+  "NOTICE",
+  "NOTICE_SERVICE_ATTEMPT",
+  "HEARING_NOTICE",
+  "EVIDENCE_PACK",
+  "OTHER"
+] as const;
+
+export type ServiceEventScope = (typeof serviceEventScopes)[number];
+
+export const serviceEventStatuses = [
+  "ATTEMPTED",
+  "SENT",
+  "DELIVERED",
+  "UNKNOWN"
+] as const;
+
+export type ServiceEventStatus = (typeof serviceEventStatuses)[number];
+
+export const consentProofScopes = [
+  "EMAIL_SERVICE",
+  "NOTICE_SCOPE_VARIATION",
+  "DIGITAL_DELIVERY",
+  "OTHER"
+] as const;
+
+export type ConsentProofScope = (typeof consentProofScopes)[number];
+
+export const consentProofStatuses = [
+  "PROVIDED",
+  "REVOKED",
+  "UNCONFIRMED",
+  "GUARDED"
+] as const;
+
+export type ConsentProofStatus = (typeof consentProofStatuses)[number];
+
+export const evidenceTimingInstructionKinds = [
+  "SERVICE_BASELINE",
+  "PREP_STEP",
+  "HEARING_OVERRIDE"
+] as const;
+
+export type EvidenceTimingInstructionKind =
+  (typeof evidenceTimingInstructionKinds)[number];
+
+export const evidenceTimingStateStatuses = [
+  "ACTIVE",
+  "OVERRIDDEN",
+  "STALE",
+  "REVIEW_REQUIRED"
+] as const;
+
+export type EvidenceTimingStateStatus =
+  (typeof evidenceTimingStateStatuses)[number];
+
 export interface NoticeDraft {
   id: EntityId;
   matterId: EntityId;
@@ -231,17 +317,67 @@ export interface NoticeDraft {
 export interface ServiceEvent {
   id: EntityId;
   matterId: EntityId;
-  serviceMethod:
-    | "EMAIL"
-    | "POST"
-    | "HAND_DELIVERY"
-    | "COURIER"
-    | "PORTAL_OR_OFFICIAL_SYSTEM"
-    | "UNKNOWN";
+  renterPartyId: EntityId;
+  serviceScope: ServiceEventScope;
+  serviceMethod: ServiceMethod;
+  serviceAttempt: number;
+  eventStatus: ServiceEventStatus;
   occurredAt?: DateTimeString;
   proofStatus: "PROVIDED" | "PARTIAL" | "MISSING" | "GUARDED";
+  consentProofId?: EntityId;
+  evidenceTimingStateId?: EntityId;
+  proofEvidenceItemIds: EntityId[];
+  rulePosture: RulePosture;
+  guardedInsertionPoints: string[];
   notes?: string;
   sourceReferenceIds: EntityId[];
+}
+
+export interface ConsentProof {
+  id: EntityId;
+  renterPartyId: EntityId;
+  scope: ConsentProofScope;
+  scopeVariationKey: string;
+  channel: "EMAIL" | "OTHER";
+  status: ConsentProofStatus;
+  capturedAt?: DateTimeString;
+  revokedAt?: DateTimeString;
+  evidenceItemIds: EntityId[];
+  sourceReferenceIds: EntityId[];
+  notes?: string;
+}
+
+export interface EvidenceTimingInstruction {
+  code: string;
+  label: string;
+  kind: EvidenceTimingInstructionKind;
+  posture: RulePosture;
+  relativeTo: "SERVICE_EVENT" | "HEARING_DATE" | "HEARING_NOTICE";
+  offsetDays?: number;
+  dayCountKind?: "CALENDAR" | "BUSINESS";
+  requiredPrepStep: boolean;
+  universalDeadline: boolean;
+  summary: string;
+  guardedInsertionPoint?: string;
+}
+
+export interface EvidenceTimingPrecedence {
+  orderedInstructionCodes: string[];
+  hearingSpecificOverrideCode?: string;
+  effectiveInstructionCode: string;
+  reason: string;
+}
+
+export interface EvidenceTimingState {
+  id: EntityId;
+  matterId: EntityId;
+  renterPartyId: EntityId;
+  serviceEventId?: EntityId;
+  status: EvidenceTimingStateStatus;
+  instructions: EvidenceTimingInstruction[];
+  precedence: EvidenceTimingPrecedence;
+  staleStateCode?: string;
+  notes: string[];
 }
 
 export interface EvidenceFileMetadata {
@@ -372,7 +508,9 @@ export interface ArrearsMatterAggregate {
   priorNotices: PriorNoticeRecord[];
   noticeDrafts: NoticeDraft[];
   serviceEvents: ServiceEvent[];
+  consentProofs: ConsentProof[];
   evidenceItems: EvidenceItem[];
+  evidenceTimingStates: EvidenceTimingState[];
   paymentPlans: PaymentPlanRecord[];
   routingDecisions: RoutingDecision[];
   outputPackages: OutputPackage[];
@@ -397,3 +535,4 @@ export function validateMatterSeparation(matter: Matter): string[] {
     officialHandoff: matter.officialHandoff
   });
 }
+

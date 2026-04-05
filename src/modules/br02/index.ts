@@ -1,0 +1,453 @@
+import type {
+  ConsentProof,
+  EntityId,
+  EvidenceTimingInstruction,
+  EvidenceTimingState,
+  ServiceEvent,
+  ServiceEventScope,
+  ServiceEventStatus,
+  ServiceMethod
+} from "../../domain/model.js";
+import type {
+  Br02FreshnessSnapshot,
+  Br02HearingSpecificOverrideInput,
+  Br02ServiceAssessment,
+  Br02ValidationIssue
+} from "./models.js";
+import {
+  br02DateRuleRegistry,
+  br02EvidenceTimingPrecedenceRegistry,
+  br02FreshnessMonitorRegistry,
+  br02FreshnessStateRegistry,
+  br02ServiceMethodRegistry,
+  br02ValidatorSeverityRegistry,
+  type Br02DateRuleRegistryEntry,
+  type Br02EvidenceTimingPrecedenceRegistryEntry,
+  type Br02FreshnessMonitorRegistryEntry,
+  type Br02FreshnessStateCode,
+  type Br02FreshnessStateDefinition,
+  type Br02ServiceMethodRegistryEntry,
+  type Br02ValidatorCode,
+  type Br02ValidatorSeverityRegistryEntry
+} from "./registries.js";
+
+export interface CreateBr02ServiceEventInput {
+  id: EntityId;
+  matterId: EntityId;
+  renterPartyId: EntityId;
+  serviceMethod: ServiceMethod;
+  serviceScope?: ServiceEventScope;
+  serviceAttempt?: number;
+  eventStatus?: ServiceEventStatus;
+  occurredAt?: string;
+  proofStatus?: ServiceEvent["proofStatus"];
+  consentProofId?: EntityId;
+  evidenceTimingStateId?: EntityId;
+  proofEvidenceItemIds?: EntityId[];
+  notes?: string;
+  sourceReferenceIds?: EntityId[];
+}
+
+export interface CreateBr02ConsentProofInput {
+  id: EntityId;
+  renterPartyId: EntityId;
+  scopeVariationKey: string;
+  capturedAt?: string;
+  status?: ConsentProof["status"];
+  revokedAt?: string;
+  evidenceItemIds?: EntityId[];
+  sourceReferenceIds?: EntityId[];
+  notes?: string;
+}
+
+export interface BuildBr02EvidenceTimingStateInput {
+  id: EntityId;
+  matterId: EntityId;
+  renterPartyId: EntityId;
+  serviceEventId?: EntityId;
+  staleStateCode?: Br02FreshnessStateCode;
+  hearingSpecificOverride?: Br02HearingSpecificOverrideInput;
+}
+
+export interface AssessBr02ServiceEventInput {
+  thresholdState: "THRESHOLD_MET" | "BELOW_THRESHOLD" | "BLOCKED_INVALID";
+  serviceEvent: ServiceEvent;
+  consentProofs?: readonly ConsentProof[];
+  freshnessSnapshots?: readonly Br02FreshnessSnapshot[];
+}
+
+const blockedSeverities = new Set(["hard-stop", "slowdown"]);
+
+export function lookupBr02DateRule(code: string): Br02DateRuleRegistryEntry | undefined {
+  return br02DateRuleRegistry.find((entry) => entry.code === code);
+}
+
+export function lookupBr02ServiceMethod(code: ServiceMethod): Br02ServiceMethodRegistryEntry | undefined {
+  return br02ServiceMethodRegistry.find((entry) => entry.code === code);
+}
+
+export function lookupBr02ValidatorSeverity(
+  code: Br02ValidatorCode
+): Br02ValidatorSeverityRegistryEntry | undefined {
+  return br02ValidatorSeverityRegistry.find((entry) => entry.code === code);
+}
+
+export function lookupBr02EvidenceTimingRule(
+  code: string
+): Br02EvidenceTimingPrecedenceRegistryEntry | undefined {
+  return br02EvidenceTimingPrecedenceRegistry.find((entry) => entry.code === code);
+}
+
+export function lookupBr02FreshnessState(
+  code: Br02FreshnessStateCode
+): Br02FreshnessStateDefinition | undefined {
+  return br02FreshnessStateRegistry.find((entry) => entry.code === code);
+}
+
+export function lookupBr02FreshnessMonitor(
+  code: string
+): Br02FreshnessMonitorRegistryEntry | undefined {
+  return br02FreshnessMonitorRegistry.find((entry) => entry.code === code);
+}
+
+export function createBr02ServiceEventRecord(
+  input: CreateBr02ServiceEventInput
+): ServiceEvent {
+  const method = lookupBr02ServiceMethod(input.serviceMethod);
+  const guardedInsertionPoints = method?.guardedInsertionPoint
+    ? [method.guardedInsertionPoint]
+    : [];
+
+  return {
+    id: input.id,
+    matterId: input.matterId,
+    renterPartyId: input.renterPartyId,
+    serviceScope: input.serviceScope ?? "NOTICE",
+    serviceMethod: input.serviceMethod,
+    serviceAttempt: input.serviceAttempt ?? 1,
+    eventStatus: input.eventStatus ?? (input.occurredAt ? "SENT" : "ATTEMPTED"),
+    ...(input.occurredAt ? { occurredAt: input.occurredAt } : {}),
+    proofStatus: input.proofStatus ?? defaultProofStatus(method?.posture),
+    ...(input.consentProofId ? { consentProofId: input.consentProofId } : {}),
+    ...(input.evidenceTimingStateId
+      ? { evidenceTimingStateId: input.evidenceTimingStateId }
+      : {}),
+    proofEvidenceItemIds: input.proofEvidenceItemIds ?? [],
+    rulePosture: method?.posture ?? "GUARDED",
+    guardedInsertionPoints,
+    ...(input.notes ? { notes: input.notes } : {}),
+    sourceReferenceIds: input.sourceReferenceIds ?? []
+  };
+}
+
+export function createBr02ConsentProofRecord(
+  input: CreateBr02ConsentProofInput
+): ConsentProof {
+  return {
+    id: input.id,
+    renterPartyId: input.renterPartyId,
+    scope: "EMAIL_SERVICE",
+    scopeVariationKey: input.scopeVariationKey,
+    channel: "EMAIL",
+    status: input.status ?? "PROVIDED",
+    ...(input.capturedAt ? { capturedAt: input.capturedAt } : {}),
+    ...(input.revokedAt ? { revokedAt: input.revokedAt } : {}),
+    evidenceItemIds: input.evidenceItemIds ?? [],
+    sourceReferenceIds: input.sourceReferenceIds ?? [],
+    ...(input.notes ? { notes: input.notes } : {})
+  };
+}
+
+export function createBr02FreshnessSnapshot(input: {
+  monitorCode: string;
+  stateCode?: Br02FreshnessStateCode;
+}): Br02FreshnessSnapshot {
+  const monitor = requireFreshnessMonitor(input.monitorCode);
+  const state = requireFreshnessState(input.stateCode ?? monitor.defaultStateCode);
+
+  return {
+    monitorCode: monitor.code,
+    stateCode: state.code,
+    authority: monitor.authority,
+    neverUniversalDeadlineTruth: monitor.neverUniversalDeadlineTruth,
+    summary: state.summary
+  };
+}
+
+export function buildBr02EvidenceTimingState(
+  input: BuildBr02EvidenceTimingStateInput
+): EvidenceTimingState {
+  const baselineRule = requireEvidenceTimingRule("SERVICE_EVENT_BASELINE_CAPTURE");
+  const prepRule = requireEvidenceTimingRule("EVIDENCE_PREP_REQUIRED_7_DAY_STEP");
+  const instructions: EvidenceTimingInstruction[] = [
+    toEvidenceTimingInstruction(baselineRule),
+    toEvidenceTimingInstruction(prepRule)
+  ];
+  const orderedInstructionCodes = [baselineRule.code, prepRule.code];
+  let effectiveInstructionCode = prepRule.code;
+  const staleStateCode = input.staleStateCode ?? "CURRENT";
+  const notes = [
+    "The 7-day step remains a required prep step, not a universal deadline truth.",
+    "Generic timing surfaces stay non-authoritative until checked against hearing-specific instructions."
+  ];
+
+  if (input.hearingSpecificOverride) {
+    const overrideRule = requireEvidenceTimingRule("HEARING_SPECIFIC_OVERRIDE_PRIORITY");
+    const overrideCode = input.hearingSpecificOverride.code ?? overrideRule.code;
+    instructions.push({
+      ...toEvidenceTimingInstruction(overrideRule),
+      code: overrideCode,
+      label: input.hearingSpecificOverride.label,
+      relativeTo: input.hearingSpecificOverride.relativeTo ?? overrideRule.relativeTo,
+      ...(typeof input.hearingSpecificOverride.offsetDays === "number"
+        ? { offsetDays: input.hearingSpecificOverride.offsetDays }
+        : {}),
+      ...(input.hearingSpecificOverride.dayCountKind
+        ? { dayCountKind: input.hearingSpecificOverride.dayCountKind }
+        : {}),
+      summary: input.hearingSpecificOverride.summary
+        ?? overrideRule.summary
+    });
+    orderedInstructionCodes.push(overrideCode);
+    effectiveInstructionCode = overrideCode;
+    notes.push(
+      "Hearing-specific instruction is active and outranks generic timing surfaces."
+    );
+  } else {
+    notes.push(
+      "No hearing-specific override is attached yet, so the prep step remains the active structural timing instruction."
+    );
+  }
+
+  if (staleStateCode !== "CURRENT") {
+    notes.push(
+      `Freshness state ${staleStateCode} keeps timing output reviewable instead of universal.`
+    );
+  }
+
+  return {
+    id: input.id,
+    matterId: input.matterId,
+    renterPartyId: input.renterPartyId,
+    ...(input.serviceEventId ? { serviceEventId: input.serviceEventId } : {}),
+    status: deriveEvidenceTimingStateStatus({
+      staleStateCode,
+      hasOverride: !!input.hearingSpecificOverride
+    }),
+    instructions,
+    precedence: {
+      orderedInstructionCodes,
+      ...(input.hearingSpecificOverride
+        ? { hearingSpecificOverrideCode: effectiveInstructionCode }
+        : {}),
+      effectiveInstructionCode,
+      reason: input.hearingSpecificOverride
+        ? "Hearing-specific instruction outranks generic timing surfaces and generic copy must not outrank it."
+        : "Service baseline plus the 7-day prep step remain visible until a hearing-specific instruction exists."
+    },
+    ...(staleStateCode !== "CURRENT" ? { staleStateCode } : {}),
+    notes
+  };
+}
+
+export function assessBr02ServiceEvent(
+  input: AssessBr02ServiceEventInput
+): Br02ServiceAssessment {
+  const method = requireServiceMethod(input.serviceEvent.serviceMethod);
+  const issues: Br02ValidationIssue[] = [];
+  const appliedDateRuleCodes = uniqueStrings([
+    "NO_EARLY_NOTICE_THRESHOLD_GATE",
+    ...method.dateRuleCodes
+  ]);
+
+  if (input.thresholdState !== "THRESHOLD_MET") {
+    issues.push(buildValidationIssue("NO_EARLY_NOTICE_GATE"));
+  }
+
+  if (method.requiresConsentProof && !hasLinkedConsentProof(input.serviceEvent, input.consentProofs ?? [])) {
+    issues.push(buildValidationIssue("EMAIL_CONSENT_PROOF_REQUIRED"));
+  }
+
+  if (input.serviceEvent.serviceMethod === "HAND_DELIVERY") {
+    issues.push(buildValidationIssue("HAND_SERVICE_REVIEW_REQUIRED"));
+  }
+
+  if (
+    input.serviceEvent.serviceMethod === "POST"
+    || input.serviceEvent.serviceMethod === "ORDINARY_POST"
+  ) {
+    issues.push(buildValidationIssue("REGISTERED_POST_PREFERRED_PATH"));
+  }
+
+  for (const snapshot of input.freshnessSnapshots ?? []) {
+    const monitor = lookupBr02FreshnessMonitor(snapshot.monitorCode);
+
+    if (!monitor) {
+      continue;
+    }
+
+    if (monitor.area === "REGISTERED_POST_ASSUMPTION" && snapshot.stateCode !== "CURRENT") {
+      issues.push(buildValidationIssue("STALE_REGISTERED_POST_ASSUMPTION"));
+    }
+
+    if (monitor.area === "GENERIC_EVIDENCE_TIMING" && snapshot.stateCode !== "CURRENT") {
+      issues.push(buildValidationIssue("STALE_GENERIC_TIMING_SURFACE"));
+    }
+  }
+
+  return {
+    thresholdGateOpen: input.thresholdState === "THRESHOLD_MET",
+    serviceMethod: input.serviceEvent.serviceMethod,
+    appliedDateRuleCodes,
+    preferredDeterministicPath: method.preferredDeterministicPath
+      ? input.serviceEvent.serviceMethod
+      : (method.channel === "POSTAL" ? "REGISTERED_POST" : null),
+    issues,
+    readyForDeterministicDateHandling: issues.every(
+      (issue) => !blockedSeverities.has(issue.severity)
+    )
+  };
+}
+
+function defaultProofStatus(posture: Br02ServiceMethodRegistryEntry["posture"] | undefined): ServiceEvent["proofStatus"] {
+  return posture === "DETERMINISTIC" ? "PARTIAL" : "GUARDED";
+}
+
+function toEvidenceTimingInstruction(
+  rule: Br02EvidenceTimingPrecedenceRegistryEntry
+): EvidenceTimingInstruction {
+  return {
+    code: rule.code,
+    label: rule.label,
+    kind: mapEvidenceTimingKind(rule.sourceKind),
+    posture: rule.posture,
+    relativeTo: rule.relativeTo,
+    ...(typeof rule.offsetDays === "number" ? { offsetDays: rule.offsetDays } : {}),
+    ...(rule.dayCountKind ? { dayCountKind: rule.dayCountKind } : {}),
+    requiredPrepStep: rule.requiredPrepStep,
+    universalDeadline: rule.universalDeadline,
+    summary: rule.summary
+  };
+}
+
+function mapEvidenceTimingKind(
+  sourceKind: Br02EvidenceTimingPrecedenceRegistryEntry["sourceKind"]
+): EvidenceTimingInstruction["kind"] {
+  switch (sourceKind) {
+    case "SERVICE_EVENT_BASELINE":
+      return "SERVICE_BASELINE";
+    case "REQUIRED_PREP_STEP":
+      return "PREP_STEP";
+    case "HEARING_SPECIFIC_OVERRIDE":
+      return "HEARING_OVERRIDE";
+  }
+}
+
+function deriveEvidenceTimingStateStatus(input: {
+  staleStateCode: Br02FreshnessStateCode;
+  hasOverride: boolean;
+}): EvidenceTimingState["status"] {
+  if (input.staleStateCode !== "CURRENT") {
+    return "STALE";
+  }
+
+  return input.hasOverride ? "OVERRIDDEN" : "ACTIVE";
+}
+
+function hasLinkedConsentProof(
+  serviceEvent: ServiceEvent,
+  consentProofs: readonly ConsentProof[]
+): boolean {
+  const matchingProofs = serviceEvent.consentProofId
+    ? consentProofs.filter((proof) => proof.id === serviceEvent.consentProofId)
+    : consentProofs.filter((proof) => proof.renterPartyId === serviceEvent.renterPartyId);
+
+  return matchingProofs.some((proof) => (
+    proof.renterPartyId === serviceEvent.renterPartyId
+    && proof.scope === "EMAIL_SERVICE"
+    && proof.channel === "EMAIL"
+    && proof.status === "PROVIDED"
+  ));
+}
+
+function buildValidationIssue(code: Br02ValidatorCode): Br02ValidationIssue {
+  const registryEntry = requireValidatorSeverity(code);
+
+  return {
+    code: registryEntry.code,
+    severity: registryEntry.severity,
+    area: registryEntry.area,
+    posture: registryEntry.posture,
+    summary: registryEntry.summary,
+    ...(registryEntry.guardedInsertionPoint
+      ? { guardedInsertionPoint: registryEntry.guardedInsertionPoint }
+      : {})
+  };
+}
+
+function requireServiceMethod(code: ServiceMethod): Br02ServiceMethodRegistryEntry {
+  const entry = lookupBr02ServiceMethod(code);
+
+  if (!entry) {
+    throw new Error(`Unknown BR02 service method: ${code}`);
+  }
+
+  return entry;
+}
+
+function requireValidatorSeverity(
+  code: Br02ValidatorCode
+): Br02ValidatorSeverityRegistryEntry {
+  const entry = lookupBr02ValidatorSeverity(code);
+
+  if (!entry) {
+    throw new Error(`Unknown BR02 validator severity code: ${code}`);
+  }
+
+  return entry;
+}
+
+function requireEvidenceTimingRule(
+  code: string
+): Br02EvidenceTimingPrecedenceRegistryEntry {
+  const entry = lookupBr02EvidenceTimingRule(code);
+
+  if (!entry) {
+    throw new Error(`Unknown BR02 evidence timing rule: ${code}`);
+  }
+
+  return entry;
+}
+
+function requireFreshnessState(
+  code: Br02FreshnessStateCode
+): Br02FreshnessStateDefinition {
+  const entry = lookupBr02FreshnessState(code);
+
+  if (!entry) {
+    throw new Error(`Unknown BR02 freshness state: ${code}`);
+  }
+
+  return entry;
+}
+
+function requireFreshnessMonitor(
+  code: string
+): Br02FreshnessMonitorRegistryEntry {
+  const entry = lookupBr02FreshnessMonitor(code);
+
+  if (!entry) {
+    throw new Error(`Unknown BR02 freshness monitor: ${code}`);
+  }
+
+  return entry;
+}
+
+function uniqueStrings(values: readonly string[]): string[] {
+  return [...new Set(values)];
+}
+
+export * from "./models.js";
+export * from "./registries.js";
+export * from "./audit.js";
+export * from "./qa.js";
