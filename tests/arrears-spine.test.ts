@@ -6,6 +6,7 @@ import {
   createForumPathState,
   createOfficialHandoffStateRecord,
   createOutputModeState,
+  createPrivacyLifecycleHooks,
   officialHandoffStates,
   outputModes,
   validateMatterSeparation,
@@ -13,7 +14,7 @@ import {
 } from "../src/domain/model.js";
 import { arrearsHeroWorkflow, workflowGuardrails } from "../src/workflow/arrearsHeroWorkflow.js";
 
-test("matter separates forum path, output mode, and official handoff state", () => {
+test("matter separates forum path, output mode, official handoff state, and privacy hooks", () => {
   const matter: Matter = {
     id: "matter-1",
     tenancyId: "tenancy-1",
@@ -39,12 +40,14 @@ test("matter separates forum path, output mode, and official handoff state", () 
     referralFlagIds: [],
     routingDecisionIds: [],
     auditLogIds: [],
+    privacyHooks: createPrivacyLifecycleHooks(),
     sourceReferenceIds: []
   };
 
   assert.deepEqual(validateMatterSeparation(matter), []);
   assert.ok(outputModes.includes(matter.outputMode.mode));
   assert.ok(officialHandoffStates.includes(matter.officialHandoff.stage));
+  assert.equal(matter.privacyHooks.lifecycleState, "NORMAL_LIFECYCLE");
 });
 
 test("workflow stops at notice readiness and keeps guarded doctrines visible", () => {
@@ -52,6 +55,6 @@ test("workflow stops at notice readiness and keeps guarded doctrines visible", (
 
   assert.ok(states.includes("NOTICE_READY_FOR_REVIEW"));
   assert.ok(!states.includes("FILED" as never));
-  assert.ok(Object.keys(GUARDED_INSERTION_POINTS).length >= 5);
+  assert.ok(Object.keys(GUARDED_INSERTION_POINTS).length >= 7);
   assert.ok(workflowGuardrails.some((guardrail) => guardrail.code === "MIXED_CLAIM_GUARDED"));
 });

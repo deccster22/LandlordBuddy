@@ -1,4 +1,4 @@
-﻿import test from "node:test";
+import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
@@ -11,7 +11,7 @@ import {
   validateLocalEvidenceUpload
 } from "../src/modules/evidence/index.js";
 
-test("evidence item shell holds file, proof, privacy, retention, and upload hooks", () => {
+test("evidence item shell holds file, proof, privacy, retention, upload, and lifecycle hooks", () => {
   const item = createEvidenceItemShell({
     id: "evidence-1",
     matterId: "matter-1",
@@ -36,6 +36,8 @@ test("evidence item shell holds file, proof, privacy, retention, and upload hook
   assert.equal(item.retentionClass, "ARREARS_MVP_WORKING");
   assert.equal(item.holdStatus, "REVIEW_REQUIRED");
   assert.equal(item.uploadStatus, "LOCAL_VALIDATION_READY");
+  assert.equal(item.privacyHooks.lifecycleState, "REVIEW_NEEDED");
+  assert.ok(item.privacyHooks.guardedInsertionPoints.length >= 3);
   assert.deepEqual(item.auditEventIds, []);
 });
 

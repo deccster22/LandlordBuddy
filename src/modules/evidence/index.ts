@@ -1,14 +1,16 @@
-﻿import type {
-  AttachmentSeparationStatus,
-  ControlSeverity,
-  EvidenceHoldStatus,
-  EvidenceItem,
-  EvidencePrivacyClass,
-  EvidenceRetentionClass,
-  EvidenceUploadStatus,
-  EvidenceValidationFlag,
-  ProofOfSendingStatus,
-  SourceSensitivity
+﻿import {
+  createPrivacyLifecycleHooks,
+  type AttachmentSeparationStatus,
+  type ControlSeverity,
+  type EvidenceHoldStatus,
+  type EvidenceItem,
+  type EvidencePrivacyClass,
+  type EvidenceRetentionClass,
+  type EvidenceUploadStatus,
+  type EvidenceValidationFlag,
+  type PrivacyLifecycleState,
+  type ProofOfSendingStatus,
+  type SourceSensitivity
 } from "../../domain/model.js";
 
 export interface EvidenceUploadCandidate {
@@ -207,6 +209,12 @@ export function createEvidenceItemShell(
     holdStatus: input.holdStatus ?? "NONE",
     uploadStatus: input.uploadStatus ?? validation.uploadStatus,
     sourceSensitivity: input.sourceSensitivity ?? "LOW",
+    privacyHooks: createPrivacyLifecycleHooks({
+      lifecycleState: deriveEvidencePrivacyLifecycleState({
+        holdStatus: input.holdStatus ?? "NONE",
+        retentionClass: input.retentionClass ?? "UNCLASSIFIED_PENDING_POLICY"
+      })
+    }),
     validationFlags,
     auditEventIds: [],
     sourceReferenceIds: input.sourceReferenceIds
@@ -251,6 +259,21 @@ function isFileNameClear(fileName: string, rules: UploadValidationRules): boolea
 function extractExtension(fileName: string): string | undefined {
   const extension = /\.([^.]+)$/u.exec(fileName)?.[1];
   return extension ? `.${extension.toLowerCase()}` : undefined;
+}
+
+function deriveEvidencePrivacyLifecycleState(input: {
+  holdStatus: EvidenceHoldStatus;
+  retentionClass: EvidenceRetentionClass;
+}): PrivacyLifecycleState {
+  if (input.holdStatus === "PRESERVE") {
+    return "HOLD_AFFECTED";
+  }
+
+  if (input.holdStatus === "REVIEW_REQUIRED" || input.retentionClass === "REVIEW_REQUIRED") {
+    return "REVIEW_NEEDED";
+  }
+
+  return "NORMAL_LIFECYCLE";
 }
 
 function defaultRelevanceForKind(kind: EvidenceItem["kind"]): EvidenceItem["relevance"] {

@@ -41,8 +41,10 @@ This checklist is for QA and Product review of the current non-blocked implement
 
 ### Evidence and audit
 
-- Confirm evidence items retain normalized filename, upload status, validation flags, privacy class, retention class, hold status, and source sensitivity.
+- Confirm evidence items retain normalized filename, upload status, validation flags, privacy class, retention class, hold status, source sensitivity, and `privacyHooks`.
+- Confirm `Matter`, `NoticeDraft`, and `OutputPackage` also carry `privacyHooks` with lifecycle state plus linked IDs or refs rather than hidden privacy state.
 - Confirm local validation outcomes distinguish blocked-local issues from review-required issues.
+- Confirm scoped hold records remain subject-bound through `PreservationScope` and do not imply blanket preservation.
 - Confirm audit events retain matter linkage, subject linkage, severity, outcome, and metadata.
 - Confirm local validation and audit recording do not imply official acceptance.
 
