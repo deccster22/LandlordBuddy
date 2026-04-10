@@ -1,6 +1,6 @@
 # Non-blocked Dependency Map
 
-This map separates what future build contributors can extend now from what remains blocker-dependent in Phase 4A. It is intentionally scoped to the current repo and does not treat guarded doctrine as solved.
+This map separates what future build contributors can extend now from what remains blocker-dependent in Phase 4B. It is intentionally scoped to the current repo and does not treat guarded doctrine as solved.
 
 ## Status legend
 
@@ -18,7 +18,8 @@ This map separates what future build contributors can extend now from what remai
 | Timeline shell | Guarded shell | `src/modules/timeline/index.ts` derives threshold-driven milestones while keeping evidence, payment-plan, and hearing steps as placeholders |
 | Notice-readiness shell | Non-blocked plus guarded seams | `src/modules/notice-readiness/index.ts` enforces deterministic blockers and preserves guarded review hooks |
 | Output, handoff, and touchpoint shells | Non-blocked plus guarded seams | `src/modules/output`, `src/modules/handoff`, and `src/modules/touchpoints` keep package selection, handoff posture, and touchpoint metadata separate |
-| Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, and event recording |
+| Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, event recording, and privacy-aware metadata attachment |
+| BR04 privacy scaffold | Guarded shell | `src/domain/model.ts` and `src/modules/br04/index.ts` attach privacy hooks, policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, and access-boundary placeholders without hard-coded durations or release rules |
 | Verification posture | Non-blocked | `tests/` plus `npm run verify` enforce the current boundary and shell posture |
 
 ## What remains blocked or guarded

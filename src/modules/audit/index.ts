@@ -4,7 +4,8 @@ export const auditEventDomains = [
   "EVIDENCE",
   "WORKFLOW",
   "OUTPUT",
-  "HANDOFF"
+  "HANDOFF",
+  "PRIVACY"
 ] as const;
 
 export type AuditEventDomain = (typeof auditEventDomains)[number];

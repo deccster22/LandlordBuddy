@@ -46,6 +46,75 @@ export const evidenceHoldStatuses = [
 
 export type EvidenceHoldStatus = (typeof evidenceHoldStatuses)[number];
 
+export const privacyLifecycleStates = [
+  "NORMAL_LIFECYCLE",
+  "REVIEW_NEEDED",
+  "HOLD_AFFECTED",
+  "DELETION_REQUESTED"
+] as const;
+
+export type PrivacyLifecycleState = (typeof privacyLifecycleStates)[number];
+
+export const privacyLifecycleHookTargets = [
+  "MATTER",
+  "EVIDENCE_ITEM",
+  "NOTICE_DRAFT",
+  "OUTPUT_PACKAGE"
+] as const;
+
+export type PrivacyLifecycleHookTarget =
+  (typeof privacyLifecycleHookTargets)[number];
+
+export const privacyAuditSubjectTypes = [
+  "MATTER",
+  "EVIDENCE_ITEM",
+  "NOTICE_DRAFT",
+  "OUTPUT_PACKAGE",
+  "DATA_CLASS",
+  "RETENTION_POLICY",
+  "HOLD_FLAG",
+  "LIFECYCLE_ACTION",
+  "DELETION_REQUEST",
+  "DEIDENTIFICATION_ACTION",
+  "ACCESS_SCOPE"
+] as const;
+
+export type PrivacyAuditSubjectType =
+  (typeof privacyAuditSubjectTypes)[number];
+
+export const privacyRoles = [
+  "MATTER_OPERATOR",
+  "PRIVACY_REVIEWER",
+  "SYSTEM_PROCESS",
+  "AUDIT_READER"
+] as const;
+
+export type PrivacyRole = (typeof privacyRoles)[number];
+
+export const privacyOperations = [
+  "CLASSIFY_DATA",
+  "ATTACH_RETENTION_POLICY",
+  "APPLY_HOLD",
+  "REQUEST_HOLD_RELEASE",
+  "REQUEST_DELETION",
+  "REQUEST_DEIDENTIFICATION",
+  "REVIEW_LIFECYCLE",
+  "VIEW_AUDIT_LOG"
+] as const;
+
+export type PrivacyOperation = (typeof privacyOperations)[number];
+
+export const privacyAuditControlAreas = [
+  "CLASSIFICATION",
+  "RETENTION",
+  "HOLD",
+  "LIFECYCLE",
+  "ACCESS"
+] as const;
+
+export type PrivacyAuditControlArea =
+  (typeof privacyAuditControlAreas)[number];
+
 export const evidenceUploadStatuses = [
   "NOT_STARTED",
   "LOCAL_VALIDATION_READY",
@@ -141,13 +210,21 @@ export interface AuditLogEntry {
   subjectType?:
     | "MATTER"
     | "EVIDENCE_ITEM"
+    | "NOTICE_DRAFT"
     | "OUTPUT_PACKAGE"
     | "HANDOFF_GUIDANCE"
     | "WORKFLOW"
     | "SERVICE_EVENT"
     | "CONSENT_PROOF"
     | "EVIDENCE_TIMING"
-    | "FRESHNESS_MONITOR";
+    | "FRESHNESS_MONITOR"
+    | "DATA_CLASS"
+    | "RETENTION_POLICY"
+    | "HOLD_FLAG"
+    | "LIFECYCLE_ACTION"
+    | "DELETION_REQUEST"
+    | "DEIDENTIFICATION_ACTION"
+    | "ACCESS_SCOPE";
   subjectId?: EntityId;
   detail?: string;
   metadata?: Record<string, string | number | boolean | null>;
@@ -213,6 +290,157 @@ export interface ArrearsStatus {
   daysInArrears?: number;
   calculationConfidence: "DETERMINISTIC" | "PROVISIONAL";
   warnings: string[];
+}
+
+export interface DataClass {
+  id: EntityId;
+  code: string;
+  label: string;
+  appliesTo: PrivacyLifecycleHookTarget;
+  sensitivity: SourceSensitivity;
+  summary: string;
+  notes?: string[];
+}
+
+// Policy refs attach records to a configurable slot without claiming a settled duration.
+export interface RetentionPolicyRef {
+  id: EntityId;
+  policyKey: string;
+  dataClassId: EntityId;
+  appliesTo: PrivacyLifecycleHookTarget;
+  policyStatus: "CONFIG_PENDING" | "ATTACHED" | "REVIEW_REQUIRED";
+  configurable: true;
+  guardedInsertionPoint?: string;
+  notes?: string[];
+}
+
+export interface PreservationScope {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  scopeLabel: string;
+  notes?: string[];
+}
+
+export interface HoldReason {
+  code: string;
+  label: string;
+  placeholder: true;
+  summary: string;
+  guardedInsertionPoint?: string;
+}
+
+// Hold scope is explicit now; trigger detail and release authority stay guarded for later BR04 work.
+export interface HoldFlag {
+  id: EntityId;
+  matterId: EntityId;
+  scope: PreservationScope;
+  reason: HoldReason;
+  status: "ACTIVE" | "REVIEW_REQUIRED" | "RELEASE_REVIEW_REQUIRED";
+  appliedAt?: DateTimeString;
+  releaseRequestedAt?: DateTimeString;
+  releaseAuthorityKey?: string;
+  notes?: string[];
+}
+
+export interface LifecycleAction {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  action: Exclude<PrivacyOperation, "VIEW_AUDIT_LOG">;
+  lifecycleState: PrivacyLifecycleState;
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  reviewRequired: boolean;
+  retentionPolicyRefId?: EntityId;
+  holdFlagId?: EntityId;
+  notes?: string[];
+  sourceReferenceIds: EntityId[];
+}
+
+export interface DeletionRequest {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  lifecycleState: "DELETION_REQUESTED";
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  blockedByHoldFlagIds: EntityId[];
+  reviewRequired: true;
+  notes?: string[];
+  sourceReferenceIds: EntityId[];
+}
+
+export interface DeidentificationAction {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  lifecycleState: PrivacyLifecycleState;
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  methodStatus: "PLACEHOLDER_PENDING_POLICY";
+  blockedByHoldFlagIds: EntityId[];
+  reviewRequired: true;
+  notes?: string[];
+  sourceReferenceIds: EntityId[];
+}
+
+export interface PrivacyAuditEvent {
+  id: EntityId;
+  at: DateTimeString;
+  actor: string;
+  actorType?: "SYSTEM" | "USER" | "OPERATOR" | "EXTERNAL_CHANNEL";
+  event: string;
+  matterId: EntityId;
+  controlArea: PrivacyAuditControlArea;
+  action: string;
+  severity: ControlSeverity;
+  outcome: "RECORDED" | "REVIEW_REQUIRED" | "BLOCKED";
+  subjectType: PrivacyAuditSubjectType;
+  subjectId: EntityId;
+  lifecycleState: PrivacyLifecycleState;
+  deterministic: boolean;
+  accessRole?: PrivacyRole;
+  accessScopeId?: EntityId;
+  policyKeys: string[];
+  holdFlagIds: EntityId[];
+  detail?: string;
+  metadata?: Record<string, string | number | boolean | null>;
+  sourceReferenceIds: EntityId[];
+}
+
+export interface AccessScope {
+  id: EntityId;
+  subjectType: PrivacyLifecycleHookTarget | "PRIVACY_AUDIT";
+  subjectId?: EntityId;
+  scopeLabel: string;
+  notes?: string[];
+}
+
+export interface PrivacyRoleBoundary {
+  id: EntityId;
+  role: PrivacyRole;
+  accessScopeIds: EntityId[];
+  allowedOperations: PrivacyOperation[];
+  reviewRequiredOperations: PrivacyOperation[];
+  blockedOperations: PrivacyOperation[];
+  notes: string[];
+}
+
+export interface PrivacyLifecycleHooks {
+  lifecycleState: PrivacyLifecycleState;
+  dataClassIds: EntityId[];
+  retentionPolicyRefs: RetentionPolicyRef[];
+  holdFlagIds: EntityId[];
+  lifecycleActionIds: EntityId[];
+  deletionRequestIds: EntityId[];
+  deidentificationActionIds: EntityId[];
+  accessScopeIds: EntityId[];
+  guardedInsertionPoints: string[];
 }
 
 export interface PriorNoticeRecord {
@@ -311,6 +539,7 @@ export interface NoticeDraft {
   forumPath: ForumPathState;
   outputMode: OutputModeState;
   unresolvedIssueIds: EntityId[];
+  privacyHooks: PrivacyLifecycleHooks;
   sourceReferenceIds: EntityId[];
 }
 
@@ -424,6 +653,7 @@ export interface EvidenceItem {
   holdStatus: EvidenceHoldStatus;
   uploadStatus: EvidenceUploadStatus;
   sourceSensitivity: SourceSensitivity;
+  privacyHooks: PrivacyLifecycleHooks;
   validationFlags: EvidenceValidationFlag[];
   auditEventIds: EntityId[];
   sourceReferenceIds: EntityId[];
@@ -461,6 +691,7 @@ export interface OutputPackage {
   carryForwardControls: CarryForwardControl[];
   generatedAt?: DateTimeString;
   completeness: "PARTIAL" | "READY_FOR_REVIEW";
+  privacyHooks: PrivacyLifecycleHooks;
 }
 
 export interface ReferralFlag {
@@ -495,6 +726,7 @@ export interface Matter {
   referralFlagIds: EntityId[];
   routingDecisionIds: EntityId[];
   auditLogIds: EntityId[];
+  privacyHooks: PrivacyLifecycleHooks;
   sourceReferenceIds: EntityId[];
 }
 
@@ -516,6 +748,15 @@ export interface ArrearsMatterAggregate {
   outputPackages: OutputPackage[];
   referralFlags: ReferralFlag[];
   auditLog: AuditLogEntry[];
+  dataClasses: DataClass[];
+  retentionPolicyRefs: RetentionPolicyRef[];
+  holdFlags: HoldFlag[];
+  lifecycleActions: LifecycleAction[];
+  deletionRequests: DeletionRequest[];
+  deidentificationActions: DeidentificationAction[];
+  privacyAuditEvents: PrivacyAuditEvent[];
+  accessScopes: AccessScope[];
+  privacyRoleBoundaries: PrivacyRoleBoundary[];
   sourceReferences: SourceReference[];
 }
 
@@ -524,9 +765,31 @@ export const GUARDED_INSERTION_POINTS = Object.freeze({
   evidenceTiming: "Keep timing-specific rules guarded and operator-reviewable.",
   handServiceProof: "Do not encode final proof sufficiency thresholds.",
   privacyRetention: "Keep retention and deletion handling behind future privacy engine work.",
+  privacyHoldRelease: "Keep hold trigger detail, release authority, and review cadence behind later BR04 extraction.",
+  privacyRoleBoundary: "Keep privacy-role operation limits explicit until role policy is extracted.",
   portalBehavior: "Authenticated portal behavior remains official handoff only.",
   touchpointFreshness: "Live official surface behavior and cadence remain freshness-sensitive."
 });
+
+export function createPrivacyLifecycleHooks(
+  overrides: Partial<PrivacyLifecycleHooks> = {}
+): PrivacyLifecycleHooks {
+  return {
+    lifecycleState: overrides.lifecycleState ?? "NORMAL_LIFECYCLE",
+    dataClassIds: overrides.dataClassIds ?? [],
+    retentionPolicyRefs: overrides.retentionPolicyRefs ?? [],
+    holdFlagIds: overrides.holdFlagIds ?? [],
+    lifecycleActionIds: overrides.lifecycleActionIds ?? [],
+    deletionRequestIds: overrides.deletionRequestIds ?? [],
+    deidentificationActionIds: overrides.deidentificationActionIds ?? [],
+    accessScopeIds: overrides.accessScopeIds ?? [],
+    guardedInsertionPoints: overrides.guardedInsertionPoints ?? [
+      GUARDED_INSERTION_POINTS.privacyRetention,
+      GUARDED_INSERTION_POINTS.privacyHoldRelease,
+      GUARDED_INSERTION_POINTS.privacyRoleBoundary
+    ]
+  };
+}
 
 export function validateMatterSeparation(matter: Matter): string[] {
   return validatePreparationSeparation({

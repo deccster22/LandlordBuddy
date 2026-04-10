@@ -6,6 +6,7 @@ import {
   createForumPathState,
   createOfficialHandoffStateRecord,
   createOutputModeState,
+  createPrivacyLifecycleHooks,
   officialHandoffStates,
   outputModes,
   validateMatterSeparation,
@@ -37,6 +38,7 @@ const matter: Matter = {
   referralFlagIds: [],
   routingDecisionIds: [],
   auditLogIds: [],
+  privacyHooks: createPrivacyLifecycleHooks(),
   sourceReferenceIds: []
 };
 
@@ -51,7 +53,7 @@ const workflowModuleSource = readFileSync(
 
 assert.ok(workflowModuleSource.includes('"NOTICE_READY_FOR_REVIEW"'));
 assert.ok(!workflowModuleSource.includes('"FILED"'));
-assert.ok(Object.keys(GUARDED_INSERTION_POINTS).length >= 5);
+assert.ok(Object.keys(GUARDED_INSERTION_POINTS).length >= 7);
 assert.ok(workflowModuleSource.includes('"MIXED_CLAIM_GUARDED"'));
 
 console.log("Arrears MVP spine checks passed.");

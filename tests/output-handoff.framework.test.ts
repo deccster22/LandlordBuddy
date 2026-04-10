@@ -5,6 +5,7 @@ import {
   createForumPathState,
   createOfficialHandoffStateRecord,
   createOutputModeState,
+  createPrivacyLifecycleHooks,
   validateMatterSeparation,
   type CarryForwardControl,
   type Matter
@@ -54,6 +55,7 @@ function buildMatter(overrides: Partial<Matter> = {}): Matter {
     referralFlagIds: [],
     routingDecisionIds: [],
     auditLogIds: [],
+    privacyHooks: createPrivacyLifecycleHooks(),
     sourceReferenceIds: [],
     ...overrides
   };

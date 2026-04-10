@@ -68,6 +68,14 @@ This inventory turns the current repo spine into QA-visible control classes for 
 | `REFER_OUT` workflow state | `src/workflow/arrearsHeroWorkflow.ts` | Use when a guarded issue reaches referral severity or the matter exceeds settled MVP scope. |
 | `referral-stop` guidance block | `src/modules/handoff/index.ts` | When referral-severity controls are present, handoff guidance must render a referral stop instead of implying normal progression. |
 
+## BR04 privacy scaffold
+
+| Rule | Current module surface | Testable invariant | Current QA anchor |
+| --- | --- | --- | --- |
+| BR04 privacy hook attachment | `src/domain/model.ts`, `src/modules/evidence/index.ts`, `src/modules/br04/index.ts` | Matter, evidence, notice-draft, and output-package records carry explicit `privacyHooks` instead of inferring privacy lifecycle from generic status fields. | `tests/br04-privacy-scaffold.test.ts`, `tests/evidence-audit.framework.test.ts` |
+| BR04 scoped hold and lifecycle placeholder posture | `src/domain/model.ts`, `src/modules/br04/index.ts` | Hold flags remain scope-bound, deletion requests remain review-led, and deidentification stays placeholder-only rather than being treated as final disposal truth. | `tests/br04-privacy-scaffold.test.ts` |
+| BR04 access and audit spine | `src/modules/br04/index.ts`, `src/modules/audit/index.ts` | Role boundaries and access scopes stay explicit, and privacy audit events preserve control area, lifecycle state, hold linkage, policy linkage, and access metadata. | `tests/br04-privacy-scaffold.test.ts` |
+
 ## Explicit non-inventory items
 
 These remain intentionally outside deterministic pass or fail criteria in this pack:
