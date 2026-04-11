@@ -32,10 +32,11 @@ This note describes the current BR04 implementation scaffold in Phase 4B. It now
 - Evidence records now consume those source-managed policy and access refs by default when they are created through the evidence shell.
 - Notice-draft records now consume those source-managed policy and access refs by default when they are created through the notice-draft record factory.
 - Output-package records now consume those source-managed policy and access refs when they are created through the output module record factory.
-- Privacy-audit records now resolve source-managed policy keys and the current event-level access-scope link when they are created through the audit module record factory.
+- Privacy-audit records now resolve source-managed policy keys and an explicit access-scope mode when they are created through the audit module record factory, while keeping the current event shape.
 - The policy source also carries explicit placeholder markers for unresolved doctrine such as exact retention duration, hold trigger taxonomy, release authority, review cadence, and the prohibition on any blanket keep/delete rule.
 - BR04 hook assembly now refuses to attach hooks that lack scoped retention refs, explicit data-class linkage, or explicit access-scope linkage, so no universal keep/delete fallback can slip in through the source-driven path.
 - Default target-level attachment remains usable only while a target has one policy and one scope candidate. If later BR04 work introduces multiple candidates for the same target, callers must select `policyKeys` and `accessScopeIds` or fail loudly instead of silently attaching every match.
+- Hook overrides may restate already selected source-linked policy refs or access scopes, but they can no longer widen attachment beyond the validated selection or retarget another lane silently.
 
 ## Guarded or blocked details that remain unresolved
 

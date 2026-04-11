@@ -266,6 +266,104 @@ test("br04 policy source assembles placeholder-based policy refs, scopes, and bo
   );
 });
 
+test("br04 privacy hook overrides reject incompatible or widening access-scope attachment", () => {
+  assert.throws(
+    () => buildBr04PrivacyHooksFromSource({
+      appliesTo: "NOTICE_DRAFT",
+      hookOverrides: {
+        accessScopeIds: ["BR04-SCOPE-OUTPUT-REVIEW"]
+      }
+    }),
+    /cannot attach access scope BR04-SCOPE-OUTPUT-REVIEW for OUTPUT_PACKAGE/i
+  );
+  assert.throws(
+    () => buildBr04PrivacyHooksFromSource({
+      appliesTo: "NOTICE_DRAFT",
+      hookOverrides: {
+        accessScopeIds: ["BR04-SCOPE-AUDIT-READ"]
+      }
+    }),
+    /cannot widen access scope attachment with BR04-SCOPE-AUDIT-READ; select it via accessScopeIds instead/i
+  );
+});
+
+test("br04 privacy hook overrides can restate explicitly selected compatible access scopes", () => {
+  const hooks = buildBr04PrivacyHooksFromSource({
+    appliesTo: "NOTICE_DRAFT",
+    accessScopeIds: ["BR04-SCOPE-NOTICE-REVIEW", "BR04-SCOPE-AUDIT-READ"],
+    hookOverrides: {
+      accessScopeIds: ["BR04-SCOPE-AUDIT-READ"],
+      lifecycleState: "REVIEW_NEEDED"
+    }
+  });
+
+  assert.deepEqual(hooks.accessScopeIds, [
+    "BR04-SCOPE-NOTICE-REVIEW",
+    "BR04-SCOPE-AUDIT-READ"
+  ]);
+  assert.equal(hooks.lifecycleState, "REVIEW_NEEDED");
+});
+
+test("br04 privacy hook overrides cannot widen or retarget source-linked retention policy refs", () => {
+  const source = loadBr04PolicySource();
+  const sourceWithSecondaryNoticePolicy = {
+    ...source,
+    retentionPolicies: [
+      ...source.retentionPolicies,
+      {
+        id: "BR04-POLICY-NOTICE-DRAFT-SECONDARY",
+        policyKey: "NOTICE_DRAFT_ARCHIVE_REVIEW",
+        dataClassId: "BR04-DATA-CLASS-NOTICE-DRAFT",
+        appliesTo: "NOTICE_DRAFT" as const,
+        policyStatus: "REVIEW_REQUIRED" as const,
+        configurable: true as const,
+        durationStatus: "PLACEHOLDER_PENDING_CONFIG" as const,
+        durationModelKey: "CONFIGURE_LATER" as const,
+        noUniversalLifecycleRule: true as const,
+        guardedInsertionPoint: source.retentionPolicies[0]?.guardedInsertionPoint ?? "",
+        notes: [
+          "Secondary draft policy remains placeholder-only.",
+          "Explicit selection is required once multiple draft policies exist."
+        ]
+      }
+    ]
+  };
+  const assembly = assembleBr04PolicyRegistry(sourceWithSecondaryNoticePolicy);
+  const noticePolicy = assembly.retentionPolicyRefs.find(
+    (entry) => entry.id === "BR04-POLICY-NOTICE-DRAFT"
+  );
+  const secondaryNoticePolicy = assembly.retentionPolicyRefs.find(
+    (entry) => entry.id === "BR04-POLICY-NOTICE-DRAFT-SECONDARY"
+  );
+
+  assert.ok(noticePolicy);
+  assert.ok(secondaryNoticePolicy);
+  assert.throws(
+    () => buildBr04PrivacyHooksFromSource({
+      appliesTo: "NOTICE_DRAFT",
+      source: sourceWithSecondaryNoticePolicy,
+      policyKeys: ["NOTICE_DRAFT_RECORD"],
+      hookOverrides: {
+        retentionPolicyRefs: secondaryNoticePolicy ? [secondaryNoticePolicy] : []
+      }
+    }),
+    /cannot widen retention policy attachment with BR04-POLICY-NOTICE-DRAFT-SECONDARY; select it via policyKeys instead/i
+  );
+  assert.throws(
+    () => buildBr04PrivacyHooksFromSource({
+      appliesTo: "NOTICE_DRAFT",
+      source: sourceWithSecondaryNoticePolicy,
+      policyKeys: ["NOTICE_DRAFT_RECORD"],
+      hookOverrides: {
+        retentionPolicyRefs: noticePolicy
+          ? [{ ...noticePolicy, dataClassId: "BR04-DATA-CLASS-MATTER-PRIMARY" }]
+          : []
+      }
+    }),
+    /cannot alter source-linked retention policy BR04-POLICY-NOTICE-DRAFT/i
+  );
+});
+
 test("br04 policy source keeps unresolved doctrine placeholder-based and rejects blanket lifecycle inference", () => {
   const source = loadBr04PolicySource();
   const retentionPolicyEntry = source.retentionPolicies.find(
