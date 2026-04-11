@@ -528,14 +528,24 @@ export function buildBr04PrivacyHooksFromSource(
     appliesTo: input.appliesTo,
     policyKeys: input.policyKeys
   });
+  const overrideRetentionPolicyRefs = input.hookOverrides?.retentionPolicyRefs ?? [];
+
+  validateBr04HookRetentionPolicyOverrides({
+    source: input.source,
+    appliesTo: input.appliesTo,
+    base: retentionPolicyRefs,
+    overrides: overrideRetentionPolicyRefs
+  });
+
   const dataClassIds = uniqueEntityIds([
     ...retentionPolicyRefs.map((policyRef) => policyRef.dataClassId),
     ...(input.hookOverrides?.dataClassIds ?? [])
   ]);
   const resolvedAccessScopeIds = (
     input.accessScopeIds && input.accessScopeIds.length > 0
-      ? resolveBr04AccessScopes({
+      ? resolveBr04HookAccessScopes({
           source: input.source,
+          appliesTo: input.appliesTo,
           ids: input.accessScopeIds
         })
       : resolveBr04AccessScopes({
@@ -543,13 +553,22 @@ export function buildBr04PrivacyHooksFromSource(
           subjectType: input.appliesTo
         })
   ).map((scope) => scope.id);
+  const overrideAccessScopeIds = input.hookOverrides?.accessScopeIds ?? [];
+
+  validateBr04HookAccessScopeOverrides({
+    source: input.source,
+    appliesTo: input.appliesTo,
+    baseAccessScopeIds: resolvedAccessScopeIds,
+    overrides: overrideAccessScopeIds
+  });
+
   const accessScopeIds = uniqueEntityIds([
     ...resolvedAccessScopeIds,
-    ...(input.hookOverrides?.accessScopeIds ?? [])
+    ...overrideAccessScopeIds
   ]);
   const mergedRetentionPolicyRefs = mergeRetentionPolicyRefs(
     retentionPolicyRefs,
-    input.hookOverrides?.retentionPolicyRefs ?? []
+    overrideRetentionPolicyRefs
   );
 
   validateBr04HookCoverage(input.appliesTo, mergedRetentionPolicyRefs, dataClassIds, accessScopeIds);
@@ -754,6 +773,106 @@ function validateBr04HookCoverage(
     throw new Error(
       `BR04 privacy hooks for ${appliesTo} require at least one explicit access scope ref.`
     );
+  }
+}
+
+function resolveBr04HookAccessScopes(input: {
+  source?: Br04PolicySource | undefined;
+  appliesTo: PrivacyLifecycleHookTarget;
+  ids: readonly EntityId[];
+}): AccessScope[] {
+  const accessScopes = resolveBr04AccessScopes({
+    source: input.source,
+    ids: input.ids
+  });
+
+  for (const accessScope of accessScopes) {
+    if (
+      accessScope.subjectType !== input.appliesTo
+      && accessScope.subjectType !== "PRIVACY_AUDIT"
+    ) {
+      throw new Error(
+        `BR04 privacy hooks for ${input.appliesTo} cannot attach access scope ${accessScope.id} for ${accessScope.subjectType}.`
+      );
+    }
+  }
+
+  return accessScopes;
+}
+
+function validateBr04HookAccessScopeOverrides(input: {
+  source?: Br04PolicySource | undefined;
+  appliesTo: PrivacyLifecycleHookTarget;
+  baseAccessScopeIds: readonly EntityId[];
+  overrides: readonly EntityId[];
+}): void {
+  if (input.overrides.length === 0) {
+    return;
+  }
+
+  resolveBr04HookAccessScopes({
+    source: input.source,
+    appliesTo: input.appliesTo,
+    ids: input.overrides
+  });
+
+  const selectedAccessScopeIds = new Set(input.baseAccessScopeIds);
+
+  for (const accessScopeId of input.overrides) {
+    if (!selectedAccessScopeIds.has(accessScopeId)) {
+      throw new Error(
+        `BR04 privacy hook overrides for ${input.appliesTo} cannot widen access scope attachment with ${accessScopeId}; select it via accessScopeIds instead.`
+      );
+    }
+  }
+}
+
+function validateBr04HookRetentionPolicyOverrides(input: {
+  source?: Br04PolicySource | undefined;
+  appliesTo: PrivacyLifecycleHookTarget;
+  base: readonly RetentionPolicyRef[];
+  overrides: readonly RetentionPolicyRef[];
+}): void {
+  if (input.overrides.length === 0) {
+    return;
+  }
+
+  const selectedPolicyIds = new Set(input.base.map((policyRef) => policyRef.id));
+  const registryPolicyRefs = new Map(
+    assembleBr04PolicyRegistry(input.source).retentionPolicyRefs.map((policyRef) => [
+      policyRef.id,
+      policyRef
+    ])
+  );
+
+  for (const policyRef of input.overrides) {
+    const registryPolicyRef = registryPolicyRefs.get(policyRef.id);
+
+    if (!registryPolicyRef) {
+      throw new Error(`Unknown BR04 retention policy override: ${policyRef.id}`);
+    }
+
+    if (registryPolicyRef.appliesTo !== input.appliesTo) {
+      throw new Error(
+        `BR04 privacy hooks for ${input.appliesTo} cannot attach retention policy ${policyRef.id} for ${registryPolicyRef.appliesTo}.`
+      );
+    }
+
+    if (!selectedPolicyIds.has(policyRef.id)) {
+      throw new Error(
+        `BR04 privacy hook overrides for ${input.appliesTo} cannot widen retention policy attachment with ${policyRef.id}; select it via policyKeys instead.`
+      );
+    }
+
+    if (
+      policyRef.policyKey !== registryPolicyRef.policyKey
+      || policyRef.dataClassId !== registryPolicyRef.dataClassId
+      || policyRef.appliesTo !== registryPolicyRef.appliesTo
+    ) {
+      throw new Error(
+        `BR04 privacy hook overrides for ${input.appliesTo} cannot alter source-linked retention policy ${policyRef.id}.`
+      );
+    }
   }
 }
 

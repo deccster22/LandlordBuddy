@@ -31,6 +31,13 @@ export const auditEventOutcomes = [
 
 export type AuditEventOutcome = (typeof auditEventOutcomes)[number];
 
+export const privacyAuditAccessScopeModes = [
+  "TARGET_LANE",
+  "AUDIT_ONLY"
+] as const;
+
+export type PrivacyAuditAccessScopeMode = (typeof privacyAuditAccessScopeModes)[number];
+
 export interface AuditEventInput {
   id: string;
   at: string;
@@ -59,6 +66,7 @@ export interface PrivacyAuditSourceLinkInput {
   source?: Br04PolicySource | undefined;
   appliesTo: PrivacyLifecycleHookTarget;
   policyKeys?: readonly string[] | undefined;
+  accessScopeMode?: PrivacyAuditAccessScopeMode | undefined;
   accessScopeId?: EntityId | undefined;
 }
 
@@ -125,23 +133,41 @@ export function createInMemoryAuditRecorder(
 function resolvePrivacyAuditAccessScopeId(
   input: PrivacyAuditSourceLinkInput
 ): EntityId {
+  const accessScopeMode = input.accessScopeMode ?? "TARGET_LANE";
+  const accessScopeSubjectType = resolvePrivacyAuditAccessScopeSubjectType(
+    input.appliesTo,
+    accessScopeMode
+  );
   const accessScopes = input.accessScopeId
     ? resolveBr04AccessScopes({
         source: input.source,
         ids: [input.accessScopeId],
-        subjectType: input.appliesTo
+        subjectType: accessScopeSubjectType
       })
     : resolveBr04AccessScopes({
         source: input.source,
-        subjectType: input.appliesTo
+        subjectType: accessScopeSubjectType
       });
   const accessScope = accessScopes[0];
 
   if (!accessScope) {
     throw new Error(
-      `BR04 privacy audit records for ${input.appliesTo} require at least one explicit access scope ref.`
+      `BR04 privacy audit records for ${input.appliesTo} require at least one explicit ${describePrivacyAuditAccessScopeMode(accessScopeMode)} access scope ref.`
     );
   }
 
   return accessScope.id;
+}
+
+function resolvePrivacyAuditAccessScopeSubjectType(
+  appliesTo: PrivacyLifecycleHookTarget,
+  accessScopeMode: PrivacyAuditAccessScopeMode
+): PrivacyLifecycleHookTarget | "PRIVACY_AUDIT" {
+  return accessScopeMode === "AUDIT_ONLY" ? "PRIVACY_AUDIT" : appliesTo;
+}
+
+function describePrivacyAuditAccessScopeMode(
+  accessScopeMode: PrivacyAuditAccessScopeMode
+): string {
+  return accessScopeMode === "AUDIT_ONLY" ? "audit-only" : "target-lane";
 }

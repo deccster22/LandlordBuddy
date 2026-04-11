@@ -81,6 +81,25 @@ test("privacy audit records receive source-driven BR04 policy and access linkage
   assert.deepEqual(Object.keys(auditEvent).sort(), Object.keys(baselineEvent).sort());
 });
 
+test("privacy audit access-scope mode stays explicit while preserving the current event shape", () => {
+  const auditInput = buildPrivacyAuditInput();
+  const targetLaneAuditEvent = createPrivacyAuditRecord(auditInput, {
+    appliesTo: "NOTICE_DRAFT",
+    accessScopeMode: "TARGET_LANE"
+  });
+  const auditOnlyEvent = createPrivacyAuditRecord(auditInput, {
+    appliesTo: "NOTICE_DRAFT",
+    accessScopeMode: "AUDIT_ONLY"
+  });
+
+  assert.equal(targetLaneAuditEvent.accessScopeId, "BR04-SCOPE-NOTICE-REVIEW");
+  assert.equal(auditOnlyEvent.accessScopeId, "BR04-SCOPE-AUDIT-READ");
+  assert.deepEqual(
+    Object.keys(auditOnlyEvent).sort(),
+    Object.keys(targetLaneAuditEvent).sort()
+  );
+});
+
 test("ambiguous BR04 target defaults fail loudly until notice-draft and privacy-audit callers select explicitly", () => {
   const source = loadBr04PolicySource();
   const ambiguousPolicySource = {
@@ -137,6 +156,22 @@ test("ambiguous BR04 target defaults fail loudly until notice-draft and privacy-
       appliesTo: "NOTICE_DRAFT"
     }),
     /default access scope selection for NOTICE_DRAFT is ambiguous; explicit accessScopeIds are required/i
+  );
+  assert.equal(
+    createPrivacyAuditRecord(buildPrivacyAuditInput(), {
+      source: ambiguousScopeSource,
+      appliesTo: "NOTICE_DRAFT",
+      accessScopeMode: "AUDIT_ONLY"
+    }).accessScopeId,
+    "BR04-SCOPE-AUDIT-READ"
+  );
+  assert.throws(
+    () => createPrivacyAuditRecord(buildPrivacyAuditInput(), {
+      appliesTo: "NOTICE_DRAFT",
+      accessScopeMode: "AUDIT_ONLY",
+      accessScopeId: "BR04-SCOPE-NOTICE-REVIEW"
+    }),
+    /cannot be selected for PRIVACY_AUDIT/i
   );
 
   const noticeDraft = createNoticeDraftRecord(buildNoticeDraftInput(), {
