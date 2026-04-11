@@ -12,6 +12,7 @@ import {
 } from "../src/domain/model.js";
 import { buildOfficialHandoffGuidanceShell } from "../src/modules/handoff/index.js";
 import {
+  createOutputPackageRecord,
   generateOutputPackageShell,
   selectOutputShell,
   type OfficialHandoffGuidancePackageShell,
@@ -180,6 +181,32 @@ test("output shells stay distinct and never imply official submission", () => {
   assert.ok(
     handoffGuidance.trustBinding.boundaryStatementKeys.includes("boundary.no-product-submission")
   );
+});
+
+test("output package records receive source-driven BR04 policy and access refs", () => {
+  const outputPackage = createOutputPackageRecord({
+    id: "output-record-1",
+    matterId: "matter-1",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    noticeReadiness: validateUnpaidRentNoticeReadiness(buildNoticeReadinessInput()),
+    noticeDraftId: "draft-1",
+    evidenceItemIds: ["evidence-1"]
+  });
+
+  assert.equal(outputPackage.completeness, "READY_FOR_REVIEW");
+  assert.equal(outputPackage.privacyHooks.lifecycleState, "NORMAL_LIFECYCLE");
+  assert.deepEqual(outputPackage.privacyHooks.dataClassIds, ["BR04-DATA-CLASS-OUTPUT-PACK"]);
+  assert.equal(
+    outputPackage.privacyHooks.retentionPolicyRefs[0]?.policyKey,
+    "OUTPUT_PACKAGE_RECORD"
+  );
+  assert.deepEqual(outputPackage.privacyHooks.accessScopeIds, ["BR04-SCOPE-OUTPUT-REVIEW"]);
+  assert.equal(outputPackage.noticeDraftId, "draft-1");
+  assert.deepEqual(outputPackage.evidenceItemIds, ["evidence-1"]);
 });
 
 test("output selection carries guarded metadata forward from touchpoints and caller inputs", () => {

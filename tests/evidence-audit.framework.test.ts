@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { GUARDED_INSERTION_POINTS } from "../src/domain/model.js";
+import { loadBr04PolicySource } from "../src/modules/br04/index.js";
 import {
   createAuditEvent,
   createInMemoryAuditRecorder
@@ -38,8 +39,43 @@ test("evidence item shell holds file, proof, privacy, retention, upload, and lif
   assert.equal(item.holdStatus, "REVIEW_REQUIRED");
   assert.equal(item.uploadStatus, "LOCAL_VALIDATION_READY");
   assert.equal(item.privacyHooks.lifecycleState, "REVIEW_NEEDED");
+  assert.deepEqual(item.privacyHooks.dataClassIds, ["BR04-DATA-CLASS-EVIDENCE-WORKING"]);
+  assert.equal(
+    item.privacyHooks.retentionPolicyRefs[0]?.policyKey,
+    "EVIDENCE_WORKING_RECORD"
+  );
+  assert.deepEqual(item.privacyHooks.accessScopeIds, ["BR04-SCOPE-EVIDENCE-REVIEW"]);
   assert.ok(item.privacyHooks.guardedInsertionPoints.length >= 3);
   assert.deepEqual(item.auditEventIds, []);
+});
+
+test("evidence item shell rejects BR04 sources that drop the no-universal keep/delete guard", () => {
+  const source = loadBr04PolicySource();
+
+  assert.throws(
+    () => createEvidenceItemShell(
+      {
+        id: "evidence-guard-1",
+        matterId: "matter-guard-1",
+        kind: "LEDGER",
+        title: "Ledger",
+        fileName: "rent-ledger.pdf",
+        mimeType: "application/pdf",
+        sizeBytes: 2048,
+        sourceReferenceIds: []
+      },
+      undefined,
+      {
+        source: {
+          ...source,
+          doctrinePlaceholders: source.doctrinePlaceholders.filter(
+            (entry) => entry.key !== "UNIVERSAL_KEEP_DELETE_RULE"
+          )
+        }
+      }
+    ),
+    /must keep UNIVERSAL_KEEP_DELETE_RULE marked as NOT_ALLOWED/i
+  );
 });
 
 test("local evidence validation blocks unsupported types and oversized files", () => {

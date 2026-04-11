@@ -10,8 +10,16 @@ The `src/modules/output`, `src/modules/handoff`, and `src/modules/touchpoints` s
 
 The output and handoff shells now also attach structural trust/copy bindings only: section or block mappings, visible source-type label keys, boundary-statement keys, trust-cue keys, and emphasis zones. These bindings are for later UI or document rendering. They are not final approved prose, legal doctrine, or portal behavior.
 
-The `src/modules/evidence` and `src/modules/audit` shells validate only stable local-only constraints and keep privacy, retention, hold, proof-linkage, and upload progress as visible hooks. `LOCAL_VALIDATION_READY` means local checks passed. It does not mean official acceptance or evidentiary sufficiency.
+The `src/modules/evidence` and `src/modules/audit` shells validate only stable local-only constraints and keep privacy, retention, hold, proof-linkage, and upload progress as visible hooks. Evidence records now also attach source-driven BR04 data-class, retention-policy, and access-scope refs. `LOCAL_VALIDATION_READY` means local checks passed. It does not mean official acceptance, evidentiary sufficiency, or settled privacy doctrine.
+
+The `src/modules/notice-draft` shell now has a record-construction path for `NoticeDraft` entities. That record path attaches source-driven BR04 data-class, retention-policy, and access-scope refs while keeping notice-draft handling review-led and separate from official action.
+
+The `src/modules/output` shell now has a record-construction path for `OutputPackage` entities in addition to its existing package-shell generators. That record path attaches source-driven BR04 data-class, retention-policy, and access-scope refs while keeping output generation prep-and-handoff only.
+
+The `src/modules/audit` shell now has a privacy-audit record-construction path that resolves source-driven BR04 policy keys plus a single event-level access-scope link onto the current `PrivacyAuditEvent` shape. It remains an auditability surface only and does not imply settled lifecycle automation or disposal authority.
 
 Generic proof-linkage review remains a dedicated guarded insertion point separate from hand-service doctrine. This keeps proof-linkage review visible without implying that the repo has settled broader service-proof sufficiency.
+
+No notice-draft, output, evidence, or privacy-audit consumer path may infer a universal keep/delete rule. BR04 source-driven attachment requires scoped policy refs, explicit data-class linkage, and explicit access-scope linkage, while final durations, hold triggers, release authority, and review cadence remain placeholder-only. If a target later has multiple candidate policies or scopes, the caller must select explicitly instead of relying on broad default fan-out.
 
 Readiness remains a local preparation state, not filing or acceptance. Official handoff guidance remains a prep-and-handoff surface, not a completed official step.

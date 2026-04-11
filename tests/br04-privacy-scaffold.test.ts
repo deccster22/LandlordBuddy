@@ -309,3 +309,16 @@ test("br04 policy source rejects overlapping role-boundary operation sets", () =
   );
 });
 
+test("direct privacy role-boundary construction also rejects overlapping operation sets", () => {
+  assert.throws(
+    () => createPrivacyRoleBoundary({
+      id: "boundary-overlap-direct",
+      role: "PRIVACY_REVIEWER",
+      accessScopeIds: ["BR04-SCOPE-MATTER-REVIEW"],
+      allowedOperations: ["CLASSIFY_DATA", "VIEW_AUDIT_LOG"],
+      reviewRequiredOperations: ["VIEW_AUDIT_LOG"],
+      blockedOperations: []
+    }),
+    /maps operation VIEW_AUDIT_LOG to both allowedOperations and reviewRequiredOperations/i
+  );
+});

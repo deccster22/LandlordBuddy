@@ -23,8 +23,7 @@ import {
 } from "../../domain/model.js";
 import {
   loadBr04PolicySource,
-  type Br04PolicySource,
-  type Br04PrivacyRoleBoundaryRegistryEntry
+  type Br04PolicySource
 } from "./policy-source.js";
 
 export interface CreateDataClassInput {
@@ -177,6 +176,13 @@ export interface BuildBr04PrivacyHooksFromSourceInput {
   policyKeys?: readonly string[] | undefined;
   accessScopeIds?: readonly EntityId[] | undefined;
   hookOverrides?: Partial<PrivacyLifecycleHooks> | undefined;
+}
+
+export interface ValidateBr04RoleBoundaryOperationInput {
+  id: EntityId;
+  allowedOperations: readonly PrivacyOperation[];
+  reviewRequiredOperations: readonly PrivacyOperation[];
+  blockedOperations: readonly PrivacyOperation[];
 }
 
 export function buildBr04PrivacyHooks(
@@ -333,6 +339,13 @@ export function createAccessScope(input: CreateAccessScopeInput): AccessScope {
 export function createPrivacyRoleBoundary(
   input: CreatePrivacyRoleBoundaryInput
 ): PrivacyRoleBoundary {
+  validateBr04RoleBoundaryOperationOverlap({
+    id: input.id,
+    allowedOperations: input.allowedOperations,
+    reviewRequiredOperations: input.reviewRequiredOperations ?? [],
+    blockedOperations: input.blockedOperations ?? []
+  });
+
   return {
     id: input.id,
     role: input.role,
@@ -424,18 +437,38 @@ export function resolveBr04RetentionPolicyRefs(
   input: ResolveBr04RetentionPolicyRefsInput = {}
 ): RetentionPolicyRef[] {
   const registry = assembleBr04PolicyRegistry(input.source);
+  const retentionPolicyRefs = input.appliesTo
+    ? registry.retentionPolicyRefs.filter(
+        (candidate) => candidate.appliesTo === input.appliesTo
+      )
+    : registry.retentionPolicyRefs;
 
-  return registry.retentionPolicyRefs.filter((candidate) => {
-    if (input.appliesTo && candidate.appliesTo !== input.appliesTo) {
-      return false;
-    }
+  if (input.policyKeys && input.policyKeys.length > 0) {
+    const byPolicyKey = new Map(
+      retentionPolicyRefs.map((policyRef) => [policyRef.policyKey, policyRef])
+    );
 
-    if (input.policyKeys && input.policyKeys.length > 0) {
-      return input.policyKeys.includes(candidate.policyKey);
-    }
+    return input.policyKeys.map((policyKey) => {
+      const policyRef = byPolicyKey.get(policyKey);
 
-    return true;
-  });
+      if (!policyRef) {
+        throw new Error(`Unknown BR04 retention policy key: ${policyKey}`);
+      }
+
+      return policyRef;
+    });
+  }
+
+  if (input.appliesTo) {
+    assertUnambiguousBr04DefaultSelection({
+      appliesTo: input.appliesTo,
+      candidates: retentionPolicyRefs,
+      candidateLabel: "retention policy",
+      selectionKey: "policyKeys"
+    });
+  }
+
+  return retentionPolicyRefs;
 }
 
 export function resolveBr04AccessScopes(
@@ -453,14 +486,29 @@ export function resolveBr04AccessScopes(
         throw new Error(`Unknown BR04 access scope: ${id}`);
       }
 
+      if (input.subjectType && scope.subjectType !== input.subjectType) {
+        throw new Error(
+          `BR04 access scope ${scope.id} for ${scope.subjectType} cannot be selected for ${input.subjectType}.`
+        );
+      }
+
       return scope;
     });
   }
 
   if (input.subjectType) {
-    return registry.accessScopes.filter(
+    const accessScopes = registry.accessScopes.filter(
       (scope) => scope.subjectType === input.subjectType
     );
+
+    assertUnambiguousBr04DefaultSelection({
+      appliesTo: input.subjectType,
+      candidates: accessScopes,
+      candidateLabel: "access scope",
+      selectionKey: "accessScopeIds"
+    });
+
+    return accessScopes;
   }
 
   return registry.accessScopes;
@@ -484,25 +532,32 @@ export function buildBr04PrivacyHooksFromSource(
     ...retentionPolicyRefs.map((policyRef) => policyRef.dataClassId),
     ...(input.hookOverrides?.dataClassIds ?? [])
   ]);
+  const resolvedAccessScopeIds = (
+    input.accessScopeIds && input.accessScopeIds.length > 0
+      ? resolveBr04AccessScopes({
+          source: input.source,
+          ids: input.accessScopeIds
+        })
+      : resolveBr04AccessScopes({
+          source: input.source,
+          subjectType: input.appliesTo
+        })
+  ).map((scope) => scope.id);
   const accessScopeIds = uniqueEntityIds([
-    ...(
-      input.accessScopeIds && input.accessScopeIds.length > 0
-        ? resolveBr04AccessScopes({
-            source: input.source,
-            ids: input.accessScopeIds
-          }).map((scope) => scope.id)
-        : []
-    ),
+    ...resolvedAccessScopeIds,
     ...(input.hookOverrides?.accessScopeIds ?? [])
   ]);
+  const mergedRetentionPolicyRefs = mergeRetentionPolicyRefs(
+    retentionPolicyRefs,
+    input.hookOverrides?.retentionPolicyRefs ?? []
+  );
+
+  validateBr04HookCoverage(input.appliesTo, mergedRetentionPolicyRefs, dataClassIds, accessScopeIds);
 
   return buildBr04PrivacyHooks({
     ...input.hookOverrides,
     dataClassIds,
-    retentionPolicyRefs: mergeRetentionPolicyRefs(
-      retentionPolicyRefs,
-      input.hookOverrides?.retentionPolicyRefs ?? []
-    ),
+    retentionPolicyRefs: mergedRetentionPolicyRefs,
     accessScopeIds
   });
 }
@@ -514,7 +569,12 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     deterministic: true,
     invariant: "Matter, evidence, and document records carry explicit privacy lifecycle hooks instead of relying on inferred retention behavior.",
     scaffoldKeys: ["privacyHooks", "NORMAL_LIFECYCLE", "DELETION_REQUESTED"],
-    testFiles: ["tests/br04-privacy-scaffold.test.ts", "tests/evidence-audit.framework.test.ts"]
+    testFiles: [
+      "tests/br04-privacy-scaffold.test.ts",
+      "tests/br04-consumer-lanes.test.ts",
+      "tests/evidence-audit.framework.test.ts",
+      "tests/output-handoff.framework.test.ts"
+    ]
   },
   {
     id: "BR04-POLICY-PLACEHOLDER",
@@ -522,7 +582,11 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     deterministic: false,
     invariant: "Retention policy refs attach to configurable slots and must not hard-code final durations.",
     scaffoldKeys: ["CONFIG_PENDING", "ATTACHED", "REVIEW_REQUIRED"],
-    testFiles: ["tests/br04-privacy-scaffold.test.ts"]
+    testFiles: [
+      "tests/br04-privacy-scaffold.test.ts",
+      "tests/br04-consumer-lanes.test.ts",
+      "tests/evidence-audit.framework.test.ts"
+    ]
   },
   {
     id: "BR04-SCOPED-HOLD",
@@ -538,7 +602,7 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     deterministic: true,
     invariant: "Privacy audit events preserve control area, lifecycle state, policy linkage, hold linkage, and access-role metadata.",
     scaffoldKeys: ["CLASSIFICATION", "RETENTION", "HOLD", "LIFECYCLE", "ACCESS"],
-    testFiles: ["tests/br04-privacy-scaffold.test.ts"]
+    testFiles: ["tests/br04-privacy-scaffold.test.ts", "tests/br04-consumer-lanes.test.ts"]
   },
   {
     id: "BR04-ROLE-BOUNDARY",
@@ -552,6 +616,8 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
 
 
 function validateBr04PolicySource(source: Br04PolicySource): void {
+  validateBr04NoUniversalKeepDeleteRule(source);
+
   assertUniqueValues(
     source.dataClasses.map((entry) => entry.id),
     "BR04 data class id"
@@ -598,8 +664,8 @@ function validateBr04PolicySource(source: Br04PolicySource): void {
   }
 }
 
-function validateBr04RoleBoundaryOperationOverlap(
-  boundary: Br04PrivacyRoleBoundaryRegistryEntry
+export function validateBr04RoleBoundaryOperationOverlap(
+  boundary: ValidateBr04RoleBoundaryOperationInput
 ): void {
   const seen = new Map<PrivacyOperation, string>();
 
@@ -614,7 +680,7 @@ function validateBr04RoleBoundaryOperationOverlap(
 }
 
 function registerOperationSet(
-  boundary: Br04PrivacyRoleBoundaryRegistryEntry,
+  boundary: ValidateBr04RoleBoundaryOperationInput,
   seen: Map<PrivacyOperation, string>,
   operations: readonly PrivacyOperation[],
   setName: string
@@ -632,12 +698,86 @@ function registerOperationSet(
   }
 }
 
+function validateBr04NoUniversalKeepDeleteRule(source: Br04PolicySource): void {
+  const universalRuleGuard = source.doctrinePlaceholders.find(
+    (entry) => entry.key === "UNIVERSAL_KEEP_DELETE_RULE"
+  );
+
+  if (universalRuleGuard?.status !== "NOT_ALLOWED") {
+    throw new Error(
+      "BR04 policy source must keep UNIVERSAL_KEEP_DELETE_RULE marked as NOT_ALLOWED."
+    );
+  }
+
+  for (const policyRef of source.retentionPolicies) {
+    if (policyRef.noUniversalLifecycleRule !== true) {
+      throw new Error(
+        `BR04 retention policy ${policyRef.id} must preserve the no-universal keep/delete guard.`
+      );
+    }
+  }
+}
+
+function validateBr04HookCoverage(
+  appliesTo: PrivacyLifecycleHookTarget,
+  retentionPolicyRefs: readonly RetentionPolicyRef[],
+  dataClassIds: readonly EntityId[],
+  accessScopeIds: readonly EntityId[]
+): void {
+  if (retentionPolicyRefs.length === 0) {
+    throw new Error(
+      `BR04 privacy hooks for ${appliesTo} require at least one scoped retention policy ref; blanket keep/delete fallback is not allowed.`
+    );
+  }
+
+  for (const policyRef of retentionPolicyRefs) {
+    if (policyRef.appliesTo !== appliesTo) {
+      throw new Error(
+        `BR04 privacy hooks for ${appliesTo} cannot attach retention policy ${policyRef.id} for ${policyRef.appliesTo}.`
+      );
+    }
+
+    if (policyRef.configurable !== true) {
+      throw new Error(
+        `BR04 retention policy ${policyRef.id} must remain configurable and placeholder-based.`
+      );
+    }
+  }
+
+  if (dataClassIds.length === 0) {
+    throw new Error(
+      `BR04 privacy hooks for ${appliesTo} require explicit data-class linkage.`
+    );
+  }
+
+  if (accessScopeIds.length === 0) {
+    throw new Error(
+      `BR04 privacy hooks for ${appliesTo} require at least one explicit access scope ref.`
+    );
+  }
+}
+
 function assertUniqueValues(values: readonly string[], label: string): void {
   const uniqueValues = new Set(values);
 
   if (uniqueValues.size !== values.length) {
     throw new Error(`Duplicate ${label} detected in BR04 policy source.`);
   }
+}
+
+function assertUnambiguousBr04DefaultSelection(input: {
+  appliesTo: string;
+  candidates: readonly { id: EntityId }[];
+  candidateLabel: string;
+  selectionKey: string;
+}): void {
+  if (input.candidates.length <= 1) {
+    return;
+  }
+
+  throw new Error(
+    `BR04 default ${input.candidateLabel} selection for ${input.appliesTo} is ambiguous; explicit ${input.selectionKey} are required. Candidates: ${input.candidates.map((candidate) => candidate.id).join(", ")}.`
+  );
 }
 
 function uniqueEntityIds(values: readonly EntityId[]): EntityId[] {
