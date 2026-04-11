@@ -73,6 +73,7 @@ This inventory turns the current repo spine into QA-visible control classes for 
 | Rule | Current module surface | Testable invariant | Current QA anchor |
 | --- | --- | --- | --- |
 | BR04 privacy hook attachment | `src/domain/model.ts`, `src/modules/evidence/index.ts`, `src/modules/br04/index.ts` | Matter, evidence, notice-draft, and output-package records carry explicit `privacyHooks` instead of inferring privacy lifecycle from generic status fields. | `tests/br04-privacy-scaffold.test.ts`, `tests/evidence-audit.framework.test.ts` |
+| BR04 policy-source registry assembly | `src/modules/br04/policy-source.ts`, `src/modules/br04/index.ts` | Data classes, retention policy refs, access scopes, and privacy role boundaries resolve from a dedicated source lane while exact duration, hold-trigger, release-authority, and review-cadence doctrine stay placeholder-based. | `tests/br04-privacy-scaffold.test.ts` |
 | BR04 scoped hold and lifecycle placeholder posture | `src/domain/model.ts`, `src/modules/br04/index.ts` | Hold flags remain scope-bound, deletion requests remain review-led, and deidentification stays placeholder-only rather than being treated as final disposal truth. | `tests/br04-privacy-scaffold.test.ts` |
 | BR04 access and audit spine | `src/modules/br04/index.ts`, `src/modules/audit/index.ts` | Role boundaries and access scopes stay explicit, and privacy audit events preserve control area, lifecycle state, hold linkage, policy linkage, and access metadata. | `tests/br04-privacy-scaffold.test.ts` |
 

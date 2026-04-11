@@ -13,6 +13,7 @@ import {
   type PreservationScope,
   type PrivacyAuditEvent,
   type PrivacyLifecycleHooks,
+  type PrivacyLifecycleHookTarget,
   type PrivacyLifecycleState,
   type PrivacyOperation,
   type PrivacyRole,
@@ -20,6 +21,11 @@ import {
   type RetentionPolicyRef,
   type SourceSensitivity
 } from "../../domain/model.js";
+import {
+  loadBr04PolicySource,
+  type Br04PolicySource,
+  type Br04PrivacyRoleBoundaryRegistryEntry
+} from "./policy-source.js";
 
 export interface CreateDataClassInput {
   id: EntityId;
@@ -144,6 +150,33 @@ export interface Br04QaInventoryHook {
   invariant: string;
   scaffoldKeys: readonly string[];
   testFiles: readonly string[];
+}
+
+export interface Br04PolicyRegistryAssembly {
+  dataClasses: DataClass[];
+  retentionPolicyRefs: RetentionPolicyRef[];
+  accessScopes: AccessScope[];
+  privacyRoleBoundaries: PrivacyRoleBoundary[];
+}
+
+export interface ResolveBr04RetentionPolicyRefsInput {
+  source?: Br04PolicySource | undefined;
+  appliesTo?: PrivacyLifecycleHookTarget | undefined;
+  policyKeys?: readonly string[] | undefined;
+}
+
+export interface ResolveBr04AccessScopesInput {
+  source?: Br04PolicySource | undefined;
+  ids?: readonly EntityId[] | undefined;
+  subjectType?: AccessScope["subjectType"] | undefined;
+}
+
+export interface BuildBr04PrivacyHooksFromSourceInput {
+  appliesTo: PrivacyLifecycleHookTarget;
+  source?: Br04PolicySource | undefined;
+  policyKeys?: readonly string[] | undefined;
+  accessScopeIds?: readonly EntityId[] | undefined;
+  hookOverrides?: Partial<PrivacyLifecycleHooks> | undefined;
 }
 
 export function buildBr04PrivacyHooks(
@@ -341,6 +374,139 @@ export function createPrivacyAuditEvent(
   };
 }
 
+
+export function assembleBr04PolicyRegistry(
+  source: Br04PolicySource = loadBr04PolicySource()
+): Br04PolicyRegistryAssembly {
+  validateBr04PolicySource(source);
+
+  return {
+    dataClasses: source.dataClasses.map((entry) => createDataClass({
+      id: entry.id,
+      code: entry.code,
+      label: entry.label,
+      appliesTo: entry.appliesTo,
+      sensitivity: entry.sensitivity,
+      summary: entry.summary,
+      notes: [...entry.notes]
+    })),
+    retentionPolicyRefs: source.retentionPolicies.map((entry) => createRetentionPolicyRef({
+      id: entry.id,
+      policyKey: entry.policyKey,
+      dataClassId: entry.dataClassId,
+      appliesTo: entry.appliesTo,
+      policyStatus: entry.policyStatus,
+      guardedInsertionPoint: entry.guardedInsertionPoint,
+      notes: [...entry.notes]
+    })),
+    accessScopes: source.accessScopes.map((entry) => createAccessScope({
+      id: entry.id,
+      subjectType: entry.subjectType,
+      ...(entry.subjectId ? { subjectId: entry.subjectId } : {}),
+      scopeLabel: entry.scopeLabel,
+      notes: [...entry.notes]
+    })),
+    privacyRoleBoundaries: source.privacyRoleBoundaries.map((entry) => (
+      createPrivacyRoleBoundary({
+        id: entry.id,
+        role: entry.role,
+        accessScopeIds: [...entry.accessScopeIds],
+        allowedOperations: [...entry.allowedOperations],
+        reviewRequiredOperations: [...entry.reviewRequiredOperations],
+        blockedOperations: [...entry.blockedOperations],
+        notes: [...entry.notes]
+      })
+    ))
+  };
+}
+
+export function resolveBr04RetentionPolicyRefs(
+  input: ResolveBr04RetentionPolicyRefsInput = {}
+): RetentionPolicyRef[] {
+  const registry = assembleBr04PolicyRegistry(input.source);
+
+  return registry.retentionPolicyRefs.filter((candidate) => {
+    if (input.appliesTo && candidate.appliesTo !== input.appliesTo) {
+      return false;
+    }
+
+    if (input.policyKeys && input.policyKeys.length > 0) {
+      return input.policyKeys.includes(candidate.policyKey);
+    }
+
+    return true;
+  });
+}
+
+export function resolveBr04AccessScopes(
+  input: ResolveBr04AccessScopesInput = {}
+): AccessScope[] {
+  const registry = assembleBr04PolicyRegistry(input.source);
+
+  if (input.ids && input.ids.length > 0) {
+    const byId = new Map(registry.accessScopes.map((scope) => [scope.id, scope]));
+
+    return input.ids.map((id) => {
+      const scope = byId.get(id);
+
+      if (!scope) {
+        throw new Error(`Unknown BR04 access scope: ${id}`);
+      }
+
+      return scope;
+    });
+  }
+
+  if (input.subjectType) {
+    return registry.accessScopes.filter(
+      (scope) => scope.subjectType === input.subjectType
+    );
+  }
+
+  return registry.accessScopes;
+}
+
+export function resolveBr04PrivacyRoleBoundaries(
+  source: Br04PolicySource = loadBr04PolicySource()
+): PrivacyRoleBoundary[] {
+  return assembleBr04PolicyRegistry(source).privacyRoleBoundaries;
+}
+
+export function buildBr04PrivacyHooksFromSource(
+  input: BuildBr04PrivacyHooksFromSourceInput
+): PrivacyLifecycleHooks {
+  const retentionPolicyRefs = resolveBr04RetentionPolicyRefs({
+    source: input.source,
+    appliesTo: input.appliesTo,
+    policyKeys: input.policyKeys
+  });
+  const dataClassIds = uniqueEntityIds([
+    ...retentionPolicyRefs.map((policyRef) => policyRef.dataClassId),
+    ...(input.hookOverrides?.dataClassIds ?? [])
+  ]);
+  const accessScopeIds = uniqueEntityIds([
+    ...(
+      input.accessScopeIds && input.accessScopeIds.length > 0
+        ? resolveBr04AccessScopes({
+            source: input.source,
+            ids: input.accessScopeIds
+          }).map((scope) => scope.id)
+        : []
+    ),
+    ...(input.hookOverrides?.accessScopeIds ?? [])
+  ]);
+
+  return buildBr04PrivacyHooks({
+    ...input.hookOverrides,
+    dataClassIds,
+    retentionPolicyRefs: mergeRetentionPolicyRefs(
+      retentionPolicyRefs,
+      input.hookOverrides?.retentionPolicyRefs ?? []
+    ),
+    accessScopeIds
+  });
+}
+
 export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freeze([
   {
     id: "BR04-HOOK-ATTACHMENT",
@@ -384,6 +550,113 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
   }
 ]);
 
+
+function validateBr04PolicySource(source: Br04PolicySource): void {
+  assertUniqueValues(
+    source.dataClasses.map((entry) => entry.id),
+    "BR04 data class id"
+  );
+  assertUniqueValues(
+    source.retentionPolicies.map((entry) => entry.id),
+    "BR04 retention policy id"
+  );
+  assertUniqueValues(
+    source.retentionPolicies.map((entry) => entry.policyKey),
+    "BR04 retention policy key"
+  );
+  assertUniqueValues(
+    source.accessScopes.map((entry) => entry.id),
+    "BR04 access scope id"
+  );
+  assertUniqueValues(
+    source.privacyRoleBoundaries.map((entry) => entry.id),
+    "BR04 privacy role boundary id"
+  );
+
+  const dataClassIds = new Set(source.dataClasses.map((entry) => entry.id));
+
+  for (const policyRef of source.retentionPolicies) {
+    if (!dataClassIds.has(policyRef.dataClassId)) {
+      throw new Error(
+        `BR04 retention policy ${policyRef.id} references unknown data class ${policyRef.dataClassId}.`
+      );
+    }
+  }
+
+  const accessScopeIds = new Set(source.accessScopes.map((entry) => entry.id));
+
+  for (const boundary of source.privacyRoleBoundaries) {
+    validateBr04RoleBoundaryOperationOverlap(boundary);
+
+    for (const accessScopeId of boundary.accessScopeIds) {
+      if (!accessScopeIds.has(accessScopeId)) {
+        throw new Error(
+          `BR04 privacy role boundary ${boundary.id} references unknown access scope ${accessScopeId}.`
+        );
+      }
+    }
+  }
+}
+
+function validateBr04RoleBoundaryOperationOverlap(
+  boundary: Br04PrivacyRoleBoundaryRegistryEntry
+): void {
+  const seen = new Map<PrivacyOperation, string>();
+
+  registerOperationSet(boundary, seen, boundary.allowedOperations, "allowedOperations");
+  registerOperationSet(
+    boundary,
+    seen,
+    boundary.reviewRequiredOperations,
+    "reviewRequiredOperations"
+  );
+  registerOperationSet(boundary, seen, boundary.blockedOperations, "blockedOperations");
+}
+
+function registerOperationSet(
+  boundary: Br04PrivacyRoleBoundaryRegistryEntry,
+  seen: Map<PrivacyOperation, string>,
+  operations: readonly PrivacyOperation[],
+  setName: string
+): void {
+  for (const operation of operations) {
+    const existingSet = seen.get(operation);
+
+    if (existingSet) {
+      throw new Error(
+        `BR04 privacy role boundary ${boundary.id} maps operation ${operation} to both ${existingSet} and ${setName}.`
+      );
+    }
+
+    seen.set(operation, setName);
+  }
+}
+
+function assertUniqueValues(values: readonly string[], label: string): void {
+  const uniqueValues = new Set(values);
+
+  if (uniqueValues.size !== values.length) {
+    throw new Error(`Duplicate ${label} detected in BR04 policy source.`);
+  }
+}
+
+function uniqueEntityIds(values: readonly EntityId[]): EntityId[] {
+  return [...new Set(values)];
+}
+
+function mergeRetentionPolicyRefs(
+  base: readonly RetentionPolicyRef[],
+  overrides: readonly RetentionPolicyRef[]
+): RetentionPolicyRef[] {
+  const byId = new Map<string, RetentionPolicyRef>();
+
+  for (const policyRef of [...base, ...overrides]) {
+    byId.set(policyRef.id, policyRef);
+  }
+
+  return [...byId.values()];
+}
+
 function deriveLifecycleState(
   action: LifecycleAction["action"]
 ): PrivacyLifecycleState {
@@ -397,3 +670,5 @@ function deriveLifecycleState(
 
   return "REVIEW_NEEDED";
 }
+
+export * from "./policy-source.js";

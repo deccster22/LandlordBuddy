@@ -18,7 +18,7 @@ Acceptance criteria:
 - `Matter` preserves separate `forumPath`, `outputMode`, and `officialHandoff` state objects; the repo does not flatten them into a single status field.
 - `validatePreparationSeparation` rejects out-of-lane or boundary-breaking state, including unresolved forum paths marked as `IN_SCOPE_CONFIRMED`, output modes that imply official submission, or handoff states that imply product execution.
 - Shared entities exist for referral flags, routing decisions, prior notices, service events, evidence items, payment plans, audit log entries, and source references so guarded work can be attached visibly.
-- `GUARDED_INSERTION_POINTS` stays populated for mixed claims, evidence timing, hand-service proof, privacy retention, portal behavior, and touchpoint freshness.
+- `GUARDED_INSERTION_POINTS` stays populated for mixed claims, evidence timing, hand-service proof, proof-linkage review, privacy retention, portal behavior, and touchpoint freshness.
 
 Blocked areas for this module:
 
@@ -100,7 +100,7 @@ Acceptance criteria:
 - Local evidence validation blocks unsupported file types and invalid sizes.
 - Filename normalization and filename clarity checks remain visible in validation output.
 - Attachment separation and proof linkage remain explicit review surfaces instead of silent assumptions.
-- `LOCAL_VALIDATION_READY` means local validation passed only; it does not imply official upload or evidentiary sufficiency.
+- `LOCAL_VALIDATION_READY` means local-only validation passed only; it does not imply official upload or evidentiary sufficiency.
 - Created evidence items preserve privacy class, retention class, hold status, source sensitivity, upload status, validation flags, and linked audit IDs.
 - Audit events preserve timestamp, actor, matter ID, subject, severity, outcome, metadata, and source-reference linkage when supplied.
 - Audit event names remain stable in `DOMAIN:ACTION` format.
