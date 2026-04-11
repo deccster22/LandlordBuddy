@@ -437,18 +437,38 @@ export function resolveBr04RetentionPolicyRefs(
   input: ResolveBr04RetentionPolicyRefsInput = {}
 ): RetentionPolicyRef[] {
   const registry = assembleBr04PolicyRegistry(input.source);
+  const retentionPolicyRefs = input.appliesTo
+    ? registry.retentionPolicyRefs.filter(
+        (candidate) => candidate.appliesTo === input.appliesTo
+      )
+    : registry.retentionPolicyRefs;
 
-  return registry.retentionPolicyRefs.filter((candidate) => {
-    if (input.appliesTo && candidate.appliesTo !== input.appliesTo) {
-      return false;
-    }
+  if (input.policyKeys && input.policyKeys.length > 0) {
+    const byPolicyKey = new Map(
+      retentionPolicyRefs.map((policyRef) => [policyRef.policyKey, policyRef])
+    );
 
-    if (input.policyKeys && input.policyKeys.length > 0) {
-      return input.policyKeys.includes(candidate.policyKey);
-    }
+    return input.policyKeys.map((policyKey) => {
+      const policyRef = byPolicyKey.get(policyKey);
 
-    return true;
-  });
+      if (!policyRef) {
+        throw new Error(`Unknown BR04 retention policy key: ${policyKey}`);
+      }
+
+      return policyRef;
+    });
+  }
+
+  if (input.appliesTo) {
+    assertUnambiguousBr04DefaultSelection({
+      appliesTo: input.appliesTo,
+      candidates: retentionPolicyRefs,
+      candidateLabel: "retention policy",
+      selectionKey: "policyKeys"
+    });
+  }
+
+  return retentionPolicyRefs;
 }
 
 export function resolveBr04AccessScopes(
@@ -466,14 +486,29 @@ export function resolveBr04AccessScopes(
         throw new Error(`Unknown BR04 access scope: ${id}`);
       }
 
+      if (input.subjectType && scope.subjectType !== input.subjectType) {
+        throw new Error(
+          `BR04 access scope ${scope.id} for ${scope.subjectType} cannot be selected for ${input.subjectType}.`
+        );
+      }
+
       return scope;
     });
   }
 
   if (input.subjectType) {
-    return registry.accessScopes.filter(
+    const accessScopes = registry.accessScopes.filter(
       (scope) => scope.subjectType === input.subjectType
     );
+
+    assertUnambiguousBr04DefaultSelection({
+      appliesTo: input.subjectType,
+      candidates: accessScopes,
+      candidateLabel: "access scope",
+      selectionKey: "accessScopeIds"
+    });
+
+    return accessScopes;
   }
 
   return registry.accessScopes;
@@ -536,6 +571,7 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     scaffoldKeys: ["privacyHooks", "NORMAL_LIFECYCLE", "DELETION_REQUESTED"],
     testFiles: [
       "tests/br04-privacy-scaffold.test.ts",
+      "tests/br04-consumer-lanes.test.ts",
       "tests/evidence-audit.framework.test.ts",
       "tests/output-handoff.framework.test.ts"
     ]
@@ -546,7 +582,11 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     deterministic: false,
     invariant: "Retention policy refs attach to configurable slots and must not hard-code final durations.",
     scaffoldKeys: ["CONFIG_PENDING", "ATTACHED", "REVIEW_REQUIRED"],
-    testFiles: ["tests/br04-privacy-scaffold.test.ts", "tests/evidence-audit.framework.test.ts"]
+    testFiles: [
+      "tests/br04-privacy-scaffold.test.ts",
+      "tests/br04-consumer-lanes.test.ts",
+      "tests/evidence-audit.framework.test.ts"
+    ]
   },
   {
     id: "BR04-SCOPED-HOLD",
@@ -562,7 +602,7 @@ export const br04QaInventoryHooks: readonly Br04QaInventoryHook[] = Object.freez
     deterministic: true,
     invariant: "Privacy audit events preserve control area, lifecycle state, policy linkage, hold linkage, and access-role metadata.",
     scaffoldKeys: ["CLASSIFICATION", "RETENTION", "HOLD", "LIFECYCLE", "ACCESS"],
-    testFiles: ["tests/br04-privacy-scaffold.test.ts"]
+    testFiles: ["tests/br04-privacy-scaffold.test.ts", "tests/br04-consumer-lanes.test.ts"]
   },
   {
     id: "BR04-ROLE-BOUNDARY",
@@ -723,6 +763,21 @@ function assertUniqueValues(values: readonly string[], label: string): void {
   if (uniqueValues.size !== values.length) {
     throw new Error(`Duplicate ${label} detected in BR04 policy source.`);
   }
+}
+
+function assertUnambiguousBr04DefaultSelection(input: {
+  appliesTo: string;
+  candidates: readonly { id: EntityId }[];
+  candidateLabel: string;
+  selectionKey: string;
+}): void {
+  if (input.candidates.length <= 1) {
+    return;
+  }
+
+  throw new Error(
+    `BR04 default ${input.candidateLabel} selection for ${input.appliesTo} is ambiguous; explicit ${input.selectionKey} are required. Candidates: ${input.candidates.map((candidate) => candidate.id).join(", ")}.`
+  );
 }
 
 function uniqueEntityIds(values: readonly EntityId[]): EntityId[] {

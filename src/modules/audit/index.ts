@@ -1,4 +1,17 @@
-﻿import type { AuditLogEntry, ControlSeverity } from "../../domain/model.js";
+import type {
+  AuditLogEntry,
+  ControlSeverity,
+  EntityId,
+  PrivacyAuditEvent,
+  PrivacyLifecycleHookTarget
+} from "../../domain/model.js";
+import {
+  createPrivacyAuditEvent,
+  resolveBr04AccessScopes,
+  resolveBr04RetentionPolicyRefs,
+  type Br04PolicySource,
+  type CreatePrivacyAuditEventInput
+} from "../br04/index.js";
 
 export const auditEventDomains = [
   "EVIDENCE",
@@ -42,6 +55,13 @@ export interface AuditEventRecord extends AuditLogEntry {
   outcome: AuditEventOutcome;
 }
 
+export interface PrivacyAuditSourceLinkInput {
+  source?: Br04PolicySource | undefined;
+  appliesTo: PrivacyLifecycleHookTarget;
+  policyKeys?: readonly string[] | undefined;
+  accessScopeId?: EntityId | undefined;
+}
+
 export interface AuditEventRecorder {
   record(input: AuditEventInput): AuditEventRecord;
   listByMatter(matterId: string): AuditEventRecord[];
@@ -67,7 +87,27 @@ export function createAuditEvent(input: AuditEventInput): AuditEventRecord {
   };
 }
 
-export function createInMemoryAuditRecorder(initial: AuditEventRecord[] = []): AuditEventRecorder {
+export function createPrivacyAuditRecord(
+  input: CreatePrivacyAuditEventInput,
+  sourceLinkInput: PrivacyAuditSourceLinkInput
+): PrivacyAuditEvent {
+  const policyKeys = resolveBr04RetentionPolicyRefs({
+    source: sourceLinkInput.source,
+    appliesTo: sourceLinkInput.appliesTo,
+    policyKeys: sourceLinkInput.policyKeys
+  }).map((policyRef) => policyRef.policyKey);
+  const accessScopeId = resolvePrivacyAuditAccessScopeId(sourceLinkInput);
+
+  return createPrivacyAuditEvent({
+    ...input,
+    accessScopeId,
+    policyKeys
+  });
+}
+
+export function createInMemoryAuditRecorder(
+  initial: AuditEventRecord[] = []
+): AuditEventRecorder {
   const events = [...initial];
 
   return {
@@ -80,4 +120,28 @@ export function createInMemoryAuditRecorder(initial: AuditEventRecord[] = []): A
       return events.filter((event) => event.matterId === matterId);
     }
   };
+}
+
+function resolvePrivacyAuditAccessScopeId(
+  input: PrivacyAuditSourceLinkInput
+): EntityId {
+  const accessScopes = input.accessScopeId
+    ? resolveBr04AccessScopes({
+        source: input.source,
+        ids: [input.accessScopeId],
+        subjectType: input.appliesTo
+      })
+    : resolveBr04AccessScopes({
+        source: input.source,
+        subjectType: input.appliesTo
+      });
+  const accessScope = accessScopes[0];
+
+  if (!accessScope) {
+    throw new Error(
+      `BR04 privacy audit records for ${input.appliesTo} require at least one explicit access scope ref.`
+    );
+  }
+
+  return accessScope.id;
 }
