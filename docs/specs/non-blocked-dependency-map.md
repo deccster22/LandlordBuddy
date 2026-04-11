@@ -18,8 +18,8 @@ This map separates what future build contributors can extend now from what remai
 | Timeline shell | Guarded shell | `src/modules/timeline/index.ts` derives threshold-driven milestones while keeping evidence, payment-plan, and hearing steps as placeholders |
 | Notice-readiness shell | Non-blocked plus guarded seams | `src/modules/notice-readiness/index.ts` enforces deterministic blockers and preserves guarded review hooks |
 | Output, handoff, and touchpoint shells | Non-blocked plus guarded seams | `src/modules/output`, `src/modules/handoff`, and `src/modules/touchpoints` keep package selection, handoff posture, and touchpoint metadata separate |
-| Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, event recording, and privacy-aware metadata attachment |
-| BR04 privacy scaffold | Guarded shell | `src/domain/model.ts`, `src/modules/br04/index.ts`, and `src/modules/br04/policy-source.ts` attach privacy hooks, source-driven policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, and access-boundary placeholders without hard-coded durations or release rules |
+| Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, event recording, and source-driven BR04 privacy metadata attachment without turning local-only checks into doctrine |
+| BR04 privacy scaffold | Guarded shell | `src/domain/model.ts`, `src/modules/br04/index.ts`, `src/modules/br04/policy-source.ts`, and `src/modules/output/index.ts` attach privacy hooks, source-driven policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, access-boundary placeholders, and first consumer-lane record population without hard-coded durations or release rules |
 | Verification posture | Non-blocked | `tests/` plus `npm run verify` enforce the current boundary and shell posture |
 
 ## What remains blocked or guarded
@@ -31,6 +31,7 @@ These assumptions are still unresolved and must remain explicit:
 - authenticated portal behavior remains handoff-only in detail
 - privacy retention engine details remain incomplete pending `AG-BR04A`
 - BR04 policy source resolves references only; exact durations, hold triggers, release authority, and review cadence remain placeholder/configurable
+- BR04 consumer-lane hooks now require target-scoped policy refs plus explicit access-scope linkage, so no universal keep/delete fallback can be inferred from source-driven assembly
 - trust-copy and pricing validation are not final
 
 Current safe extension path:
@@ -40,7 +41,7 @@ Current safe extension path:
 3. Move through the hero workflow while logging guarded issues as slowdown or referral.
 4. Validate notice readiness using deterministic blockers plus guarded hooks.
 5. Assemble printable, prep-pack, or handoff-guidance output without implying official submission.
-6. Carry review controls into evidence and audit records.
+6. Carry review controls and source-driven BR04 refs into evidence, output-package, and audit records without implying official execution or compliant disposal.
 
 ## Blocker insertion points
 
@@ -98,6 +99,7 @@ Insert later through:
 - section keys and block keys in `src/modules/output/index.ts`
 - guidance block keys and boundary messaging in `src/modules/handoff/index.ts`
 - retention, hold, upload, and review handling in `src/modules/evidence/index.ts`
+- source-driven output-package record attachment in `src/modules/output/index.ts`
 - audit metadata conventions in `src/modules/audit/index.ts`
 
 Keep unchanged until then:

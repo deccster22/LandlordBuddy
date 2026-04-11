@@ -1,6 +1,5 @@
 ﻿import {
   GUARDED_INSERTION_POINTS,
-  createPrivacyLifecycleHooks,
   type AttachmentSeparationStatus,
   type ControlSeverity,
   type EvidenceHoldStatus,
@@ -9,10 +8,15 @@
   type EvidenceRetentionClass,
   type EvidenceUploadStatus,
   type EvidenceValidationFlag,
+  type PrivacyLifecycleHooks,
   type PrivacyLifecycleState,
   type ProofOfSendingStatus,
   type SourceSensitivity
 } from "../../domain/model.js";
+import {
+  buildBr04PrivacyHooksFromSource,
+  type Br04PolicySource
+} from "../br04/index.js";
 
 export interface EvidenceUploadCandidate {
   id: string;
@@ -40,6 +44,13 @@ export interface UploadValidationRules {
   maxSizeBytes: number;
   genericFileNameTokens: readonly string[];
   minimumFileStemLength: number;
+}
+
+export interface EvidencePrivacyHookSourceInput {
+  source?: Br04PolicySource | undefined;
+  policyKeys?: readonly string[] | undefined;
+  accessScopeIds?: readonly string[] | undefined;
+  hookOverrides?: Partial<PrivacyLifecycleHooks> | undefined;
 }
 
 export interface UploadValidationIssue {
@@ -168,7 +179,8 @@ export function validateLocalEvidenceUpload(
 
 export function createEvidenceItemShell(
   input: EvidenceUploadCandidate,
-  rules: UploadValidationRules = defaultUploadValidationRules
+  rules: UploadValidationRules = defaultUploadValidationRules,
+  privacyHookInput: EvidencePrivacyHookSourceInput = {}
 ): EvidenceItem {
   const validation = validateLocalEvidenceUpload(input, rules);
   const proofOfSendingStatus = input.proofOfSendingStatus
@@ -211,11 +223,18 @@ export function createEvidenceItemShell(
     holdStatus: input.holdStatus ?? "NONE",
     uploadStatus: input.uploadStatus ?? validation.uploadStatus,
     sourceSensitivity: input.sourceSensitivity ?? "LOW",
-    privacyHooks: createPrivacyLifecycleHooks({
-      lifecycleState: deriveEvidencePrivacyLifecycleState({
-        holdStatus: input.holdStatus ?? "NONE",
-        retentionClass: input.retentionClass ?? "UNCLASSIFIED_PENDING_POLICY"
-      })
+    privacyHooks: buildBr04PrivacyHooksFromSource({
+      appliesTo: "EVIDENCE_ITEM",
+      source: privacyHookInput.source,
+      policyKeys: privacyHookInput.policyKeys,
+      accessScopeIds: privacyHookInput.accessScopeIds,
+      hookOverrides: {
+        lifecycleState: deriveEvidencePrivacyLifecycleState({
+          holdStatus: input.holdStatus ?? "NONE",
+          retentionClass: input.retentionClass ?? "UNCLASSIFIED_PENDING_POLICY"
+        }),
+        ...(privacyHookInput.hookOverrides ?? {})
+      }
     }),
     validationFlags,
     auditEventIds: [],

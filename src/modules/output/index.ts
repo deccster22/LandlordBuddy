@@ -1,4 +1,9 @@
-import type { EntityId } from "../../domain/model.js";
+import type {
+  DateTimeString,
+  EntityId,
+  OutputPackage,
+  PrivacyLifecycleHooks
+} from "../../domain/model.js";
 import type {
   ForumPathState,
   OfficialHandoffStateRecord,
@@ -35,6 +40,10 @@ import {
   lookupTouchpointMetadata,
   type TouchpointMetadata
 } from "../touchpoints/index.js";
+import {
+  buildBr04PrivacyHooksFromSource,
+  type Br04PolicySource
+} from "../br04/index.js";
 
 export interface OutputSelectionInput {
   matterId: EntityId;
@@ -90,6 +99,21 @@ export type OutputPackageShell =
   | PrintableOutputPackageShell
   | PrepPackOutputPackageShell
   | OfficialHandoffGuidancePackageShell;
+
+export interface OutputPackagePrivacyHookSourceInput {
+  source?: Br04PolicySource | undefined;
+  policyKeys?: readonly string[] | undefined;
+  accessScopeIds?: readonly EntityId[] | undefined;
+  hookOverrides?: Partial<PrivacyLifecycleHooks> | undefined;
+}
+
+export interface CreateOutputPackageRecordInput extends OutputSelectionInput {
+  id: EntityId;
+  noticeDraftId?: EntityId;
+  evidenceItemIds?: EntityId[];
+  generatedAt?: DateTimeString;
+  completeness?: OutputPackage["completeness"];
+}
 
 export function selectOutputShell(input: OutputSelectionInput): OutputSelection {
   const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
@@ -223,6 +247,37 @@ export function generateOutputPackageShell(
   }
 }
 
+export function createOutputPackageRecord(
+  input: CreateOutputPackageRecordInput,
+  privacyHookInput: OutputPackagePrivacyHookSourceInput = {}
+): OutputPackage {
+  const selection = selectOutputShell(input);
+  const completeness = input.completeness ?? deriveOutputPackageCompleteness(input.noticeReadiness);
+
+  return {
+    id: input.id,
+    matterId: selection.matterId,
+    outputMode: selection.outputMode,
+    officialHandoff: selection.officialHandoff,
+    ...(input.noticeDraftId ? { noticeDraftId: input.noticeDraftId } : {}),
+    evidenceItemIds: input.evidenceItemIds ?? [],
+    touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id),
+    carryForwardControls: selection.carryForwardControls,
+    ...(input.generatedAt ? { generatedAt: input.generatedAt } : {}),
+    completeness,
+    privacyHooks: buildBr04PrivacyHooksFromSource({
+      appliesTo: "OUTPUT_PACKAGE",
+      source: privacyHookInput.source,
+      policyKeys: privacyHookInput.policyKeys,
+      accessScopeIds: privacyHookInput.accessScopeIds,
+      hookOverrides: {
+        lifecycleState: deriveOutputPackagePrivacyLifecycleState(completeness),
+        ...(privacyHookInput.hookOverrides ?? {})
+      }
+    })
+  };
+}
+
 function resolveTouchpoints(
   forumPath: ForumPathState["path"],
   touchpointIds?: string[]
@@ -235,6 +290,22 @@ function resolveTouchpoints(
     const touchpoint = lookupTouchpointMetadata(touchpointId);
     return touchpoint ? [touchpoint] : [];
   });
+}
+
+function deriveOutputPackageCompleteness(
+  noticeReadiness?: NoticeReadinessResult
+): OutputPackage["completeness"] {
+  return noticeReadiness?.outcome === "READY_FOR_REVIEW"
+    ? "READY_FOR_REVIEW"
+    : "PARTIAL";
+}
+
+function deriveOutputPackagePrivacyLifecycleState(
+  completeness: OutputPackage["completeness"]
+): PrivacyLifecycleHooks["lifecycleState"] {
+  return completeness === "READY_FOR_REVIEW"
+    ? "NORMAL_LIFECYCLE"
+    : "REVIEW_NEEDED";
 }
 
 function buildPrintableSectionKeys(
