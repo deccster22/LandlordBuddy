@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
+import { GUARDED_INSERTION_POINTS } from "../src/domain/model.js";
 import {
   createAuditEvent,
   createInMemoryAuditRecorder
@@ -55,8 +56,14 @@ test("local evidence validation blocks unsupported types and oversized files", (
 
   assert.equal(result.acceptedLocally, false);
   assert.equal(result.uploadStatus, "LOCAL_VALIDATION_BLOCKED");
-  assert.ok(result.issues.some((issue) => issue.code === "UNSUPPORTED_FILE_TYPE"));
-  assert.ok(result.issues.some((issue) => issue.code === "INVALID_FILE_SIZE"));
+  assert.ok(result.issues.some((issue) => (
+    issue.code === "UNSUPPORTED_FILE_TYPE"
+    && issue.message.includes("local-only")
+  )));
+  assert.ok(result.issues.some((issue) => (
+    issue.code === "INVALID_FILE_SIZE"
+    && issue.message.includes("local-only")
+  )));
 });
 
 test("service proof validation keeps filename, attachment, and proof-linkage review visible", () => {
@@ -76,7 +83,10 @@ test("service proof validation keeps filename, attachment, and proof-linkage rev
   assert.equal(result.reviewRequired, true);
   assert.ok(result.issues.some((issue) => issue.code === "UNCLEAR_FILE_NAME"));
   assert.ok(result.issues.some((issue) => issue.code === "ATTACHMENT_SEPARATION_REVIEW"));
-  assert.ok(result.issues.some((issue) => issue.code === "PROOF_LINKAGE_REVIEW"));
+  assert.ok(result.issues.some((issue) => (
+    issue.code === "PROOF_LINKAGE_REVIEW"
+    && issue.guardedInsertionPoint === GUARDED_INSERTION_POINTS.proofLinkageReview
+  )));
 });
 
 test("evidence store and audit recorder retain evidence-related events without implying official acceptance", () => {

@@ -764,6 +764,7 @@ export const GUARDED_INSERTION_POINTS = Object.freeze({
   mixedClaimRouting: "Represent as referral or slowdown until doctrine is settled.",
   evidenceTiming: "Keep timing-specific rules guarded and operator-reviewable.",
   handServiceProof: "Do not encode final proof sufficiency thresholds.",
+  proofLinkageReview: "Keep generic proof-linkage review visible without implying evidentiary sufficiency.",
   privacyRetention: "Keep retention and deletion handling behind future privacy engine work.",
   privacyHoldRelease: "Keep hold trigger detail, release authority, and review cadence behind later BR04 extraction.",
   privacyRoleBoundary: "Keep privacy-role operation limits explicit until role policy is extracted.",

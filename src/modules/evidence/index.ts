@@ -1,4 +1,5 @@
 ﻿import {
+  GUARDED_INSERTION_POINTS,
   createPrivacyLifecycleHooks,
   type AttachmentSeparationStatus,
   type ControlSeverity,
@@ -69,6 +70,7 @@ export interface UploadValidator {
   validate(input: EvidenceUploadCandidate, rules?: UploadValidationRules): UploadValidationResult;
 }
 
+// These limits are local-only preparation checks, not privacy-retention doctrine.
 export const defaultUploadValidationRules: UploadValidationRules = {
   allowedMimeTypes: [
     "application/pdf",
@@ -95,7 +97,7 @@ export function validateLocalEvidenceUpload(
       code: "UNSUPPORTED_FILE_TYPE",
       field: "fileType",
       severity: "SLOWDOWN",
-      message: "Unsupported local file type for the current evidence shell.",
+      message: "Unsupported local-only file type for the current evidence shell.",
       deterministic: true,
       blockedLocally: true
     });
@@ -106,7 +108,7 @@ export function validateLocalEvidenceUpload(
       code: "INVALID_FILE_SIZE",
       field: "fileSize",
       severity: "SLOWDOWN",
-      message: "File size falls outside the current local upload limits.",
+      message: "File size falls outside the current local-only upload limits.",
       deterministic: true,
       blockedLocally: true
     });
@@ -148,7 +150,7 @@ export function validateLocalEvidenceUpload(
       message: "Proof-of-sending linkage remains a visible placeholder and requires review.",
       deterministic: false,
       blockedLocally: false,
-      guardedInsertionPoint: "handServiceProof"
+      guardedInsertionPoint: GUARDED_INSERTION_POINTS.proofLinkageReview
     });
   }
 

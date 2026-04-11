@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import {
+  GUARDED_INSERTION_POINTS,
   createForumPathState,
   createOfficialHandoffStateRecord,
   createOutputModeState,
@@ -11,8 +12,10 @@ import {
 } from "../src/domain/model.js";
 import { createEvidenceItemShell } from "../src/modules/evidence/index.js";
 import {
+  assembleBr04PolicyRegistry,
   br04QaInventoryHooks,
   buildBr04PrivacyHooks,
+  buildBr04PrivacyHooksFromSource,
   createAccessScope,
   createDataClass,
   createDeidentificationAction,
@@ -22,7 +25,10 @@ import {
   createPrivacyAuditEvent,
   createPrivacyRoleBoundary,
   createRetentionPolicyRef,
-  createScopedHoldFlag
+  createScopedHoldFlag,
+  loadBr04PolicySource,
+  resolveBr04AccessScopes,
+  resolveBr04PrivacyRoleBoundaries
 } from "../src/modules/br04/index.js";
 
 test("br04 privacy hooks attach cleanly to matter, evidence, and document records", () => {
@@ -221,3 +227,85 @@ test("privacy audit and role boundaries preserve access and linkage metadata", (
   assert.equal(auditEvent.holdFlagIds[0], "hold-2");
   assert.ok(qaHook?.testFiles.includes("tests/br04-privacy-scaffold.test.ts"));
 });
+
+test("br04 policy source assembles placeholder-based policy refs, scopes, and boundaries", () => {
+  const source = loadBr04PolicySource();
+  const assembly = assembleBr04PolicyRegistry(source);
+  const hooks = buildBr04PrivacyHooksFromSource({
+    appliesTo: "MATTER",
+    accessScopeIds: ["BR04-SCOPE-MATTER-REVIEW", "BR04-SCOPE-AUDIT-READ"],
+    hookOverrides: {
+      lifecycleState: "REVIEW_NEEDED",
+      lifecycleActionIds: ["action-2"]
+    }
+  });
+  const privacyReviewerBoundary = resolveBr04PrivacyRoleBoundaries(source).find(
+    (boundary) => boundary.role === "PRIVACY_REVIEWER"
+  );
+  const matterAndAuditScopes = resolveBr04AccessScopes({
+    source,
+    ids: ["BR04-SCOPE-MATTER-REVIEW", "BR04-SCOPE-AUDIT-READ"]
+  });
+
+  assert.ok(assembly.dataClasses.some((entry) => entry.code === "MATTER_PRIMARY_RECORD"));
+  assert.ok(assembly.retentionPolicyRefs.every((entry) => entry.configurable));
+  assert.equal(hooks.retentionPolicyRefs[0]?.policyKey, "MATTER_PRIMARY_RECORD");
+  assert.equal(hooks.retentionPolicyRefs[0]?.policyStatus, "ATTACHED");
+  assert.deepEqual(
+    hooks.accessScopeIds,
+    ["BR04-SCOPE-MATTER-REVIEW", "BR04-SCOPE-AUDIT-READ"]
+  );
+  assert.equal(hooks.lifecycleActionIds[0], "action-2");
+  assert.deepEqual(
+    matterAndAuditScopes.map((scope) => scope.scopeLabel),
+    ["Matter privacy review scope", "Audit-only visibility scope"]
+  );
+  assert.ok(privacyReviewerBoundary?.allowedOperations.includes("REVIEW_LIFECYCLE"));
+  assert.ok(
+    privacyReviewerBoundary?.reviewRequiredOperations.includes("REQUEST_HOLD_RELEASE")
+  );
+});
+
+test("br04 policy source keeps unresolved doctrine placeholder-based and rejects blanket lifecycle inference", () => {
+  const source = loadBr04PolicySource();
+  const retentionPolicyEntry = source.retentionPolicies.find(
+    (entry) => entry.policyKey === "MATTER_PRIMARY_RECORD"
+  );
+  const universalRuleGuard = source.doctrinePlaceholders.find(
+    (entry) => entry.key === "UNIVERSAL_KEEP_DELETE_RULE"
+  );
+  const localEvidenceGuard = source.doctrinePlaceholders.find(
+    (entry) => entry.key === "LOCAL_EVIDENCE_LIMITS"
+  );
+
+  assert.equal(retentionPolicyEntry?.durationStatus, "PLACEHOLDER_PENDING_CONFIG");
+  assert.equal(retentionPolicyEntry?.durationModelKey, "CONFIGURE_LATER");
+  assert.equal(
+    retentionPolicyEntry?.guardedInsertionPoint,
+    GUARDED_INSERTION_POINTS.privacyRetention
+  );
+  assert.equal(universalRuleGuard?.status, "NOT_ALLOWED");
+  assert.match(universalRuleGuard?.summary ?? "", /blanket keep\/delete/i);
+  assert.equal(localEvidenceGuard?.status, "LOCAL_ONLY");
+});
+
+test("br04 policy source rejects overlapping role-boundary operation sets", () => {
+  const source = loadBr04PolicySource();
+  const baseBoundary = source.privacyRoleBoundaries[0];
+
+  assert.ok(baseBoundary);
+  assert.throws(
+    () => resolveBr04PrivacyRoleBoundaries({
+      ...source,
+      privacyRoleBoundaries: [
+        {
+          ...baseBoundary,
+          allowedOperations: ["CLASSIFY_DATA", "VIEW_AUDIT_LOG"],
+          reviewRequiredOperations: ["VIEW_AUDIT_LOG"]
+        }
+      ]
+    }),
+    /maps operation VIEW_AUDIT_LOG to both allowedOperations and reviewRequiredOperations/i
+  );
+});
+

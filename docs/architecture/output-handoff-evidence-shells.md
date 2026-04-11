@@ -10,6 +10,8 @@ The `src/modules/output`, `src/modules/handoff`, and `src/modules/touchpoints` s
 
 The output and handoff shells now also attach structural trust/copy bindings only: section or block mappings, visible source-type label keys, boundary-statement keys, trust-cue keys, and emphasis zones. These bindings are for later UI or document rendering. They are not final approved prose, legal doctrine, or portal behavior.
 
-The `src/modules/evidence` and `src/modules/audit` shells validate only stable local constraints and keep privacy, retention, hold, proof-linkage, and upload progress as visible hooks. `LOCAL_VALIDATION_READY` means local checks passed. It does not mean official acceptance or evidentiary sufficiency.
+The `src/modules/evidence` and `src/modules/audit` shells validate only stable local-only constraints and keep privacy, retention, hold, proof-linkage, and upload progress as visible hooks. `LOCAL_VALIDATION_READY` means local checks passed. It does not mean official acceptance or evidentiary sufficiency.
+
+Generic proof-linkage review remains a dedicated guarded insertion point separate from hand-service doctrine. This keeps proof-linkage review visible without implying that the repo has settled broader service-proof sufficiency.
 
 Readiness remains a local preparation state, not filing or acceptance. Official handoff guidance remains a prep-and-handoff surface, not a completed official step.

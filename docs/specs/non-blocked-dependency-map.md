@@ -19,7 +19,7 @@ This map separates what future build contributors can extend now from what remai
 | Notice-readiness shell | Non-blocked plus guarded seams | `src/modules/notice-readiness/index.ts` enforces deterministic blockers and preserves guarded review hooks |
 | Output, handoff, and touchpoint shells | Non-blocked plus guarded seams | `src/modules/output`, `src/modules/handoff`, and `src/modules/touchpoints` keep package selection, handoff posture, and touchpoint metadata separate |
 | Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, event recording, and privacy-aware metadata attachment |
-| BR04 privacy scaffold | Guarded shell | `src/domain/model.ts` and `src/modules/br04/index.ts` attach privacy hooks, policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, and access-boundary placeholders without hard-coded durations or release rules |
+| BR04 privacy scaffold | Guarded shell | `src/domain/model.ts`, `src/modules/br04/index.ts`, and `src/modules/br04/policy-source.ts` attach privacy hooks, source-driven policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, and access-boundary placeholders without hard-coded durations or release rules |
 | Verification posture | Non-blocked | `tests/` plus `npm run verify` enforce the current boundary and shell posture |
 
 ## What remains blocked or guarded
@@ -30,6 +30,7 @@ These assumptions are still unresolved and must remain explicit:
 - evidence deadline wording remains guarded
 - authenticated portal behavior remains handoff-only in detail
 - privacy retention engine details remain incomplete pending `AG-BR04A`
+- BR04 policy source resolves references only; exact durations, hold triggers, release authority, and review cadence remain placeholder/configurable
 - trust-copy and pricing validation are not final
 
 Current safe extension path:
@@ -102,6 +103,7 @@ Insert later through:
 Keep unchanged until then:
 
 - `LOCAL_VALIDATION_READY` means only local checks passed
+- local evidence upload limits remain local-only shell constraints rather than retention doctrine
 - `UNCLASSIFIED_PENDING_POLICY` does not imply a settled retention doctrine
 - output shells stay reviewable and handoff-oriented rather than official-channel executing
 
