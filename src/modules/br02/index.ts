@@ -8,6 +8,18 @@ import type {
   ServiceEventStatus,
   ServiceMethod
 } from "../../domain/model.js";
+import {
+  assessBr02ConsumerAssessment,
+  assessBr02EvidenceDeadline,
+  assessBr02NoticeEligibilityTiming,
+  assessBr02ServiceProof,
+  calculateBr02TerminationDate,
+  type Br02ConsumerAssessment,
+  type Br02EvidenceDeadlineResult,
+  type Br02NoticeEligibilityTimingResult,
+  type Br02ServiceProofResult,
+  type Br02TerminationDateResult
+} from "./consumer.js";
 import type {
   Br02FreshnessSnapshot,
   Br02HearingSpecificOverrideInput,
@@ -74,6 +86,13 @@ export interface AssessBr02ServiceEventInput {
   serviceEvent: ServiceEvent;
   consentProofs?: readonly ConsentProof[];
   freshnessSnapshots?: readonly Br02FreshnessSnapshot[];
+  evidenceTimingState?: EvidenceTimingState;
+  hearingDateAt?: string;
+  hearingNoticeAt?: string;
+}
+
+export interface Br02ServiceEventAssessment extends Br02ServiceAssessment, Br02ConsumerAssessment {
+  consumerAssessment: Br02ConsumerAssessment;
 }
 
 const blockedSeverities = new Set(["hard-stop", "slowdown"]);
@@ -252,60 +271,28 @@ export function buildBr02EvidenceTimingState(
 
 export function assessBr02ServiceEvent(
   input: AssessBr02ServiceEventInput
-): Br02ServiceAssessment {
-  const method = requireServiceMethod(input.serviceEvent.serviceMethod);
-  const issues: Br02ValidationIssue[] = [];
-  const appliedDateRuleCodes = uniqueStrings([
-    "NO_EARLY_NOTICE_THRESHOLD_GATE",
-    ...method.dateRuleCodes
-  ]);
-
-  if (input.thresholdState !== "THRESHOLD_MET") {
-    issues.push(buildValidationIssue("NO_EARLY_NOTICE_GATE"));
-  }
-
-  if (method.requiresConsentProof && !hasLinkedConsentProof(input.serviceEvent, input.consentProofs ?? [])) {
-    issues.push(buildValidationIssue("EMAIL_CONSENT_PROOF_REQUIRED"));
-  }
-
-  if (input.serviceEvent.serviceMethod === "HAND_DELIVERY") {
-    issues.push(buildValidationIssue("HAND_SERVICE_REVIEW_REQUIRED"));
-  }
-
-  if (
-    input.serviceEvent.serviceMethod === "POST"
-    || input.serviceEvent.serviceMethod === "ORDINARY_POST"
-  ) {
-    issues.push(buildValidationIssue("REGISTERED_POST_PREFERRED_PATH"));
-  }
-
-  for (const snapshot of input.freshnessSnapshots ?? []) {
-    const monitor = lookupBr02FreshnessMonitor(snapshot.monitorCode);
-
-    if (!monitor) {
-      continue;
-    }
-
-    if (monitor.area === "REGISTERED_POST_ASSUMPTION" && snapshot.stateCode !== "CURRENT") {
-      issues.push(buildValidationIssue("STALE_REGISTERED_POST_ASSUMPTION"));
-    }
-
-    if (monitor.area === "GENERIC_EVIDENCE_TIMING" && snapshot.stateCode !== "CURRENT") {
-      issues.push(buildValidationIssue("STALE_GENERIC_TIMING_SURFACE"));
-    }
-  }
+): Br02ServiceEventAssessment {
+  const consumerAssessment = assessBr02ConsumerAssessment({
+    thresholdState: input.thresholdState,
+    serviceEvent: input.serviceEvent,
+    ...(input.consentProofs ? { consentProofs: input.consentProofs } : {}),
+    ...(input.freshnessSnapshots ? { freshnessSnapshots: input.freshnessSnapshots } : {}),
+    ...(input.evidenceTimingState ? { evidenceTimingState: input.evidenceTimingState } : {}),
+    ...(input.hearingDateAt ? { hearingDateAt: input.hearingDateAt } : {}),
+    ...(input.hearingNoticeAt ? { hearingNoticeAt: input.hearingNoticeAt } : {})
+  });
 
   return {
-    thresholdGateOpen: input.thresholdState === "THRESHOLD_MET",
+    thresholdGateOpen: consumerAssessment.noticeEligibility.canPrepareNotice,
     serviceMethod: input.serviceEvent.serviceMethod,
-    appliedDateRuleCodes,
-    preferredDeterministicPath: method.preferredDeterministicPath
-      ? input.serviceEvent.serviceMethod
-      : (method.channel === "POSTAL" ? "REGISTERED_POST" : null),
-    issues,
-    readyForDeterministicDateHandling: issues.every(
-      (issue) => !blockedSeverities.has(issue.severity)
-    )
+    appliedDateRuleCodes: consumerAssessment.appliedRuleCodes,
+    preferredDeterministicPath: consumerAssessment.serviceProof.preferredDeterministicPath,
+    // Keep the legacy readiness flag aligned to the older service-proof boundary.
+    readyForDeterministicDateHandling:
+      consumerAssessment.noticeEligibility.readyForNextStep
+      && consumerAssessment.serviceProof.readyForNextStep,
+    consumerAssessment,
+    ...consumerAssessment
   };
 }
 
@@ -451,3 +438,4 @@ export * from "./models.js";
 export * from "./registries.js";
 export * from "./audit.js";
 export * from "./qa.js";
+export * from "./consumer.js";
