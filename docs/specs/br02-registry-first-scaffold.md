@@ -19,6 +19,13 @@ This spec anchors the Phase 4B BR02 scaffold now present in `src/modules/br02` a
 - The 7-day step is a required prep step only and must not be rendered as universal deadline truth.
 - Freshness monitors keep timing and registered-post surfaces explicitly non-authoritative when stale.
 
+## Consumer layer
+
+- `src/modules/br02/consumer.ts` now consumes the accepted scaffold into notice-eligibility, service-proof, termination-date, and evidence-deadline results.
+- The legacy service-event assessor in `src/modules/br02/index.ts` now carries a nested `consumerAssessment` bundle so the older seam can expose the new consumer layer without collapsing the existing shape.
+- Hearing-specific deadlines continue to outrank generic timing when a hearing reference is available.
+- Hand-service proof remains review-led and guarded; this consumer layer does not settle final sufficiency doctrine.
+
 ## Non-goals preserved
 
 - No portal submission logic or portal mimicry.
