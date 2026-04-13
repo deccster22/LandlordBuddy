@@ -23,8 +23,8 @@ This spec anchors the Phase 4B BR02 scaffold now present in `src/modules/br02` a
 
 - `src/modules/br02/consumer.ts` now consumes the accepted scaffold into notice-eligibility, service-proof, termination-date, and evidence-deadline results.
 - The legacy service-event assessor in `src/modules/br02/index.ts` now carries a nested `consumerAssessment` bundle so the older seam can expose the new consumer layer without collapsing the existing shape.
-- `src/workflow/arrearsHeroWorkflow.ts`, `src/modules/output/index.ts`, and `src/modules/handoff/index.ts` now thread the nested `consumerAssessment` bundle through a BR02 downstream bridge when notice-readiness is not already present. `src/modules/output/index.ts` now passes `br02ConsumerAssessment` directly into the handoff guidance shell, while `src/modules/handoff/index.ts` still accepts `br02Assessment` only as an explicit compatibility path for direct legacy callers.
-- The legacy top-level `readyForDeterministicDateHandling` flag remains compatibility only. It is still exposed for bridge checks and direct legacy compatibility tests, but it is no longer the preferred downstream handoff input.
+- `src/workflow/arrearsHeroWorkflow.ts`, `src/modules/output/index.ts`, and `src/modules/handoff/index.ts` now thread the nested `consumerAssessment` bundle through a BR02 downstream bridge when notice-readiness is not already present. `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now use `br02ConsumerAssessment` directly for downstream handoff generation, with no legacy `br02Assessment` fallback in those downstream callers.
+- The legacy top-level `readyForDeterministicDateHandling` flag remains compatibility only inside the BR02 bridge and workflow comparison path. It is still exposed for bridge checks, but it is no longer a downstream handoff input.
 - Hearing-specific deadlines continue to outrank generic timing when a hearing reference is available.
 - Hand-service proof remains review-led and guarded; this consumer layer does not settle final sufficiency doctrine.
 
