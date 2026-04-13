@@ -18,6 +18,7 @@ import {
   type OutputSelectionInput,
   type PrepPackOutputPackageShell
 } from "../src/modules/output/index.js";
+import { buildOfficialHandoffGuidanceShell } from "../src/modules/handoff/index.js";
 import {
   validateUnpaidRentNoticeReadiness,
   type UnpaidRentNoticeReadinessInput
@@ -146,8 +147,7 @@ test("BR02 downstream handoff keeps hand-service caution review-led", () => {
     })
   });
   const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment,
-    legacyReadyForDeterministicDateHandling: assessment.readyForDeterministicDateHandling
+    consumerAssessment: assessment.consumerAssessment
   });
   const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
@@ -227,9 +227,9 @@ test("hearing-specific timing can tighten BR02 downstream readiness beyond the l
   );
 });
 
-test("threading BR02 assessment through a notice-readiness baseline does not drift Lane 2 copy surfaces", () => {
+test("threading BR02 consumerAssessment through a notice-readiness baseline does not drift Lane 2 copy surfaces", () => {
   const noticeReadiness = validateUnpaidRentNoticeReadiness(buildNoticeReadinessInput());
-  const br02Assessment = assessBr02ServiceEvent({
+  const br02ServiceEventAssessment = assessBr02ServiceEvent({
     thresholdState: "THRESHOLD_MET",
     serviceEvent: createBr02ServiceEventRecord({
       id: "service-baseline-drift-check",
@@ -261,7 +261,7 @@ test("threading BR02 assessment through a notice-readiness baseline does not dri
   const threadedPrepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
     noticeReadiness,
-    br02Assessment
+    br02ConsumerAssessment: br02ServiceEventAssessment.consumerAssessment
   })));
   const baselineGuidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
@@ -270,7 +270,7 @@ test("threading BR02 assessment through a notice-readiness baseline does not dri
   const threadedGuidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
     noticeReadiness,
-    br02Assessment
+    br02ConsumerAssessment: br02ServiceEventAssessment.consumerAssessment
   })));
 
   assert.deepEqual(threadedPrepPack.blockKeys, baselinePrepPack.blockKeys);
@@ -288,4 +288,41 @@ test("threading BR02 assessment through a notice-readiness baseline does not dri
     threadedGuidance.trustBinding.reviewHandoffState.ownership.nextAction.kind,
     baselineGuidance.trustBinding.reviewHandoffState.ownership.nextAction.kind
   );
+});
+
+test("legacy BR02 assessment compatibility stays explicit at the direct handoff shell", () => {
+  const assessment = assessBr02ServiceEvent({
+    thresholdState: "THRESHOLD_MET",
+    serviceEvent: createBr02ServiceEventRecord({
+      id: "service-legacy-compat",
+      matterId: "matter-6",
+      renterPartyId: "renter-6",
+      serviceMethod: "HAND_DELIVERY",
+      occurredAt: "2026-04-06T10:00:00.000Z"
+    })
+  });
+  const directGuidance = buildOfficialHandoffGuidanceShell({
+    matterId: "matter-6",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    br02ConsumerAssessment: assessment.consumerAssessment
+  });
+  const legacyGuidance = buildOfficialHandoffGuidanceShell({
+    matterId: "matter-6",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    br02Assessment: assessment
+  });
+
+  assert.deepEqual(legacyGuidance.guidanceBlockKeys, directGuidance.guidanceBlockKeys);
+  assert.deepEqual(
+    legacyGuidance.trustBinding.boundaryStatementKeys,
+    directGuidance.trustBinding.boundaryStatementKeys
+  );
+  assert.deepEqual(legacyGuidance.trustBinding.trustCueKeys, directGuidance.trustBinding.trustCueKeys);
+  assert.equal(legacyGuidance.rendererState.primaryState, directGuidance.rendererState.primaryState);
 });

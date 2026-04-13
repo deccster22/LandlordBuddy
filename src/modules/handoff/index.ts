@@ -43,6 +43,7 @@ export interface OfficialHandoffGuidanceInput {
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
+  // Compatibility only: prefer br02ConsumerAssessment for direct handoff callers.
   br02Assessment?: Br02ServiceEventAssessment;
   timelineContent?: OutputPackageTimelineContent;
 }
