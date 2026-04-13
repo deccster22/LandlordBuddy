@@ -18,7 +18,6 @@ import {
   type OutputSelectionInput,
   type PrepPackOutputPackageShell
 } from "../src/modules/output/index.js";
-import { buildOfficialHandoffGuidanceShell } from "../src/modules/handoff/index.js";
 import {
   validateUnpaidRentNoticeReadiness,
   type UnpaidRentNoticeReadinessInput
@@ -288,41 +287,4 @@ test("threading BR02 consumerAssessment through a notice-readiness baseline does
     threadedGuidance.trustBinding.reviewHandoffState.ownership.nextAction.kind,
     baselineGuidance.trustBinding.reviewHandoffState.ownership.nextAction.kind
   );
-});
-
-test("legacy BR02 assessment compatibility stays explicit at the direct handoff shell", () => {
-  const assessment = assessBr02ServiceEvent({
-    thresholdState: "THRESHOLD_MET",
-    serviceEvent: createBr02ServiceEventRecord({
-      id: "service-legacy-compat",
-      matterId: "matter-6",
-      renterPartyId: "renter-6",
-      serviceMethod: "HAND_DELIVERY",
-      occurredAt: "2026-04-06T10:00:00.000Z"
-    })
-  });
-  const directGuidance = buildOfficialHandoffGuidanceShell({
-    matterId: "matter-6",
-    forumPath: createForumPathState({
-      path: "VIC_VCAT_RENT_ARREARS"
-    }),
-    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
-    br02ConsumerAssessment: assessment.consumerAssessment
-  });
-  const legacyGuidance = buildOfficialHandoffGuidanceShell({
-    matterId: "matter-6",
-    forumPath: createForumPathState({
-      path: "VIC_VCAT_RENT_ARREARS"
-    }),
-    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
-    br02Assessment: assessment
-  });
-
-  assert.deepEqual(legacyGuidance.guidanceBlockKeys, directGuidance.guidanceBlockKeys);
-  assert.deepEqual(
-    legacyGuidance.trustBinding.boundaryStatementKeys,
-    directGuidance.trustBinding.boundaryStatementKeys
-  );
-  assert.deepEqual(legacyGuidance.trustBinding.trustCueKeys, directGuidance.trustBinding.trustCueKeys);
-  assert.equal(legacyGuidance.rendererState.primaryState, directGuidance.rendererState.primaryState);
 });

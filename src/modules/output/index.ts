@@ -14,8 +14,7 @@ import {
   type CarryForwardControl
 } from "../../domain/posture.js";
 import type {
-  Br02ConsumerAssessment,
-  Br02ServiceEventAssessment
+  Br02ConsumerAssessment
 } from "../br02/index.js";
 import {
   deriveBr02DownstreamAssessment,
@@ -62,8 +61,6 @@ export interface OutputSelectionInput {
   touchpointIds?: string[];
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
-  // Compatibility only: prefer br02ConsumerAssessment for new downstream callers.
-  br02Assessment?: Br02ServiceEventAssessment;
   timeline?: TimelineShell;
 }
 
@@ -162,8 +159,7 @@ export function generateOutputPackageShell(
   input: OutputSelectionInput
 ): OutputPackageShell {
   const selection = selectOutputShell(input);
-  const br02ConsumerAssessment = input.br02ConsumerAssessment
-    ?? input.br02Assessment?.consumerAssessment;
+  const br02ConsumerAssessment = input.br02ConsumerAssessment;
   const base = {
     matterId: selection.matterId,
     forumPath: selection.forumPath,
@@ -249,7 +245,6 @@ export function generateOutputPackageShell(
         ...(input.noticeReadiness
           ? { noticeReadiness: input.noticeReadiness }
           : {}),
-        // Pass the consumer bundle directly. Legacy shell remains only for direct compatibility callers.
         ...(br02ConsumerAssessment
           ? { br02ConsumerAssessment }
           : {}),
@@ -469,24 +464,15 @@ function shouldIncludeCopyReadyFacts(
 function resolveBr02DownstreamAssessment(
   input: OutputSelectionInput
 ): Br02DownstreamAssessment | undefined {
-  const br02ConsumerAssessment = input.br02ConsumerAssessment
-    ?? input.br02Assessment?.consumerAssessment;
-  const legacyReadyForDeterministicDateHandling =
-    input.br02Assessment?.readyForDeterministicDateHandling;
+  const br02ConsumerAssessment = input.br02ConsumerAssessment;
 
-  // Preserve the existing notice-readiness baseline when it is present; prefer the nested BR02 consumer bundle and only fall back to the legacy shell for compatibility.
+  // Preserve the existing notice-readiness baseline when it is present; only use the nested BR02 consumer bundle for downstream BR02 bridging.
   if (input.noticeReadiness || !br02ConsumerAssessment) {
     return undefined;
   }
 
   return deriveBr02DownstreamAssessment({
-    consumerAssessment: br02ConsumerAssessment,
-    ...(typeof legacyReadyForDeterministicDateHandling === "boolean"
-      ? {
-          legacyReadyForDeterministicDateHandling:
-            legacyReadyForDeterministicDateHandling
-        }
-      : {})
+    consumerAssessment: br02ConsumerAssessment
   });
 }
 

@@ -8,8 +8,7 @@ import {
   type CarryForwardControl
 } from "../../domain/posture.js";
 import type {
-  Br02ConsumerAssessment,
-  Br02ServiceEventAssessment
+  Br02ConsumerAssessment
 } from "../br02/index.js";
 import {
   deriveBr02DownstreamAssessment,
@@ -43,8 +42,6 @@ export interface OfficialHandoffGuidanceInput {
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
-  // Compatibility only: prefer br02ConsumerAssessment for direct handoff callers.
-  br02Assessment?: Br02ServiceEventAssessment;
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -124,24 +121,15 @@ export function buildOfficialHandoffGuidanceShell(
 function resolveBr02DownstreamAssessment(
   input: OfficialHandoffGuidanceInput
 ): Br02DownstreamAssessment | undefined {
-  const br02ConsumerAssessment = input.br02ConsumerAssessment
-    ?? input.br02Assessment?.consumerAssessment;
-  const legacyReadyForDeterministicDateHandling =
-    input.br02Assessment?.readyForDeterministicDateHandling;
+  const br02ConsumerAssessment = input.br02ConsumerAssessment;
 
-  // Preserve the existing notice-readiness or explicit readiness outcome when present; prefer the nested BR02 consumer bundle and only fall back to the legacy shell for compatibility.
+  // Preserve the existing notice-readiness or explicit readiness outcome when present; only use the nested BR02 consumer bundle for downstream BR02 bridging.
   if (input.noticeReadiness || input.readinessOutcome || !br02ConsumerAssessment) {
     return undefined;
   }
 
   return deriveBr02DownstreamAssessment({
-    consumerAssessment: br02ConsumerAssessment,
-    ...(typeof legacyReadyForDeterministicDateHandling === "boolean"
-      ? {
-          legacyReadyForDeterministicDateHandling:
-            legacyReadyForDeterministicDateHandling
-        }
-      : {})
+    consumerAssessment: br02ConsumerAssessment
   });
 }
 
