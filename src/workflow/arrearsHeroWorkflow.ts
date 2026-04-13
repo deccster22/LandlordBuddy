@@ -1,4 +1,9 @@
 import type { ControlSeverity, MatterStatus, WorkflowState } from "../domain/model.js";
+import type { Br02ConsumerAssessment } from "../modules/br02/consumer.js";
+import {
+  deriveBr02DownstreamAssessment,
+  type Br02DownstreamAssessment
+} from "../modules/br02/downstream.js";
 
 export interface WorkflowGuardrail {
   code: string;
@@ -196,4 +201,57 @@ export const workflowGuardrails: WorkflowGuardrail[] = [
 
 export function findWorkflowNode(state: WorkflowState): WorkflowNode | undefined {
   return arrearsHeroWorkflow.find((node) => node.state === state);
+}
+
+export interface Br02WorkflowGate {
+  status: Br02DownstreamAssessment["status"];
+  readinessOutcome: Br02DownstreamAssessment["readinessOutcome"];
+  workflowState: WorkflowState;
+  readyForProgression: boolean;
+  hardStop: boolean;
+  needsReview: boolean;
+  reviewLedCaution: boolean;
+  nextStepReady: boolean;
+  legacyReadyForDeterministicDateHandling?: boolean;
+  legacyReadyForDeterministicDateHandlingAligned?: boolean;
+  issueCodes: string[];
+}
+
+export function deriveBr02WorkflowGate(input: {
+  consumerAssessment: Br02ConsumerAssessment;
+  legacyReadyForDeterministicDateHandling?: boolean;
+}): Br02WorkflowGate {
+  const downstreamAssessment = deriveBr02DownstreamAssessment({
+    consumerAssessment: input.consumerAssessment,
+    ...(typeof input.legacyReadyForDeterministicDateHandling === "boolean"
+      ? {
+          legacyReadyForDeterministicDateHandling:
+            input.legacyReadyForDeterministicDateHandling
+        }
+      : {})
+  });
+
+  return {
+    status: downstreamAssessment.status,
+    readinessOutcome: downstreamAssessment.readinessOutcome,
+    workflowState: downstreamAssessment.workflowState,
+    readyForProgression: downstreamAssessment.readyForProgression,
+    hardStop: downstreamAssessment.hardStop,
+    needsReview: downstreamAssessment.needsReview,
+    reviewLedCaution: downstreamAssessment.reviewLedCaution,
+    nextStepReady: downstreamAssessment.nextStepReady,
+    ...(typeof downstreamAssessment.legacyReadyForDeterministicDateHandling === "boolean"
+      ? {
+          legacyReadyForDeterministicDateHandling:
+            downstreamAssessment.legacyReadyForDeterministicDateHandling
+        }
+      : {}),
+    ...(typeof downstreamAssessment.legacyReadyForDeterministicDateHandlingAligned === "boolean"
+      ? {
+          legacyReadyForDeterministicDateHandlingAligned:
+            downstreamAssessment.legacyReadyForDeterministicDateHandlingAligned
+        }
+      : {}),
+    issueCodes: downstreamAssessment.issueCodes
+  };
 }

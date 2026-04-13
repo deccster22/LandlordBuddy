@@ -439,3 +439,4 @@ export * from "./registries.js";
 export * from "./audit.js";
 export * from "./qa.js";
 export * from "./consumer.js";
+export * from "./downstream.js";
