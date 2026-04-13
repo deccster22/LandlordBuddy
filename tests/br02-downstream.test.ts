@@ -86,8 +86,7 @@ test("BR02 downstream workflow gate blocks no-early-notice hard stops", () => {
     })
   });
   const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment,
-    legacyReadyForDeterministicDateHandling: assessment.readyForDeterministicDateHandling
+    consumerAssessment: assessment.consumerAssessment
   });
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     br02ConsumerAssessment: assessment.consumerAssessment
@@ -99,7 +98,6 @@ test("BR02 downstream workflow gate blocks no-early-notice hard stops", () => {
   assert.equal(gate.readyForProgression, false);
   assert.equal(gate.hardStop, true);
   assert.equal(gate.nextStepReady, false);
-  assert.equal(gate.legacyReadyForDeterministicDateHandlingAligned, true);
   assert.ok(prepPack.blockKeys.includes("blocker-summary"));
   assert.ok(prepPack.blockKeys.includes("review-hold-points"));
   assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
@@ -172,7 +170,7 @@ test("BR02 downstream handoff keeps hand-service caution review-led", () => {
   );
 });
 
-test("hearing-specific timing can tighten BR02 downstream readiness beyond the legacy flag", () => {
+test("hearing-specific timing can tighten BR02 downstream readiness through the consumer path", () => {
   const serviceEvent = createBr02ServiceEventRecord({
     id: "service-hearing-override",
     matterId: "matter-4",
@@ -200,18 +198,15 @@ test("hearing-specific timing can tighten BR02 downstream readiness beyond the l
     hearingNoticeAt: "2026-04-07T10:00:00.000Z"
   });
   const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment,
-    legacyReadyForDeterministicDateHandling: assessment.readyForDeterministicDateHandling
+    consumerAssessment: assessment.consumerAssessment
   });
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
     br02ConsumerAssessment: assessment.consumerAssessment
   })));
 
-  assert.equal(assessment.readyForDeterministicDateHandling, true);
   assert.equal(gate.status, "NEEDS_REVIEW");
   assert.equal(gate.readinessOutcome, "REVIEW_REQUIRED");
-  assert.equal(gate.legacyReadyForDeterministicDateHandlingAligned, false);
   assert.equal(gate.workflowState, "NOTICE_DRAFTING_GUARDED");
   assert.ok(prepPack.blockKeys.includes("review-hold-points"));
   assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));

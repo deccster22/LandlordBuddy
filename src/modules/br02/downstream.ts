@@ -22,7 +22,6 @@ export type Br02DownstreamStatus = (typeof br02DownstreamStatuses)[number];
 
 export interface AssessBr02DownstreamInput {
   consumerAssessment: Br02ConsumerAssessment;
-  legacyReadyForDeterministicDateHandling?: boolean;
 }
 
 export interface Br02DownstreamAssessment {
@@ -34,8 +33,6 @@ export interface Br02DownstreamAssessment {
   needsReview: boolean;
   reviewLedCaution: boolean;
   nextStepReady: boolean;
-  legacyReadyForDeterministicDateHandling?: boolean;
-  legacyReadyForDeterministicDateHandlingAligned?: boolean;
   issueCodes: string[];
   hardStopIssueCodes: string[];
   reviewIssueCodes: string[];
@@ -59,11 +56,6 @@ export function deriveBr02DownstreamAssessment(
     nextStepReady,
     hardStop: status === "HARD_STOP"
   });
-  const legacyReadyForDeterministicDateHandling = input.legacyReadyForDeterministicDateHandling;
-  const legacyReadyForDeterministicDateHandlingAligned =
-    typeof legacyReadyForDeterministicDateHandling === "boolean"
-      ? legacyReadyForDeterministicDateHandling === nextStepReady
-      : undefined;
 
   return {
     status,
@@ -74,12 +66,6 @@ export function deriveBr02DownstreamAssessment(
     needsReview: status === "NEEDS_REVIEW",
     reviewLedCaution: status === "REVIEW_LED_CAUTION",
     nextStepReady,
-    ...(typeof legacyReadyForDeterministicDateHandling === "boolean"
-      ? { legacyReadyForDeterministicDateHandling }
-      : {}),
-    ...(typeof legacyReadyForDeterministicDateHandlingAligned === "boolean"
-      ? { legacyReadyForDeterministicDateHandlingAligned }
-      : {}),
     issueCodes: consumerAssessment.issues.map((issue) => issue.code),
     hardStopIssueCodes: consumerAssessment.hardStops.map((issue) => issue.code),
     reviewIssueCodes: consumerAssessment.warnings.map((issue) => issue.code),

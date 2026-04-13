@@ -212,23 +212,14 @@ export interface Br02WorkflowGate {
   needsReview: boolean;
   reviewLedCaution: boolean;
   nextStepReady: boolean;
-  legacyReadyForDeterministicDateHandling?: boolean;
-  legacyReadyForDeterministicDateHandlingAligned?: boolean;
   issueCodes: string[];
 }
 
 export function deriveBr02WorkflowGate(input: {
   consumerAssessment: Br02ConsumerAssessment;
-  legacyReadyForDeterministicDateHandling?: boolean;
 }): Br02WorkflowGate {
   const downstreamAssessment = deriveBr02DownstreamAssessment({
-    consumerAssessment: input.consumerAssessment,
-    ...(typeof input.legacyReadyForDeterministicDateHandling === "boolean"
-      ? {
-          legacyReadyForDeterministicDateHandling:
-            input.legacyReadyForDeterministicDateHandling
-        }
-      : {})
+    consumerAssessment: input.consumerAssessment
   });
 
   return {
@@ -240,18 +231,6 @@ export function deriveBr02WorkflowGate(input: {
     needsReview: downstreamAssessment.needsReview,
     reviewLedCaution: downstreamAssessment.reviewLedCaution,
     nextStepReady: downstreamAssessment.nextStepReady,
-    ...(typeof downstreamAssessment.legacyReadyForDeterministicDateHandling === "boolean"
-      ? {
-          legacyReadyForDeterministicDateHandling:
-            downstreamAssessment.legacyReadyForDeterministicDateHandling
-        }
-      : {}),
-    ...(typeof downstreamAssessment.legacyReadyForDeterministicDateHandlingAligned === "boolean"
-      ? {
-          legacyReadyForDeterministicDateHandlingAligned:
-            downstreamAssessment.legacyReadyForDeterministicDateHandlingAligned
-        }
-      : {}),
     issueCodes: downstreamAssessment.issueCodes
   };
 }
