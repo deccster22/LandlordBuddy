@@ -13,6 +13,14 @@ import {
   mergeCarryForwardControls,
   type CarryForwardControl
 } from "../../domain/posture.js";
+import type {
+  Br02ConsumerAssessment,
+  Br02ServiceEventAssessment
+} from "../br02/index.js";
+import {
+  deriveBr02DownstreamAssessment,
+  type Br02DownstreamAssessment
+} from "../br02/downstream.js";
 import {
   buildOfficialHandoffGuidanceShell,
   type OfficialHandoffGuidanceShell
@@ -53,6 +61,8 @@ export interface OutputSelectionInput {
   carryForwardControls?: CarryForwardControl[];
   touchpointIds?: string[];
   noticeReadiness?: NoticeReadinessResult;
+  br02ConsumerAssessment?: Br02ConsumerAssessment;
+  br02Assessment?: Br02ServiceEventAssessment;
   timeline?: TimelineShell;
 }
 
@@ -64,6 +74,7 @@ export interface OutputSelection {
   touchpoints: TouchpointMetadata[];
   carryForwardControls: CarryForwardControl[];
   readinessContent?: OutputPackageReadinessContent;
+  readinessOutcome?: NoticeReadinessResult["outcome"];
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -117,9 +128,12 @@ export interface CreateOutputPackageRecordInput extends OutputSelectionInput {
 
 export function selectOutputShell(input: OutputSelectionInput): OutputSelection {
   const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
+  const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
   const readinessContent = input.noticeReadiness
     ? deriveOutputPackageReadinessContent(input.noticeReadiness)
-    : undefined;
+    : br02DownstreamAssessment?.readinessContent;
+  const readinessOutcome = input.noticeReadiness?.outcome
+    ?? br02DownstreamAssessment?.readinessOutcome;
   const timelineContent = input.timeline
     ? deriveOutputPackageTimelineContent(input.timeline)
     : undefined;
@@ -138,6 +152,7 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
     touchpoints,
     carryForwardControls,
     ...(readinessContent ? { readinessContent } : {}),
+    ...(readinessOutcome ? { readinessOutcome } : {}),
     ...(timelineContent ? { timelineContent } : {})
   };
 }
@@ -146,6 +161,8 @@ export function generateOutputPackageShell(
   input: OutputSelectionInput
 ): OutputPackageShell {
   const selection = selectOutputShell(input);
+  const br02ConsumerAssessment = input.br02ConsumerAssessment
+    ?? input.br02Assessment?.consumerAssessment;
   const base = {
     matterId: selection.matterId,
     forumPath: selection.forumPath,
@@ -166,8 +183,8 @@ export function generateOutputPackageShell(
       const trustBinding = buildStructuralTrustBinding({
         kind: "PRINTABLE_OUTPUT",
         officialHandoff: selection.officialHandoff,
-        ...(input.noticeReadiness
-          ? { readinessOutcome: input.noticeReadiness.outcome }
+        ...(selection.readinessOutcome
+          ? { readinessOutcome: selection.readinessOutcome }
           : {}),
         sectionKeys,
         touchpoints: selection.touchpoints,
@@ -196,8 +213,8 @@ export function generateOutputPackageShell(
       const trustBinding = buildStructuralTrustBinding({
         kind: "PREP_PACK_COPY_READY",
         officialHandoff: selection.officialHandoff,
-        ...(input.noticeReadiness
-          ? { readinessOutcome: input.noticeReadiness.outcome }
+        ...(selection.readinessOutcome
+          ? { readinessOutcome: selection.readinessOutcome }
           : {}),
         blockKeys,
         touchpoints: selection.touchpoints,
@@ -231,8 +248,14 @@ export function generateOutputPackageShell(
         ...(input.noticeReadiness
           ? { noticeReadiness: input.noticeReadiness }
           : {}),
-        ...(input.noticeReadiness
-          ? { readinessOutcome: input.noticeReadiness.outcome }
+        ...(br02ConsumerAssessment
+          ? { br02ConsumerAssessment }
+          : {}),
+        ...(input.br02Assessment
+          ? { br02Assessment: input.br02Assessment }
+          : {}),
+        ...(selection.readinessOutcome
+          ? { readinessOutcome: selection.readinessOutcome }
           : {})
       });
 
@@ -252,7 +275,8 @@ export function createOutputPackageRecord(
   privacyHookInput: OutputPackagePrivacyHookSourceInput = {}
 ): OutputPackage {
   const selection = selectOutputShell(input);
-  const completeness = input.completeness ?? deriveOutputPackageCompleteness(input.noticeReadiness);
+  const completeness = input.completeness
+    ?? deriveOutputPackageCompleteness(selection.readinessOutcome);
 
   return {
     id: input.id,
@@ -293,9 +317,9 @@ function resolveTouchpoints(
 }
 
 function deriveOutputPackageCompleteness(
-  noticeReadiness?: NoticeReadinessResult
+  readinessOutcome?: NoticeReadinessResult["outcome"]
 ): OutputPackage["completeness"] {
-  return noticeReadiness?.outcome === "READY_FOR_REVIEW"
+  return readinessOutcome === "READY_FOR_REVIEW"
     ? "READY_FOR_REVIEW"
     : "PARTIAL";
 }
@@ -441,6 +465,30 @@ function shouldIncludeCopyReadyFacts(
   }
 
   return timelineContent?.allowCopyReadyFactsWhenTimelineReady ?? true;
+}
+
+function resolveBr02DownstreamAssessment(
+  input: OutputSelectionInput
+): Br02DownstreamAssessment | undefined {
+  const br02ConsumerAssessment = input.br02ConsumerAssessment
+    ?? input.br02Assessment?.consumerAssessment;
+  const legacyReadyForDeterministicDateHandling =
+    input.br02Assessment?.readyForDeterministicDateHandling;
+
+  // Preserve the existing notice-readiness baseline when it is present; prefer the nested BR02 consumer bundle and only fall back to the legacy shell for compatibility.
+  if (input.noticeReadiness || !br02ConsumerAssessment) {
+    return undefined;
+  }
+
+  return deriveBr02DownstreamAssessment({
+    consumerAssessment: br02ConsumerAssessment,
+    ...(typeof legacyReadyForDeterministicDateHandling === "boolean"
+      ? {
+          legacyReadyForDeterministicDateHandling:
+            legacyReadyForDeterministicDateHandling
+        }
+      : {})
+  });
 }
 
 export * from "./trustBindings.js";

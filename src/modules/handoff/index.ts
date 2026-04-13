@@ -8,9 +8,13 @@ import {
   type CarryForwardControl
 } from "../../domain/posture.js";
 import type {
-  NoticeReadinessOutcome,
-  NoticeReadinessResult
-} from "../notice-readiness/index.js";
+  Br02ConsumerAssessment,
+  Br02ServiceEventAssessment
+} from "../br02/index.js";
+import {
+  deriveBr02DownstreamAssessment,
+  type Br02DownstreamAssessment
+} from "../br02/downstream.js";
 import {
   deriveRendererState,
   type RendererState
@@ -20,6 +24,10 @@ import {
   buildStructuralTrustBinding,
   type StructuralTrustBinding
 } from "../output/trustBindings.js";
+import type {
+  NoticeReadinessOutcome,
+  NoticeReadinessResult
+} from "../notice-readiness/index.js";
 import {
   listTouchpointsForForumPath,
   lookupTouchpointMetadata,
@@ -34,6 +42,8 @@ export interface OfficialHandoffGuidanceInput {
   touchpointIds?: string[];
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
+  br02ConsumerAssessment?: Br02ConsumerAssessment;
+  br02Assessment?: Br02ServiceEventAssessment;
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -61,10 +71,12 @@ export function buildOfficialHandoffGuidanceShell(
   input: OfficialHandoffGuidanceInput
 ): OfficialHandoffGuidanceShell {
   const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
+  const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
     ...(input.timelineContent ? [input.timelineContent.carryForwardControls] : []),
-    ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls)
+    ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls),
+    ...(br02DownstreamAssessment ? [br02DownstreamAssessment.carryForwardControls] : [])
   );
   const boundaryCodes = [...officialHandoffBoundaryCodes];
   const guidanceBlockKeys = buildGuidanceBlockKeys(
@@ -73,11 +85,13 @@ export function buildOfficialHandoffGuidanceShell(
     input.timelineContent
   );
   const readinessOutcome = input.noticeReadiness?.outcome ?? input.readinessOutcome;
+  const downstreamReadinessOutcome = readinessOutcome
+    ?? br02DownstreamAssessment?.readinessOutcome;
   const trustBinding = buildStructuralTrustBinding({
     kind: "OFFICIAL_HANDOFF_GUIDANCE",
     officialHandoff: input.officialHandoff,
-    ...(readinessOutcome
-      ? { readinessOutcome }
+    ...(downstreamReadinessOutcome
+      ? { readinessOutcome: downstreamReadinessOutcome }
       : {}),
     blockKeys: guidanceBlockKeys,
     touchpoints,
@@ -104,6 +118,30 @@ export function buildOfficialHandoffGuidanceShell(
     trustBinding,
     rendererState
   };
+}
+
+function resolveBr02DownstreamAssessment(
+  input: OfficialHandoffGuidanceInput
+): Br02DownstreamAssessment | undefined {
+  const br02ConsumerAssessment = input.br02ConsumerAssessment
+    ?? input.br02Assessment?.consumerAssessment;
+  const legacyReadyForDeterministicDateHandling =
+    input.br02Assessment?.readyForDeterministicDateHandling;
+
+  // Preserve the existing notice-readiness or explicit readiness outcome when present; prefer the nested BR02 consumer bundle and only fall back to the legacy shell for compatibility.
+  if (input.noticeReadiness || input.readinessOutcome || !br02ConsumerAssessment) {
+    return undefined;
+  }
+
+  return deriveBr02DownstreamAssessment({
+    consumerAssessment: br02ConsumerAssessment,
+    ...(typeof legacyReadyForDeterministicDateHandling === "boolean"
+      ? {
+          legacyReadyForDeterministicDateHandling:
+            legacyReadyForDeterministicDateHandling
+        }
+      : {})
+  });
 }
 
 function resolveTouchpoints(
