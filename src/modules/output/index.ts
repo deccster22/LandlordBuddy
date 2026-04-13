@@ -62,6 +62,7 @@ export interface OutputSelectionInput {
   touchpointIds?: string[];
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
+  // Compatibility only: prefer br02ConsumerAssessment for new downstream callers.
   br02Assessment?: Br02ServiceEventAssessment;
   timeline?: TimelineShell;
 }
@@ -248,11 +249,9 @@ export function generateOutputPackageShell(
         ...(input.noticeReadiness
           ? { noticeReadiness: input.noticeReadiness }
           : {}),
+        // Pass the consumer bundle directly. Legacy shell remains only for direct compatibility callers.
         ...(br02ConsumerAssessment
           ? { br02ConsumerAssessment }
-          : {}),
-        ...(input.br02Assessment
-          ? { br02Assessment: input.br02Assessment }
           : {}),
         ...(selection.readinessOutcome
           ? { readinessOutcome: selection.readinessOutcome }
