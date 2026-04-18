@@ -287,10 +287,6 @@ export function assessBr02ServiceEvent(
     serviceMethod: input.serviceEvent.serviceMethod,
     appliedDateRuleCodes: consumerAssessment.appliedRuleCodes,
     preferredDeterministicPath: consumerAssessment.serviceProof.preferredDeterministicPath,
-    // Keep the legacy readiness flag as compatibility output only; downstream bridge/workflow code no longer reads it.
-    readyForDeterministicDateHandling:
-      consumerAssessment.noticeEligibility.readyForNextStep
-      && consumerAssessment.serviceProof.readyForNextStep,
     consumerAssessment,
     ...consumerAssessment
   };

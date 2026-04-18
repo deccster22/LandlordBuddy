@@ -27,7 +27,7 @@ test("no-early-notice gate stays hard-stop shaped until threshold is met", () =>
   });
 
   assert.equal(result.thresholdGateOpen, false);
-  assert.equal(result.readyForDeterministicDateHandling, false);
+  assert.equal(result.consumerAssessment.readyForNextStep, false);
   assert.ok(result.issues.some((issue) => (
     issue.code === "NO_EARLY_NOTICE_GATE" && issue.severity === "hard-stop"
   )));
@@ -79,7 +79,7 @@ test("email service requires linked consent proof and consent proof stays reusab
   assert.equal(consentProof.scope, "EMAIL_SERVICE");
   assert.ok(blockedResult.issues.some((issue) => issue.code === "EMAIL_CONSENT_PROOF_REQUIRED"));
   assert.ok(!clearedResult.issues.some((issue) => issue.code === "EMAIL_CONSENT_PROOF_REQUIRED"));
-  assert.equal(clearedResult.readyForDeterministicDateHandling, true);
+  assert.equal(clearedResult.consumerAssessment.serviceProof.readyForNextStep, true);
 });
 
 test("registered post stays the preferred deterministic postal path", () => {
@@ -123,7 +123,7 @@ test("hand service remains guarded and never auto-sufficient", () => {
 
   const issue = result.issues.find((candidate) => candidate.code === "HAND_SERVICE_REVIEW_REQUIRED");
 
-  assert.equal(result.readyForDeterministicDateHandling, false);
+  assert.equal(result.consumerAssessment.readyForNextStep, false);
   assert.equal(issue?.severity, "slowdown");
   assert.ok(issue?.guardedInsertionPoint);
 });

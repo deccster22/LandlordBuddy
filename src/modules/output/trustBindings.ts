@@ -256,6 +256,45 @@ const surfaceTrustTemplateByKey: Readonly<Record<string, StructuralTrustSurfaceT
       trustCueKeys: ["trust-cue.freshness-check"],
       emphasisZone: "GENERAL"
     },
+    "defer-to-live-official-flow": {
+      trustSurfaceKeys: [
+        "surface.defer-to-live-official-flow",
+        "surface.live-official-flow-required"
+      ],
+      boundaryStatementKeys: [
+        "boundary.no-portal-mimicry",
+        "boundary.handoff-not-completed-official-step"
+      ],
+      trustCueKeys: ["trust-cue.defer-to-live-official-flow"],
+      emphasisZone: "REVIEW"
+    },
+    "touchpoint-stale": {
+      trustSurfaceKeys: ["surface.touchpoint-stale", "surface.touchpoint-refresh-needed"],
+      boundaryStatementKeys: ["boundary.readiness-not-filing"],
+      trustCueKeys: ["trust-cue.touchpoint-stale"],
+      emphasisZone: "REVIEW"
+    },
+    "live-confirmation-required": {
+      trustSurfaceKeys: [
+        "surface.live-confirmation-required",
+        "surface.live-official-confirmation-gate"
+      ],
+      boundaryStatementKeys: ["boundary.handoff-not-completed-official-step"],
+      trustCueKeys: ["trust-cue.live-confirmation-required"],
+      emphasisZone: "REVIEW"
+    },
+    "wrong-channel-reroute": {
+      trustSurfaceKeys: [
+        "surface.wrong-channel-reroute",
+        "surface.stop-explain-reroute"
+      ],
+      boundaryStatementKeys: [
+        "boundary.no-portal-mimicry",
+        "boundary.handoff-not-completed-official-step"
+      ],
+      trustCueKeys: ["trust-cue.wrong-channel-reroute"],
+      emphasisZone: "REFERRAL"
+    },
     "slowdown-review": {
       trustSurfaceKeys: ["surface.slowdown-review", "surface.review-slowdown"],
       boundaryStatementKeys: ["boundary.handoff-not-completed-official-step"],
@@ -493,6 +532,18 @@ function buildReviewStateKeys(input: {
 
   if (input.surfaceKeys.includes("sequencing-guarded")) {
     reviewStateKeys.push("review-state.sequencing-guarded");
+  }
+
+  if (input.surfaceKeys.includes("touchpoint-stale")) {
+    reviewStateKeys.push("review-state.touchpoint-stale");
+  }
+
+  if (input.surfaceKeys.includes("live-confirmation-required")) {
+    reviewStateKeys.push("review-state.live-confirmation-required");
+  }
+
+  if (input.surfaceKeys.includes("wrong-channel-reroute")) {
+    reviewStateKeys.push("review-state.wrong-channel-reroute");
   }
 
   if (input.surfaceKeys.includes("external-step-summary")) {

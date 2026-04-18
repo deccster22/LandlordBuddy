@@ -37,6 +37,7 @@ This checklist is for QA and Product review of the current non-blocked implement
 - Confirm output packages retain `forumPath`, `outputMode`, `officialHandoff`, `touchpoints`, and `carryForwardControls`.
 - Confirm `officialSystemAction` remains `NOT_INCLUDED` in every generated package.
 - Confirm handoff guidance retains boundary codes and guidance blocks for authenticated surfaces, freshness checks, slowdown, and referral where present.
+- Confirm BR03 touchpoint posture keeps stale, live-confirmation-required, and wrong-channel-reroute controls distinct.
 - Confirm touchpoint-derived controls are merged rather than lost.
 
 ### Evidence and audit
