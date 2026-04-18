@@ -1,4 +1,9 @@
 import type { ControlSeverity, MatterStatus, WorkflowState } from "../domain/model.js";
+import {
+  resolveBr01Routing,
+  type Br01RoutingResult,
+  type ResolveBr01RoutingInput
+} from "../modules/br01/index.js";
 import type { Br02ConsumerAssessment } from "../modules/br02/consumer.js";
 import {
   deriveBr02DownstreamAssessment,
@@ -203,6 +208,33 @@ export function findWorkflowNode(state: WorkflowState): WorkflowNode | undefined
   return arrearsHeroWorkflow.find((node) => node.state === state);
 }
 
+export interface Br01WorkflowGate {
+  routingResult: Br01RoutingResult;
+  workflowState: WorkflowState;
+  readyForArrearsFacts: boolean;
+  triageSlowdown: boolean;
+  splitMatterRequired: boolean;
+  referralRequired: boolean;
+  routeOutRequired: boolean;
+}
+
+export function deriveBr01WorkflowGate(
+  input: ResolveBr01RoutingInput
+): Br01WorkflowGate {
+  const routingResult = resolveBr01Routing(input);
+  const workflowState = mapBr01OutcomeToWorkflowState(routingResult.outcomeFamily);
+
+  return {
+    routingResult,
+    workflowState,
+    readyForArrearsFacts: workflowState === "ARREARS_FACTS_READY",
+    triageSlowdown: workflowState === "TRIAGE_SLOWDOWN",
+    splitMatterRequired: routingResult.flags.splitMatterRequired,
+    referralRequired: routingResult.flags.referralRequired,
+    routeOutRequired: routingResult.flags.routeOutRequired
+  };
+}
+
 export interface Br02WorkflowGate {
   status: Br02DownstreamAssessment["status"];
   readinessOutcome: Br02DownstreamAssessment["readinessOutcome"];
@@ -233,4 +265,19 @@ export function deriveBr02WorkflowGate(input: {
     nextStepReady: downstreamAssessment.nextStepReady,
     issueCodes: downstreamAssessment.issueCodes
   };
+}
+
+function mapBr01OutcomeToWorkflowState(
+  outcomeFamily: Br01RoutingResult["outcomeFamily"]
+): WorkflowState {
+  switch (outcomeFamily) {
+    case "DETERMINISTIC_ROUTE_ALLOWED":
+      return "ARREARS_FACTS_READY";
+    case "SLOWDOWN_REVIEW_REQUIRED":
+    case "SPLIT_MATTER_REQUIRED":
+      return "TRIAGE_SLOWDOWN";
+    case "REFERRAL_REQUIRED":
+    case "ROUTE_OUT_REQUIRED":
+      return "REFER_OUT";
+  }
 }
