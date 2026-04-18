@@ -398,11 +398,13 @@ function buildPrepPackBlockKeys(
   const touchpointConsequenceSurfaceKeys = touchpointControlOutputs
     ? deriveTouchpointConsequenceSurfaceKeys(touchpointControlOutputs)
     : [];
+  const wrongChannelReroute = touchpointControlOutputs?.wrongChannelReroute === true;
 
   if (!readinessContent && !timelineContent) {
     return dedupeStrings([
       ...touchpointConsequenceSurfaceKeys,
-      "copy-ready-facts",
+      ...(wrongChannelReroute ? ["referral-stop"] : []),
+      ...(wrongChannelReroute ? [] : ["copy-ready-facts"]),
       "supporting-evidence-index",
       "guarded-review-flags"
     ]);
@@ -451,8 +453,14 @@ function buildPrepPackBlockKeys(
   }
 
   blockKeys.push(...touchpointConsequenceSurfaceKeys);
+  if (wrongChannelReroute) {
+    blockKeys.push("referral-stop");
+  }
 
-  if (shouldIncludeCopyReadyFacts(readinessContent, timelineContent)) {
+  if (
+    !wrongChannelReroute
+    && shouldIncludeCopyReadyFacts(readinessContent, timelineContent)
+  ) {
     blockKeys.push("copy-ready-facts");
   }
 
