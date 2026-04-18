@@ -99,6 +99,15 @@ Still guarded after first BR03 hardening pass:
 - wrong-channel detection remains explicit control input and reroute logic, not automated portal-state interpretation
 - authenticated touchpoints remain metadata plus handoff-control posture only, with no product-side authenticated execution
 
+Locked precedence invariants (P4B-CX-BR03-04):
+
+- wrong-channel reroute always suppresses ordinary mirror allowances and keeps stop + explain + reroute posture explicit downstream
+- authenticated-handoff-only posture suppresses ordinary mirror allowances and keeps authenticated touchpoints in defer/handoff-only posture
+- stale and live-confirmation-required remain distinct consequence families (including mixed multi-touchpoint combinations)
+- stale controls remain explicit (`touchpoint-stale` plus carry-forward control) and are not collapsed into generic warning-only treatment
+- prep-pack, handoff guidance, renderer state, and merged carry-forward controls stay aligned from shared resolver outputs under mixed touchpoint combinations
+- mixed touchpoint IDs with conflicting posture now rely on tested resolver precedence rather than consumer-specific fallback behavior
+
 Keep unchanged until then:
 
 - placeholder touchpoints remain explicit with `placeholder: true`
