@@ -294,6 +294,8 @@ function finalizeControlOutputPrecedence(
 
   if (normalized.authenticatedHandoffOnly) {
     normalized.deferToLiveOfficialFlow = true;
+    normalized.stablePublicMirrorAllowed = false;
+    normalized.publicMirrorAllowedWithWarning = false;
   }
 
   if (normalized.wrongChannelReroute) {
