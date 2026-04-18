@@ -56,6 +56,42 @@ export interface TouchpointControlOutputs {
   wrongChannelReroute: boolean;
 }
 
+export function deriveTouchpointConsequenceSurfaceKeys(
+  controlOutputs: TouchpointControlOutputs
+): string[] {
+  const surfaceKeys: string[] = [];
+
+  if (controlOutputs.authenticatedHandoffOnly) {
+    surfaceKeys.push("authenticated-surface-handoff");
+  }
+
+  if (
+    controlOutputs.stale
+    || controlOutputs.liveConfirmationRequired
+    || controlOutputs.deferToLiveOfficialFlow
+  ) {
+    surfaceKeys.push("freshness-check");
+  }
+
+  if (controlOutputs.deferToLiveOfficialFlow) {
+    surfaceKeys.push("defer-to-live-official-flow");
+  }
+
+  if (controlOutputs.stale) {
+    surfaceKeys.push("touchpoint-stale");
+  }
+
+  if (controlOutputs.liveConfirmationRequired) {
+    surfaceKeys.push("live-confirmation-required");
+  }
+
+  if (controlOutputs.wrongChannelReroute) {
+    surfaceKeys.push("wrong-channel-reroute");
+  }
+
+  return surfaceKeys;
+}
+
 export interface TouchpointControlResolution {
   touchpoints: TouchpointMetadata[];
   resolvedPostures: ResolvedTouchpointPosture[];

@@ -87,6 +87,7 @@ Current first-wave insertion:
   - stale vs live-confirmation-required freshness posture
   - wrong-channel reroute posture
 - `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now consume the BR03 resolver outputs so touchpoint posture can drive merged carry-forward controls and handoff guidance block structure.
+  - prep-pack output block keys now also consume BR03 consequence keys so stale, live-confirmation-required, wrong-channel-reroute, and authenticated-handoff-only posture stay explicit downstream.
 
 Expand later through:
 

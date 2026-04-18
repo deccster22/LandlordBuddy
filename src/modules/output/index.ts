@@ -43,6 +43,7 @@ import {
   type StructuralTrustBinding
 } from "./trustBindings.js";
 import {
+  deriveTouchpointConsequenceSurfaceKeys,
   resolveTouchpointControl,
   type TouchpointControlOutputs,
   type TouchpointMetadata,
@@ -218,7 +219,8 @@ export function generateOutputPackageShell(
     case "PREP_PACK_COPY_READY": {
       const blockKeys = buildPrepPackBlockKeys(
         selection.readinessContent,
-        selection.timelineContent
+        selection.timelineContent,
+        selection.touchpointControlOutputs
       );
       const trustBinding = buildStructuralTrustBinding({
         kind: "PREP_PACK_COPY_READY",
@@ -390,14 +392,20 @@ function buildPrintableSectionKeys(
 
 function buildPrepPackBlockKeys(
   readinessContent?: OutputPackageReadinessContent,
-  timelineContent?: OutputPackageTimelineContent
+  timelineContent?: OutputPackageTimelineContent,
+  touchpointControlOutputs?: TouchpointControlOutputs
 ): string[] {
+  const touchpointConsequenceSurfaceKeys = touchpointControlOutputs
+    ? deriveTouchpointConsequenceSurfaceKeys(touchpointControlOutputs)
+    : [];
+
   if (!readinessContent && !timelineContent) {
-    return [
+    return dedupeStrings([
+      ...touchpointConsequenceSurfaceKeys,
       "copy-ready-facts",
       "supporting-evidence-index",
       "guarded-review-flags"
-    ];
+    ]);
   }
 
   const blockKeys: string[] = [];
@@ -442,13 +450,15 @@ function buildPrepPackBlockKeys(
     blockKeys.push("referral-stop");
   }
 
+  blockKeys.push(...touchpointConsequenceSurfaceKeys);
+
   if (shouldIncludeCopyReadyFacts(readinessContent, timelineContent)) {
     blockKeys.push("copy-ready-facts");
   }
 
   blockKeys.push("supporting-evidence-index");
 
-  return blockKeys;
+  return dedupeStrings(blockKeys);
 }
 
 function shouldIncludeCopyReadyFacts(
@@ -461,6 +471,19 @@ function shouldIncludeCopyReadyFacts(
   }
 
   return timelineContent?.allowCopyReadyFactsWhenTimelineReady ?? true;
+}
+
+function dedupeStrings(values: readonly string[]): string[] {
+  const seen = new Set<string>();
+
+  return values.filter((value) => {
+    if (seen.has(value)) {
+      return false;
+    }
+
+    seen.add(value);
+    return true;
+  });
 }
 
 function resolveBr02DownstreamAssessment(

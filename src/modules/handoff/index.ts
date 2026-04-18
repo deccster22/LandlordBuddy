@@ -28,6 +28,7 @@ import type {
   NoticeReadinessResult
 } from "../notice-readiness/index.js";
 import {
+  deriveTouchpointConsequenceSurfaceKeys,
   resolveTouchpointControl,
   type TouchpointControlOutputs,
   type TouchpointMetadata,
@@ -173,33 +174,7 @@ function buildGuidanceBlockKeys(
     blockKeys.push("external-step-summary");
   }
 
-  if (touchpointControlOutputs.authenticatedHandoffOnly) {
-    blockKeys.push("authenticated-surface-handoff");
-  }
-
-  if (
-    touchpointControlOutputs.stale
-    || touchpointControlOutputs.liveConfirmationRequired
-    || touchpointControlOutputs.deferToLiveOfficialFlow
-  ) {
-    blockKeys.push("freshness-check");
-  }
-
-  if (touchpointControlOutputs.deferToLiveOfficialFlow) {
-    blockKeys.push("defer-to-live-official-flow");
-  }
-
-  if (touchpointControlOutputs.stale) {
-    blockKeys.push("touchpoint-stale");
-  }
-
-  if (touchpointControlOutputs.liveConfirmationRequired) {
-    blockKeys.push("live-confirmation-required");
-  }
-
-  if (touchpointControlOutputs.wrongChannelReroute) {
-    blockKeys.push("wrong-channel-reroute");
-  }
+  blockKeys.push(...deriveTouchpointConsequenceSurfaceKeys(touchpointControlOutputs));
 
   if (carryForwardControls.some((control) => control.severity === "SLOWDOWN")) {
     blockKeys.push("slowdown-review");
