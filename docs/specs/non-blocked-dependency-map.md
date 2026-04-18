@@ -80,6 +80,12 @@ Keep unchanged until then:
 
 Purpose now: authoritative register of public, warning-bearing, authenticated, and freshness-sensitive touchpoints.
 
+Park-ready checkpoint (`P4B-CX-BR03-05A`):
+
+- BR03 is paused at the current locked-invariants stopping point.
+- Canonical parking note: `docs/specs/br03-parked-invariants.md`.
+- No behavior broadening is in scope unless a listed reactivation trigger fires.
+
 Current first-wave insertion:
 
 - `src/modules/touchpoints/index.ts` now resolves touchpoints by forum path or ID and emits BR03 control outputs for:
@@ -113,6 +119,14 @@ Keep unchanged until then:
 - placeholder touchpoints remain explicit with `placeholder: true`
 - authenticated surfaces stay handoff-only and freshness-sensitive surfaces stay reviewable rather than portal-executed
 - wrong-channel handling remains stop + explain + reroute, not ordinary handoff
+
+Reopen or broaden BR03 only when one or more of these triggers fire:
+
+1. new touchpoint IDs are required
+2. new forum paths need touchpoint control coverage
+3. new authenticated/live official surfaces need modeled control posture
+4. new freshness-sensitive touchpoint classes require separate consequence handling
+5. per-instance override needs exceed current touchpoint-ID keyed posture
 
 ### `AG-BR04A outputs`
 
