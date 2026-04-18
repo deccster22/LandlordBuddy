@@ -93,6 +93,12 @@ Expand later through:
 
 - future freshness review processes, not product-driven portal execution
 
+Still guarded after first BR03 hardening pass:
+
+- live-confirmation-required triggers remain registry/override-driven; refresh cadence and authority are not settled doctrine yet
+- wrong-channel detection remains explicit control input and reroute logic, not automated portal-state interpretation
+- authenticated touchpoints remain metadata plus handoff-control posture only, with no product-side authenticated execution
+
 Keep unchanged until then:
 
 - placeholder touchpoints remain explicit with `placeholder: true`

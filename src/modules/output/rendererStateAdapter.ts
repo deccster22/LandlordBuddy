@@ -143,7 +143,9 @@ export function deriveRendererState(
     === "HUMAN_REVIEW_REQUIRED";
   const guardedReviewRequiredBeforeOfficialStep =
     reviewHandoffState.handoff.reviewBeforeOfficialStep === "GUARDED_REVIEW_REQUIRED";
-  const referredOut = reviewHandoffState.readiness.outcome === "REFER_OUT";
+  const referredOut = reviewHandoffState.readiness.outcome === "REFER_OUT"
+    || reviewHandoffState.handoff.posture === "REFERRAL_STOP"
+    || nextAction.kind === "REFER_OUTSIDE_STANDARD_PATH";
 
   return {
     primaryState: reviewHandoffState.readiness.outcome,

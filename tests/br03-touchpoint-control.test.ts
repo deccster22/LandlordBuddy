@@ -144,6 +144,9 @@ test("BR03 touchpoint control resolves wrong-channel posture as reroute referral
   });
 
   assert.equal(resolution.controlOutputs.wrongChannelReroute, true);
+  assert.equal(resolution.controlOutputs.deferToLiveOfficialFlow, true);
+  assert.equal(resolution.controlOutputs.stablePublicMirrorAllowed, false);
+  assert.equal(resolution.controlOutputs.publicMirrorAllowedWithWarning, false);
   assert.ok(
     resolution.carryForwardControls.some(
       (control) => control.code === "TOUCHPOINT_WRONG_CHANNEL_REROUTE"
@@ -249,6 +252,43 @@ test("BR03 stale and live-confirmation posture stay distinct in prep-pack downst
   assert.ok(!livePrepPack.blockKeys.includes("touchpoint-stale"));
   assert.ok(livePrepPack.trustBinding.reviewStateKeys.includes("review-state.live-confirmation-required"));
   assert.ok(!livePrepPack.trustBinding.reviewStateKeys.includes("review-state.touchpoint-stale"));
+});
+
+test("BR03 wrong-channel reroute forces prep-pack referral posture and suppresses copy-ready fallback", () => {
+  const outputPackage = generateOutputPackageShell({
+    matterId: "matter-1",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    touchpointIds: ["vic-arrears-public-form-warning"],
+    touchpointPostureOverrides: [
+      {
+        touchpointId: "vic-arrears-public-form-warning",
+        channelPosture: "WRONG_CHANNEL_REROUTE"
+      }
+    ]
+  });
+
+  if (outputPackage.kind !== "PREP_PACK_COPY_READY") {
+    throw new Error("Expected PREP_PACK_COPY_READY output shell.");
+  }
+
+  assert.ok(outputPackage.blockKeys.includes("wrong-channel-reroute"));
+  assert.ok(outputPackage.blockKeys.includes("referral-stop"));
+  assert.ok(!outputPackage.blockKeys.includes("copy-ready-facts"));
+  assert.equal(outputPackage.touchpointControlOutputs.wrongChannelReroute, true);
+  assert.equal(outputPackage.touchpointControlOutputs.deferToLiveOfficialFlow, true);
+  assert.equal(
+    outputPackage.trustBinding.reviewHandoffState.handoff.posture,
+    "REFERRAL_STOP"
+  );
+  assert.equal(
+    outputPackage.trustBinding.reviewHandoffState.ownership.nextAction.kind,
+    "REFER_OUTSIDE_STANDARD_PATH"
+  );
+  assert.equal(outputPackage.rendererState.progression.referredOut, true);
 });
 
 test("BR03 wrong-channel reroute and authenticated handoff-only posture remain explicit through output guidance packaging", () => {

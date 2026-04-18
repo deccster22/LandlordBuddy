@@ -144,8 +144,10 @@ export function deriveReviewHandoffState(
   const readinessReviewRequirement = mapReadinessReviewRequirement(
     input.readinessOutcome
   );
+  const wrongChannelReroute = input.surfaceKeys.includes("wrong-channel-reroute");
   const referralStop = input.readinessOutcome === "REFER_OUT"
-    || input.surfaceKeys.includes("referral-stop");
+    || input.surfaceKeys.includes("referral-stop")
+    || wrongChannelReroute;
   const blockedUpstream = input.readinessOutcome === "BLOCKED"
     || sequencing.blockedUpstream;
   const guardedReviewRequired = input.readinessOutcome === "REVIEW_REQUIRED"

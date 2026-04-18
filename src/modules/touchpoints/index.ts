@@ -282,7 +282,27 @@ function deriveControlOutputs(
     }
   }
 
-  return outputs;
+  return finalizeControlOutputPrecedence(outputs);
+}
+
+function finalizeControlOutputPrecedence(
+  outputs: TouchpointControlOutputs
+): TouchpointControlOutputs {
+  const normalized = {
+    ...outputs
+  };
+
+  if (normalized.authenticatedHandoffOnly) {
+    normalized.deferToLiveOfficialFlow = true;
+  }
+
+  if (normalized.wrongChannelReroute) {
+    normalized.deferToLiveOfficialFlow = true;
+    normalized.stablePublicMirrorAllowed = false;
+    normalized.publicMirrorAllowedWithWarning = false;
+  }
+
+  return normalized;
 }
 
 function mergeTouchpointCarryForwardControls(
