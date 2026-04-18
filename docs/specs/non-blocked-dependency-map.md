@@ -48,17 +48,29 @@ Current safe extension path:
 
 ### `BR01 matrix`
 
-Purpose now: authoritative mixed-claim routing guidance.
+Purpose now: first-pass BR01 scenario-registry routing for arrears-first mixed-claim posture.
 
-Insert later through:
+Current first-wave insertion:
 
-- `src/workflow/arrearsHeroWorkflow.ts` transitions around `TRIAGE_READY`, `TRIAGE_SLOWDOWN`, `ARREARS_FACTS_GUARDED`, and `REFER_OUT`
-- `src/modules/notice-readiness/index.ts` via `guarded.mixedClaimRoutingInteraction`
-- future matter-routing assembly that creates `RoutingDecision` and `ReferralFlag` records
+- `src/modules/br01/registry.ts` now holds the BR01 scenario registry for arrears-only, mixed-claim, sensitive, and jurisdiction route-out posture.
+- `src/modules/br01/resolver.ts` now captures objectives early and resolves explicit BR01 outcome families:
+  - deterministic route allowed
+  - slowdown/review required
+  - split-matter required
+  - referral required
+  - route-out required
+- `src/workflow/arrearsHeroWorkflow.ts` now exposes `deriveBr01WorkflowGate`, which maps BR01 routing output into consequential triage progression (`ARREARS_FACTS_READY`, `TRIAGE_SLOWDOWN`, or `REFER_OUT`) instead of flattening mixed objectives.
 
-Keep unchanged until then:
+Still guarded after this insertion:
 
-- mixed-claim cases stay reviewable, slowed down, or referred out
+- unresolved statutory thresholds and exception doctrine remain out of deterministic scope
+- mixed combinations outside current registry rows remain explicit guarded slowdown posture
+- downstream referral/routing decision record assembly (`RoutingDecision`, `ReferralFlag`) remains a follow-on seam
+
+Keep unchanged while expanding BR01:
+
+- no legal-advice path selection behavior
+- no portal submission/execution behavior
 - `forumPath`, `outputMode`, and `officialHandoff` remain separate state dimensions
 
 ### `BR02 operating table`
