@@ -39,7 +39,6 @@ export interface Br02ServiceAssessment {
   appliedDateRuleCodes: string[];
   preferredDeterministicPath: ServiceMethod | null;
   issues: Br02ValidationIssue[];
-  readyForDeterministicDateHandling: boolean;
 }
 
 export const br02FreshnessAuthorities = [

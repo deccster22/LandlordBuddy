@@ -141,7 +141,7 @@ test("touchpoint registry exposes all placeholder classifications for the Victor
   assert.deepEqual([...classifications].sort(), [...touchpointClassifications].sort());
   assert.equal(
     lookupTouchpointMetadata("vic-arrears-authenticated-handoff")?.classification,
-    "HANDOFF_ONLY_AUTHENTICATED"
+    "DEFER_TO_LIVE_OFFICIAL_FLOW"
   );
 });
 
@@ -275,6 +275,7 @@ test("official handoff guidance shell preserves boundary codes and guarded refer
   ]);
   assert.ok(guidance.guidanceBlockKeys.includes("authenticated-surface-handoff"));
   assert.ok(guidance.guidanceBlockKeys.includes("freshness-check"));
+  assert.ok(guidance.guidanceBlockKeys.includes("defer-to-live-official-flow"));
   assert.ok(guidance.guidanceBlockKeys.includes("referral-stop"));
   assert.ok(guidance.carryForwardControls.some((control) => control.code === "MIXED_CLAIM_GUARDED"));
   assert.equal(

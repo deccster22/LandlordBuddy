@@ -28,9 +28,10 @@ import type {
   NoticeReadinessResult
 } from "../notice-readiness/index.js";
 import {
-  listTouchpointsForForumPath,
-  lookupTouchpointMetadata,
-  type TouchpointMetadata
+  resolveTouchpointControl,
+  type TouchpointControlOutputs,
+  type TouchpointMetadata,
+  type TouchpointPostureOverride
 } from "../touchpoints/index.js";
 
 export interface OfficialHandoffGuidanceInput {
@@ -38,7 +39,8 @@ export interface OfficialHandoffGuidanceInput {
   forumPath: ForumPathState;
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
-  touchpointIds?: string[];
+  touchpointIds?: readonly string[];
+  touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
@@ -68,17 +70,24 @@ export const officialHandoffBoundaryCodes = Object.freeze([
 export function buildOfficialHandoffGuidanceShell(
   input: OfficialHandoffGuidanceInput
 ): OfficialHandoffGuidanceShell {
-  const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
+  const touchpointResolution = resolveTouchpointControl({
+    forumPath: input.forumPath.path,
+    ...(input.touchpointIds ? { touchpointIds: input.touchpointIds } : {}),
+    ...(input.touchpointPostureOverrides
+      ? { postureOverrides: input.touchpointPostureOverrides }
+      : {})
+  });
+  const touchpoints = touchpointResolution.touchpoints;
   const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
     ...(input.timelineContent ? [input.timelineContent.carryForwardControls] : []),
-    ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls),
+    touchpointResolution.carryForwardControls,
     ...(br02DownstreamAssessment ? [br02DownstreamAssessment.carryForwardControls] : [])
   );
   const boundaryCodes = [...officialHandoffBoundaryCodes];
   const guidanceBlockKeys = buildGuidanceBlockKeys(
-    touchpoints,
+    touchpointResolution.controlOutputs,
     carryForwardControls,
     input.timelineContent
   );
@@ -133,22 +142,8 @@ function resolveBr02DownstreamAssessment(
   });
 }
 
-function resolveTouchpoints(
-  forumPath: ForumPathState["path"],
-  touchpointIds?: string[]
-): TouchpointMetadata[] {
-  if (!touchpointIds || touchpointIds.length === 0) {
-    return listTouchpointsForForumPath(forumPath);
-  }
-
-  return touchpointIds.flatMap((touchpointId) => {
-    const touchpoint = lookupTouchpointMetadata(touchpointId);
-    return touchpoint ? [touchpoint] : [];
-  });
-}
-
 function buildGuidanceBlockKeys(
-  touchpoints: TouchpointMetadata[],
+  touchpointControlOutputs: TouchpointControlOutputs,
   carryForwardControls: CarryForwardControl[],
   timelineContent?: OutputPackageTimelineContent
 ): string[] {
@@ -178,20 +173,32 @@ function buildGuidanceBlockKeys(
     blockKeys.push("external-step-summary");
   }
 
-  if (
-    touchpoints.some(
-      (touchpoint) => touchpoint.classification === "HANDOFF_ONLY_AUTHENTICATED"
-    )
-  ) {
+  if (touchpointControlOutputs.authenticatedHandoffOnly) {
     blockKeys.push("authenticated-surface-handoff");
   }
 
   if (
-    touchpoints.some(
-      (touchpoint) => touchpoint.classification === "FRESHNESS_SENSITIVE"
-    )
+    touchpointControlOutputs.stale
+    || touchpointControlOutputs.liveConfirmationRequired
+    || touchpointControlOutputs.deferToLiveOfficialFlow
   ) {
     blockKeys.push("freshness-check");
+  }
+
+  if (touchpointControlOutputs.deferToLiveOfficialFlow) {
+    blockKeys.push("defer-to-live-official-flow");
+  }
+
+  if (touchpointControlOutputs.stale) {
+    blockKeys.push("touchpoint-stale");
+  }
+
+  if (touchpointControlOutputs.liveConfirmationRequired) {
+    blockKeys.push("live-confirmation-required");
+  }
+
+  if (touchpointControlOutputs.wrongChannelReroute) {
+    blockKeys.push("wrong-channel-reroute");
   }
 
   if (carryForwardControls.some((control) => control.severity === "SLOWDOWN")) {

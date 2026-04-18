@@ -85,6 +85,7 @@ Acceptance criteria:
 - Every generated package keeps `officialSystemAction: NOT_INCLUDED`.
 - Official handoff guidance always carries boundary codes that preserve prep-and-handoff only posture and no portal mimicry.
 - Touchpoint metadata and carry-forward controls propagate into output selection and handoff guidance instead of being dropped.
+- BR03 touchpoint controls keep mirror/warn/defer classification explicit and preserve distinct stale, live-confirmation-required, and wrong-channel-reroute behavior.
 - Referral-severity controls cause handoff guidance to render a referral stop block rather than implying a normal official path.
 
 Blocked areas for this module:

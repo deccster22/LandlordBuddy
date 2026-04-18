@@ -43,9 +43,10 @@ import {
   type StructuralTrustBinding
 } from "./trustBindings.js";
 import {
-  listTouchpointsForForumPath,
-  lookupTouchpointMetadata,
-  type TouchpointMetadata
+  resolveTouchpointControl,
+  type TouchpointControlOutputs,
+  type TouchpointMetadata,
+  type TouchpointPostureOverride
 } from "../touchpoints/index.js";
 import {
   buildBr04PrivacyHooksFromSource,
@@ -58,7 +59,8 @@ export interface OutputSelectionInput {
   outputMode: OutputModeState;
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
-  touchpointIds?: string[];
+  touchpointIds?: readonly string[];
+  touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
   timeline?: TimelineShell;
@@ -70,6 +72,7 @@ export interface OutputSelection {
   outputMode: OutputModeState;
   officialHandoff: OfficialHandoffStateRecord;
   touchpoints: TouchpointMetadata[];
+  touchpointControlOutputs: TouchpointControlOutputs;
   carryForwardControls: CarryForwardControl[];
   readinessContent?: OutputPackageReadinessContent;
   readinessOutcome?: NoticeReadinessResult["outcome"];
@@ -82,6 +85,7 @@ interface OutputPackageBase {
   outputMode: OutputModeState;
   officialHandoff: OfficialHandoffStateRecord;
   touchpoints: TouchpointMetadata[];
+  touchpointControlOutputs: TouchpointControlOutputs;
   carryForwardControls: CarryForwardControl[];
   trustBinding: StructuralTrustBinding;
   rendererState: RendererState;
@@ -125,7 +129,14 @@ export interface CreateOutputPackageRecordInput extends OutputSelectionInput {
 }
 
 export function selectOutputShell(input: OutputSelectionInput): OutputSelection {
-  const touchpoints = resolveTouchpoints(input.forumPath.path, input.touchpointIds);
+  const touchpointResolution = resolveTouchpointControl({
+    forumPath: input.forumPath.path,
+    ...(input.touchpointIds ? { touchpointIds: input.touchpointIds } : {}),
+    ...(input.touchpointPostureOverrides
+      ? { postureOverrides: input.touchpointPostureOverrides }
+      : {})
+  });
+  const touchpoints = touchpointResolution.touchpoints;
   const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
   const readinessContent = input.noticeReadiness
     ? deriveOutputPackageReadinessContent(input.noticeReadiness)
@@ -139,7 +150,7 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
     input.carryForwardControls ?? [],
     ...(readinessContent ? [readinessContent.carryForwardControls] : []),
     ...(timelineContent ? [timelineContent.carryForwardControls] : []),
-    ...touchpoints.map((touchpoint) => touchpoint.carryForwardControls)
+    touchpointResolution.carryForwardControls
   );
 
   return {
@@ -148,6 +159,7 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
     outputMode: input.outputMode,
     officialHandoff: input.officialHandoff,
     touchpoints,
+    touchpointControlOutputs: touchpointResolution.controlOutputs,
     carryForwardControls,
     ...(readinessContent ? { readinessContent } : {}),
     ...(readinessOutcome ? { readinessOutcome } : {}),
@@ -166,6 +178,7 @@ export function generateOutputPackageShell(
     outputMode: selection.outputMode,
     officialHandoff: selection.officialHandoff,
     touchpoints: selection.touchpoints,
+    touchpointControlOutputs: selection.touchpointControlOutputs,
     carryForwardControls: selection.carryForwardControls,
     officialSystemAction: "NOT_INCLUDED" as const,
     ...(selection.timelineContent ? { timelineContent: selection.timelineContent } : {})
@@ -239,6 +252,9 @@ export function generateOutputPackageShell(
         officialHandoff: selection.officialHandoff,
         carryForwardControls: selection.carryForwardControls,
         touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id),
+        ...(input.touchpointPostureOverrides
+          ? { touchpointPostureOverrides: input.touchpointPostureOverrides }
+          : {}),
         ...(selection.timelineContent
           ? { timelineContent: selection.timelineContent }
           : {}),
@@ -294,20 +310,6 @@ export function createOutputPackageRecord(
       }
     })
   };
-}
-
-function resolveTouchpoints(
-  forumPath: ForumPathState["path"],
-  touchpointIds?: string[]
-): TouchpointMetadata[] {
-  if (!touchpointIds || touchpointIds.length === 0) {
-    return listTouchpointsForForumPath(forumPath);
-  }
-
-  return touchpointIds.flatMap((touchpointId) => {
-    const touchpoint = lookupTouchpointMetadata(touchpointId);
-    return touchpoint ? [touchpoint] : [];
-  });
 }
 
 function deriveOutputPackageCompleteness(

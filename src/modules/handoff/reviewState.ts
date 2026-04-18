@@ -208,7 +208,8 @@ function deriveSequencingState(
   surfaceKeys: readonly string[]
 ): ReviewHandoffState["sequencing"] {
   const blockedUpstream = surfaceKeys.includes("sequencing-blocked");
-  const guardedReviewVisible = surfaceKeys.includes("sequencing-guarded");
+  const guardedReviewVisible = surfaceKeys.includes("sequencing-guarded")
+    || surfaceKeys.includes("live-confirmation-required");
   const externalOfficialDependencyVisible = surfaceKeys.includes("external-step-summary");
   const dependencyHoldPointsVisible = surfaceKeys.includes("dependency-hold-points");
 

@@ -124,7 +124,8 @@ const blockedReviewStateKeys = new Set([
 const guardedReviewStateKeys = new Set([
   "review-state.guarded-items-visible",
   "review-state.sequencing-guarded",
-  "review-state.slowdown-review-required"
+  "review-state.slowdown-review-required",
+  "review-state.live-confirmation-required"
 ]);
 
 export function deriveRendererState(

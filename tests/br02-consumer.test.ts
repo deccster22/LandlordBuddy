@@ -173,7 +173,7 @@ test("evidence deadlines keep the send/share and upload targets separate and let
   assert.ok(overrideResult.deadlineCandidates.some((candidate) => candidate.code === "HEARING-NOTICE-OVERRIDE"));
 });
 
-test("the legacy BR02 service-event assessor wires the consumer bundle into the existing shape", () => {
+test("the BR02 service-event assessor keeps the consumer bundle explicit", () => {
   const serviceEvent = createBr02ServiceEventRecord({
     id: "service-bundle",
     matterId: "matter-5",
@@ -197,7 +197,7 @@ test("the legacy BR02 service-event assessor wires the consumer bundle into the 
   assert.equal(result.noticeEligibility.canPrepareNotice, true);
   assert.equal(result.serviceProof.disposition, "NEXT_STEP_READY");
   assert.equal(result.terminationDate.disposition, "NEXT_STEP_READY");
-  assert.equal(result.readyForDeterministicDateHandling, true);
+  assert.equal(result.consumerAssessment.readyForNextStep, true);
   assert.equal(result.consumerAssessment.disposition, "NEXT_STEP_READY");
   assert.ok(result.appliedDateRuleCodes.includes("NO_EARLY_NOTICE_THRESHOLD_GATE"));
 });

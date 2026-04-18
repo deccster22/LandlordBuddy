@@ -80,16 +80,23 @@ Keep unchanged until then:
 
 Purpose now: authoritative register of public, warning-bearing, authenticated, and freshness-sensitive touchpoints.
 
-Insert later through:
+Current first-wave insertion:
 
-- `src/modules/touchpoints/index.ts`, which is currently a placeholder registry shell
-- carry-forward-control merge paths in `src/modules/output/index.ts` and `src/modules/handoff/index.ts`
+- `src/modules/touchpoints/index.ts` now resolves touchpoints by forum path or ID and emits BR03 control outputs for:
+  - mirror vs mirror-with-warning vs defer-to-live-official-flow classification posture
+  - stale vs live-confirmation-required freshness posture
+  - wrong-channel reroute posture
+- `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now consume the BR03 resolver outputs so touchpoint posture can drive merged carry-forward controls and handoff guidance block structure.
+
+Expand later through:
+
 - future freshness review processes, not product-driven portal execution
 
 Keep unchanged until then:
 
 - placeholder touchpoints remain explicit with `placeholder: true`
-- authenticated surfaces stay handoff-only and freshness-sensitive surfaces stay warning-bearing
+- authenticated surfaces stay handoff-only and freshness-sensitive surfaces stay reviewable rather than portal-executed
+- wrong-channel handling remains stop + explain + reroute, not ordinary handoff
 
 ### `AG-BR04A outputs`
 
