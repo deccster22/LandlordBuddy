@@ -7,6 +7,8 @@ See also:
 - `docs/architecture/arrears-mvp-spine.md`
 - `docs/architecture/repo-boundaries.md`
 - `docs/architecture/output-handoff-evidence-shells.md`
+- `docs/architecture/current-product-posture.md`
+- `docs/architecture/frozen-lanes-status.md`
 - `docs/specs/non-blocked-dependency-map.md`
 
 ## Phase-scoped posture

@@ -205,7 +205,18 @@ Use `Prepared for handoff` as the safer general user-facing default unless the f
 
 Do not rename frozen state families, warning families, trust keys, CTA tiers, handoff semantics, or renderer-state labels unless the task explicitly authorises it.
 
-Any change to protected lines, CTA hierarchy, trust-cue binding, or warning consequences is a review event, not normal copy iteration
+Any change to protected lines, CTA hierarchy, trust-cue binding, warning consequences, lifecycle wording affecting reliance, hold scope presentation, or auditability claims is a review event, not normal copy iteration.
+
+### 10.5 Frozen lane baseline controls (Phase 4B)
+
+Treat the current lane posture as implementation constraints:
+
+* Lane 2 is closed for authoring and is implementation-fidelity only.
+* Lane 4 is closed for authoring/control drafting and is implementation-fidelity only.
+
+Do not treat either lane as open for general writing rounds.
+
+Changes to protected lines, CTA hierarchy, trust-cue binding, warning consequences, lifecycle wording, hold scope presentation, or auditability claims must be escalated as review events.
 
 ## 11\. Renderer and presentation rules
 
@@ -395,4 +406,3 @@ This repo should behave like a careful cockpit:
 * auditable
 * explicit about uncertainty
 * useful without pretending to be a lawyer or a portal
-
