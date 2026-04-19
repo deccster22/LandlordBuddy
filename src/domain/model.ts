@@ -700,6 +700,8 @@ export interface ReferralFlag {
   severity: ControlSeverity;
   reasonCode:
     | "MIXED_CLAIM_GUARDED"
+    | "BR01_REFERRAL_REQUIRED"
+    | "BR01_ROUTE_OUT_REQUIRED"
     | "EVIDENCE_TIMING_GUARDED"
     | "SERVICE_STANDARD_GUARDED"
     | "PRIVACY_HANDLING_PENDING"
@@ -799,4 +801,3 @@ export function validateMatterSeparation(matter: Matter): string[] {
     officialHandoff: matter.officialHandoff
   });
 }
-

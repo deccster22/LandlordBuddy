@@ -13,6 +13,7 @@ This inventory turns the current repo spine into QA-visible control classes for 
 
 | Rule | Current module surface | Testable invariant | Current QA anchor |
 | --- | --- | --- | --- |
+| BR01 workflow insertion transition mapping | `src/workflow/arrearsHeroWorkflow.ts`, `src/modules/br01/resolver.ts` | BR01 routing outcomes map into explicit workflow insertion families: continue, guarded review, split-matter, referral stop, and route-out stop. Route-out posture remains distinct from referral posture and maps to stop-state workflow handling. | `tests/br01-routing.test.ts` |
 | Arrears threshold shell | `src/modules/arrears/index.ts` | With valid single-tenancy, single-currency ledger inputs plus a threshold rule, the shell computes `outstandingAmount`, `overdueChargeIds`, `unappliedPaymentIds`, `daysInArrears`, `thresholdState`, `ruleVersion`, and `thresholdMoment`. When core inputs are insufficient, it returns `calculationConfidence: PROVISIONAL` and `thresholdState.kind: BLOCKED_INVALID` with reasons. | `tests/arrears-shell.test.ts` |
 | No-early-notice gate | `src/modules/timeline/index.ts` | `noEarlyNoticeGate.canPrepareNotice` is `true` only when `thresholdState.kind === THRESHOLD_MET`. It remains `false` for `BELOW_THRESHOLD` and `BLOCKED_INVALID`, with a visible reason string. | `tests/arrears-shell.test.ts` |
 | Mandatory unpaid-rent notice fields | `src/modules/notice-readiness/index.ts` | Missing `arrearsAmount`, `paidToDate`, `noticeNumber`, or `serviceMethod` produces a `hard stop` issue with a field-specific code and keeps `noDeterministicFailures` false. | `tests/notice-readiness.result.test.ts` |
@@ -67,6 +68,8 @@ This inventory turns the current repo spine into QA-visible control classes for 
 
 | Control | Surface | Required posture now |
 | --- | --- | --- |
+| `BR01_REFERRAL_REQUIRED` | BR01 routing artifact persistence | Sensitive BR01 scenarios create explicit referral-stop records and remain outside ordinary progression. |
+| `BR01_ROUTE_OUT_REQUIRED` | BR01 routing artifact persistence | Interstate or unsupported forum posture remains explicit route-out stop, not ordinary referral progression. |
 | `MIXED_CLAIM_GUARDED` | Workflow guardrail, future referral flags, handoff guidance carry-forward | Treat mixed-claim routing as referral-capable, not settled product routing. |
 | `TOUCHPOINT_WRONG_CHANNEL_REROUTE` | BR03 touchpoint carry-forward control and handoff guidance | Wrong-channel touchpoints trigger stop + explain + reroute instead of ordinary handoff progression. |
 | `REFER_OUT` workflow state | `src/workflow/arrearsHeroWorkflow.ts` | Use when a guarded issue reaches referral severity or the matter exceeds settled MVP scope. |

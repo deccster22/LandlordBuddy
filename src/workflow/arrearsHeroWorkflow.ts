@@ -1,6 +1,7 @@
 import type { ControlSeverity, MatterStatus, WorkflowState } from "../domain/model.js";
 import {
   resolveBr01Routing,
+  type Br01RoutingOutcomeFamily,
   type Br01RoutingResult,
   type ResolveBr01RoutingInput
 } from "../modules/br01/index.js";
@@ -208,12 +209,122 @@ export function findWorkflowNode(state: WorkflowState): WorkflowNode | undefined
   return arrearsHeroWorkflow.find((node) => node.state === state);
 }
 
+export const br01WorkflowTransitionFamilies = [
+  "CONTINUE",
+  "GUARDED_REVIEW",
+  "SPLIT_MATTER",
+  "REFERRAL_STOP",
+  "ROUTE_OUT_STOP"
+] as const;
+
+export type Br01WorkflowTransitionFamily =
+  (typeof br01WorkflowTransitionFamilies)[number];
+
+export const br01WorkflowInsertionPointCodes = [
+  "BR01_DETERMINISTIC_CONTINUE",
+  "BR01_GUARDED_REVIEW",
+  "BR01_SPLIT_MATTER_REQUIRED",
+  "BR01_REFERRAL_STOP",
+  "BR01_ROUTE_OUT_STOP"
+] as const;
+
+export type Br01WorkflowInsertionPointCode =
+  (typeof br01WorkflowInsertionPointCodes)[number];
+
+interface Br01WorkflowInsertionPoint {
+  code: Br01WorkflowInsertionPointCode;
+  transitionFamily: Br01WorkflowTransitionFamily;
+  workflowState: WorkflowState;
+}
+
+export interface Br01WorkflowTransition {
+  routingResult: Br01RoutingResult;
+  fromWorkflowState: WorkflowState;
+  workflowState: WorkflowState;
+  insertionPointCode: Br01WorkflowInsertionPointCode;
+  transitionFamily: Br01WorkflowTransitionFamily;
+  continueProgression: boolean;
+  stopProgression: boolean;
+  requiresGuardedReview: boolean;
+  requiresSplitMatter: boolean;
+  requiresReferralStop: boolean;
+  requiresRouteOutStop: boolean;
+}
+
+export interface DeriveBr01WorkflowTransitionInput
+  extends ResolveBr01RoutingInput {
+  fromWorkflowState?: WorkflowState;
+}
+
+const br01WorkflowInsertionPointByOutcomeFamily: Record<
+  Br01RoutingOutcomeFamily,
+  Br01WorkflowInsertionPoint
+> = {
+  DETERMINISTIC_ROUTE_ALLOWED: {
+    code: "BR01_DETERMINISTIC_CONTINUE",
+    transitionFamily: "CONTINUE",
+    workflowState: "ARREARS_FACTS_READY"
+  },
+  SLOWDOWN_REVIEW_REQUIRED: {
+    code: "BR01_GUARDED_REVIEW",
+    transitionFamily: "GUARDED_REVIEW",
+    workflowState: "TRIAGE_SLOWDOWN"
+  },
+  SPLIT_MATTER_REQUIRED: {
+    code: "BR01_SPLIT_MATTER_REQUIRED",
+    transitionFamily: "SPLIT_MATTER",
+    workflowState: "ARREARS_FACTS_GUARDED"
+  },
+  REFERRAL_REQUIRED: {
+    code: "BR01_REFERRAL_STOP",
+    transitionFamily: "REFERRAL_STOP",
+    workflowState: "REFER_OUT"
+  },
+  ROUTE_OUT_REQUIRED: {
+    code: "BR01_ROUTE_OUT_STOP",
+    transitionFamily: "ROUTE_OUT_STOP",
+    workflowState: "STOPPED_PENDING_EXTERNAL_INPUT"
+  }
+};
+
+export function deriveBr01WorkflowTransition(
+  input: DeriveBr01WorkflowTransitionInput
+): Br01WorkflowTransition {
+  const routingResult = resolveBr01Routing(input);
+  const insertionPoint = resolveBr01WorkflowInsertionPoint(
+    routingResult.outcomeFamily
+  );
+  const transitionFamily = insertionPoint.transitionFamily;
+
+  return {
+    routingResult,
+    fromWorkflowState: input.fromWorkflowState ?? "TRIAGE_READY",
+    workflowState: insertionPoint.workflowState,
+    insertionPointCode: insertionPoint.code,
+    transitionFamily,
+    continueProgression: transitionFamily === "CONTINUE",
+    stopProgression: transitionFamily === "REFERRAL_STOP"
+      || transitionFamily === "ROUTE_OUT_STOP",
+    requiresGuardedReview: transitionFamily === "GUARDED_REVIEW",
+    requiresSplitMatter: transitionFamily === "SPLIT_MATTER",
+    requiresReferralStop: transitionFamily === "REFERRAL_STOP",
+    requiresRouteOutStop: transitionFamily === "ROUTE_OUT_STOP"
+  };
+}
+
 export interface Br01WorkflowGate {
   routingResult: Br01RoutingResult;
+  workflowTransition: Br01WorkflowTransition;
   workflowState: WorkflowState;
+  insertionPointCode: Br01WorkflowInsertionPointCode;
+  transitionFamily: Br01WorkflowTransitionFamily;
+  progressionStopped: boolean;
   readyForArrearsFacts: boolean;
   triageSlowdown: boolean;
+  guardedReviewRequired: boolean;
   splitMatterRequired: boolean;
+  referralStop: boolean;
+  routeOutStop: boolean;
   referralRequired: boolean;
   routeOutRequired: boolean;
 }
@@ -221,15 +332,23 @@ export interface Br01WorkflowGate {
 export function deriveBr01WorkflowGate(
   input: ResolveBr01RoutingInput
 ): Br01WorkflowGate {
-  const routingResult = resolveBr01Routing(input);
-  const workflowState = mapBr01OutcomeToWorkflowState(routingResult.outcomeFamily);
+  const workflowTransition = deriveBr01WorkflowTransition(input);
+  const { routingResult } = workflowTransition;
+  const workflowState = workflowTransition.workflowState;
 
   return {
     routingResult,
+    workflowTransition,
     workflowState,
-    readyForArrearsFacts: workflowState === "ARREARS_FACTS_READY",
+    insertionPointCode: workflowTransition.insertionPointCode,
+    transitionFamily: workflowTransition.transitionFamily,
+    progressionStopped: workflowTransition.stopProgression,
+    readyForArrearsFacts: workflowTransition.continueProgression,
     triageSlowdown: workflowState === "TRIAGE_SLOWDOWN",
-    splitMatterRequired: routingResult.flags.splitMatterRequired,
+    guardedReviewRequired: workflowTransition.requiresGuardedReview,
+    splitMatterRequired: workflowTransition.requiresSplitMatter,
+    referralStop: workflowTransition.requiresReferralStop,
+    routeOutStop: workflowTransition.requiresRouteOutStop,
     referralRequired: routingResult.flags.referralRequired,
     routeOutRequired: routingResult.flags.routeOutRequired
   };
@@ -267,17 +386,8 @@ export function deriveBr02WorkflowGate(input: {
   };
 }
 
-function mapBr01OutcomeToWorkflowState(
-  outcomeFamily: Br01RoutingResult["outcomeFamily"]
-): WorkflowState {
-  switch (outcomeFamily) {
-    case "DETERMINISTIC_ROUTE_ALLOWED":
-      return "ARREARS_FACTS_READY";
-    case "SLOWDOWN_REVIEW_REQUIRED":
-    case "SPLIT_MATTER_REQUIRED":
-      return "TRIAGE_SLOWDOWN";
-    case "REFERRAL_REQUIRED":
-    case "ROUTE_OUT_REQUIRED":
-      return "REFER_OUT";
-  }
+function resolveBr01WorkflowInsertionPoint(
+  outcomeFamily: Br01RoutingOutcomeFamily
+): Br01WorkflowInsertionPoint {
+  return br01WorkflowInsertionPointByOutcomeFamily[outcomeFamily];
 }

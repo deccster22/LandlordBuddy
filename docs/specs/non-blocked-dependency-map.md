@@ -61,11 +61,22 @@ Current first-wave insertion:
   - route-out required
 - `src/workflow/arrearsHeroWorkflow.ts` now exposes `deriveBr01WorkflowGate`, which maps BR01 routing output into consequential triage progression (`ARREARS_FACTS_READY`, `TRIAGE_SLOWDOWN`, or `REFER_OUT`) instead of flattening mixed objectives.
 
+Current second-wave insertion:
+
+- `src/workflow/arrearsHeroWorkflow.ts` now exposes `deriveBr01WorkflowTransition` and explicit BR01 insertion-point codes so workflow transitions are distinguished as:
+  - deterministic continue
+  - guarded review
+  - split-matter required
+  - referral stop
+  - route-out stop
+- BR01 route-out now maps to an explicit stop transition (`STOPPED_PENDING_EXTERNAL_INPUT`) rather than being blurred into ordinary referral progression.
+- `src/modules/br01/persistence.ts` now assembles BR01 `RoutingDecision` records plus BR01 referral flags (`BR01_REFERRAL_REQUIRED`, `BR01_ROUTE_OUT_REQUIRED`) for referral/route-out outcomes.
+
 Still guarded after this insertion:
 
 - unresolved statutory thresholds and exception doctrine remain out of deterministic scope
 - mixed combinations outside current registry rows remain explicit guarded slowdown posture
-- downstream referral/routing decision record assembly (`RoutingDecision`, `ReferralFlag`) remains a follow-on seam
+- downstream consumption of persisted BR01 decisions/flags beyond workflow insertion remains a follow-on seam
 
 Keep unchanged while expanding BR01:
 
