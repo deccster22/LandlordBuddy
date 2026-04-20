@@ -15,6 +15,10 @@ import {
   type Br02DownstreamAssessment
 } from "../br02/downstream.js";
 import {
+  deriveBr01DownstreamPosture,
+  type Br01RoutingResult
+} from "../br01/index.js";
+import {
   deriveRendererState,
   type RendererState
 } from "../output/rendererStateAdapter.js";
@@ -40,6 +44,7 @@ export interface OfficialHandoffGuidanceInput {
   forumPath: ForumPathState;
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
+  br01RoutingResult?: Br01RoutingResult;
   touchpointIds?: readonly string[];
   touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
   readinessOutcome?: NoticeReadinessOutcome;
@@ -80,10 +85,14 @@ export function buildOfficialHandoffGuidanceShell(
   });
   const touchpoints = touchpointResolution.touchpoints;
   const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
+  const br01DownstreamPosture = input.br01RoutingResult
+    ? deriveBr01DownstreamPosture(input.br01RoutingResult)
+    : undefined;
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
     ...(input.timelineContent ? [input.timelineContent.carryForwardControls] : []),
     touchpointResolution.carryForwardControls,
+    ...(br01DownstreamPosture ? [br01DownstreamPosture.carryForwardControls] : []),
     ...(br02DownstreamAssessment ? [br02DownstreamAssessment.carryForwardControls] : [])
   );
   const boundaryCodes = [...officialHandoffBoundaryCodes];
@@ -93,8 +102,11 @@ export function buildOfficialHandoffGuidanceShell(
     input.timelineContent
   );
   const readinessOutcome = input.noticeReadiness?.outcome ?? input.readinessOutcome;
-  const downstreamReadinessOutcome = readinessOutcome
-    ?? br02DownstreamAssessment?.readinessOutcome;
+  const downstreamReadinessOutcome = resolveDownstreamReadinessOutcome([
+    readinessOutcome,
+    br01DownstreamPosture?.readinessOutcome,
+    br02DownstreamAssessment?.readinessOutcome
+  ]);
   const trustBinding = buildStructuralTrustBinding({
     kind: "OFFICIAL_HANDOFF_GUIDANCE",
     officialHandoff: input.officialHandoff,
@@ -186,5 +198,30 @@ function buildGuidanceBlockKeys(
 
   return blockKeys;
 }
+
+function resolveDownstreamReadinessOutcome(
+  outcomes: Array<NoticeReadinessOutcome | undefined>
+): NoticeReadinessOutcome | undefined {
+  const definedOutcomes = outcomes.filter((outcome): outcome is NoticeReadinessOutcome => (
+    outcome !== undefined
+  ));
+
+  if (definedOutcomes.length === 0) {
+    return undefined;
+  }
+
+  const rankedOutcomes = [...definedOutcomes].sort((left, right) => (
+    readinessOutcomePriority[right] - readinessOutcomePriority[left]
+  ));
+
+  return rankedOutcomes[0];
+}
+
+const readinessOutcomePriority: Record<NoticeReadinessOutcome, number> = {
+  READY_FOR_REVIEW: 0,
+  REVIEW_REQUIRED: 1,
+  REFER_OUT: 2,
+  BLOCKED: 3
+};
 
 export * from "./reviewState.js";

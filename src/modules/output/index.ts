@@ -21,6 +21,10 @@ import {
   type Br02DownstreamAssessment
 } from "../br02/downstream.js";
 import {
+  deriveBr01DownstreamPosture,
+  type Br01RoutingResult
+} from "../br01/index.js";
+import {
   buildOfficialHandoffGuidanceShell,
   type OfficialHandoffGuidanceShell
 } from "../handoff/index.js";
@@ -60,6 +64,7 @@ export interface OutputSelectionInput {
   outputMode: OutputModeState;
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
+  br01RoutingResult?: Br01RoutingResult;
   touchpointIds?: readonly string[];
   touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
   noticeReadiness?: NoticeReadinessResult;
@@ -139,20 +144,32 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
   });
   const touchpoints = touchpointResolution.touchpoints;
   const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
-  const readinessContent = input.noticeReadiness
+  const br01DownstreamPosture = input.br01RoutingResult
+    ? deriveBr01DownstreamPosture(input.br01RoutingResult)
+    : undefined;
+  const baseReadinessContent = input.noticeReadiness
     ? deriveOutputPackageReadinessContent(input.noticeReadiness)
     : br02DownstreamAssessment?.readinessContent;
-  const readinessOutcome = input.noticeReadiness?.outcome
-    ?? br02DownstreamAssessment?.readinessOutcome;
   const timelineContent = input.timeline
     ? deriveOutputPackageTimelineContent(input.timeline)
     : undefined;
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
-    ...(readinessContent ? [readinessContent.carryForwardControls] : []),
+    ...(baseReadinessContent ? [baseReadinessContent.carryForwardControls] : []),
+    ...(br01DownstreamPosture ? [br01DownstreamPosture.carryForwardControls] : []),
     ...(timelineContent ? [timelineContent.carryForwardControls] : []),
     touchpointResolution.carryForwardControls
   );
+  const readinessOutcome = resolveDownstreamReadinessOutcome([
+    input.noticeReadiness?.outcome,
+    br01DownstreamPosture?.readinessOutcome,
+    br02DownstreamAssessment?.readinessOutcome
+  ]);
+  const readinessContent = deriveDownstreamReadinessContent({
+    baseReadinessContent,
+    readinessOutcome,
+    carryForwardControls
+  });
 
   return {
     matterId: input.matterId,
@@ -220,7 +237,8 @@ export function generateOutputPackageShell(
       const blockKeys = buildPrepPackBlockKeys(
         selection.readinessContent,
         selection.timelineContent,
-        selection.touchpointControlOutputs
+        selection.touchpointControlOutputs,
+        selection.carryForwardControls
       );
       const trustBinding = buildStructuralTrustBinding({
         kind: "PREP_PACK_COPY_READY",
@@ -265,6 +283,9 @@ export function generateOutputPackageShell(
           : {}),
         ...(br02ConsumerAssessment
           ? { br02ConsumerAssessment }
+          : {}),
+        ...(input.br01RoutingResult
+          ? { br01RoutingResult: input.br01RoutingResult }
           : {}),
         ...(selection.readinessOutcome
           ? { readinessOutcome: selection.readinessOutcome }
@@ -393,18 +414,23 @@ function buildPrintableSectionKeys(
 function buildPrepPackBlockKeys(
   readinessContent?: OutputPackageReadinessContent,
   timelineContent?: OutputPackageTimelineContent,
-  touchpointControlOutputs?: TouchpointControlOutputs
+  touchpointControlOutputs?: TouchpointControlOutputs,
+  carryForwardControls?: readonly CarryForwardControl[]
 ): string[] {
   const touchpointConsequenceSurfaceKeys = touchpointControlOutputs
     ? deriveTouchpointConsequenceSurfaceKeys(touchpointControlOutputs)
     : [];
   const wrongChannelReroute = touchpointControlOutputs?.wrongChannelReroute === true;
+  const hasReferralControl = hasCarryForwardControlSeverity(
+    carryForwardControls,
+    "REFERRAL"
+  );
 
   if (!readinessContent && !timelineContent) {
     return dedupeStrings([
       ...touchpointConsequenceSurfaceKeys,
-      ...(wrongChannelReroute ? ["referral-stop"] : []),
-      ...(wrongChannelReroute ? [] : ["copy-ready-facts"]),
+      ...(wrongChannelReroute || hasReferralControl ? ["referral-stop"] : []),
+      ...(wrongChannelReroute || hasReferralControl ? [] : ["copy-ready-facts"]),
       "supporting-evidence-index",
       "guarded-review-flags"
     ]);
@@ -453,7 +479,7 @@ function buildPrepPackBlockKeys(
   }
 
   blockKeys.push(...touchpointConsequenceSurfaceKeys);
-  if (wrongChannelReroute) {
+  if (wrongChannelReroute || hasReferralControl) {
     blockKeys.push("referral-stop");
   }
 
@@ -467,6 +493,77 @@ function buildPrepPackBlockKeys(
   blockKeys.push("supporting-evidence-index");
 
   return dedupeStrings(blockKeys);
+}
+
+function deriveDownstreamReadinessContent(input: {
+  baseReadinessContent: OutputPackageReadinessContent | undefined;
+  readinessOutcome: NoticeReadinessResult["outcome"] | undefined;
+  carryForwardControls: CarryForwardControl[];
+}): OutputPackageReadinessContent | undefined {
+  if (!input.baseReadinessContent && !input.readinessOutcome) {
+    return undefined;
+  }
+
+  const baseReadinessContent = input.baseReadinessContent;
+  const readinessOutcome = input.readinessOutcome;
+  const showReviewHoldPoints = readinessOutcome
+    ? readinessOutcome === "BLOCKED"
+      || readinessOutcome === "REVIEW_REQUIRED"
+      || readinessOutcome === "REFER_OUT"
+    : (baseReadinessContent?.showReviewHoldPoints ?? false);
+  const hasGuardedCarryForwardControls = input.carryForwardControls.some((control) => (
+    control.severity !== "INFO" && control.deterministic === false
+  ));
+  const showReferralStop = readinessOutcome === "REFER_OUT"
+    || hasCarryForwardControlSeverity(input.carryForwardControls, "REFERRAL");
+  const readinessOutcomeAllowsCopyReadyFacts = isCopyReadyFactsAllowed(readinessOutcome);
+  const allowCopyReadyFacts = baseReadinessContent
+    ? baseReadinessContent.allowCopyReadyFacts && readinessOutcomeAllowsCopyReadyFacts
+    : readinessOutcomeAllowsCopyReadyFacts;
+
+  return {
+    carryForwardControls: input.carryForwardControls,
+    showReadinessSummary: baseReadinessContent?.showReadinessSummary ?? true,
+    showBlockerSummary: readinessOutcome === "BLOCKED"
+      || (baseReadinessContent?.showBlockerSummary ?? false),
+    showReviewHoldPoints,
+    showGuardedIssueSection: (baseReadinessContent?.showGuardedIssueSection ?? false)
+      || hasGuardedCarryForwardControls,
+    showReferralStop,
+    allowCopyReadyFacts
+  };
+}
+
+function resolveDownstreamReadinessOutcome(
+  outcomes: Array<NoticeReadinessResult["outcome"] | undefined>
+): NoticeReadinessResult["outcome"] | undefined {
+  const definedOutcomes = outcomes.filter((outcome): outcome is NoticeReadinessResult["outcome"] => (
+    outcome !== undefined
+  ));
+
+  if (definedOutcomes.length === 0) {
+    return undefined;
+  }
+
+  const rankedOutcomes = [...definedOutcomes].sort((left, right) => (
+    readinessOutcomePriority[right] - readinessOutcomePriority[left]
+  ));
+
+  return rankedOutcomes[0];
+}
+
+function isCopyReadyFactsAllowed(
+  readinessOutcome: NoticeReadinessResult["outcome"] | undefined
+): boolean {
+  return readinessOutcome === "READY_FOR_REVIEW"
+    || readinessOutcome === "REVIEW_REQUIRED";
+}
+
+function hasCarryForwardControlSeverity(
+  controls: readonly CarryForwardControl[] | undefined,
+  severity: CarryForwardControl["severity"]
+): boolean {
+  return (controls ?? []).some((control) => control.severity === severity);
 }
 
 function shouldIncludeCopyReadyFacts(
@@ -493,6 +590,13 @@ function dedupeStrings(values: readonly string[]): string[] {
     return true;
   });
 }
+
+const readinessOutcomePriority: Record<NoticeReadinessResult["outcome"], number> = {
+  READY_FOR_REVIEW: 0,
+  REVIEW_REQUIRED: 1,
+  REFER_OUT: 2,
+  BLOCKED: 3
+};
 
 function resolveBr02DownstreamAssessment(
   input: OutputSelectionInput
