@@ -192,6 +192,10 @@ Keep unchanged until then:
 
 Purpose now: approved trust and wording outcomes for user-facing copy, warnings, and framing.
 
+Current baseline artifact:
+
+- `docs/specs/br05-trust-comprehension-baseline-pack.md` captures the frozen Lane 2 trust/comprehension baseline, required boundary/trust-cue expectations, event-linked pricing trigger hypotheses, and known comprehension risks without rewriting protected lines.
+
 Insert later through:
 
 - copy bound to existing section keys, block keys, reminder notes, and boundary codes
