@@ -119,6 +119,7 @@ Blocked areas for this module:
 Before this packet can be treated as accepted, Product and QA should confirm the checklist in `docs/qa/auditability-checklist.md` still matches the implementation.
 
 For BR05 beta pricing/trust validation and supporting-content alignment, Product and QA should also run `docs/qa/br05-module-surface-alignment-checks.md` whenever module-to-surface mappings change.
+For BR05 beta measurement operations, Product and QA should use `docs/specs/br05-beta-measurement-plan-artifact.md` as the current trigger-to-metric decision contract.
 
 ## Packet completion gate
 

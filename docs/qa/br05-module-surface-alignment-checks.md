@@ -8,6 +8,7 @@ Scope: QA acceptance checks for BR05 supporting-module alignment with concrete L
 
 - `docs/specs/br05-supporting-content-system-pack.md`
 - `docs/specs/br05-beta-pricing-trust-validation-pack.md`
+- `docs/specs/br05-beta-measurement-plan-artifact.md`
 - `src/modules/output/trustBindings.ts`
 - `src/modules/output/index.ts`
 - `src/modules/handoff/index.ts`
@@ -26,6 +27,7 @@ Scope: QA acceptance checks for BR05 supporting-module alignment with concrete L
 | `BR05-QA-ALN-08` | Local validation boundary rule | Evidence/privacy modules bound to evidence entries preserve local-only validation meaning | Any evidence module implies official acceptance or settled legal sufficiency |
 | `BR05-QA-ALN-09` | Trust-cue adjacency rule | Pricing-trigger entries include boundary/source/freshness cues where required by BR05-03 trigger table | Pricing entry lacks required trust cues for its trigger |
 | `BR05-QA-ALN-10` | Falsification readiness rule | Each beta trigger has explicit falsification evidence criteria before rollout | Trigger has success criteria only, with no falsification definition |
+| `BR05-QA-ALN-11` | Measurement-plan mapping sync | Every trigger/module/inventory mapping in BR05-04 references valid IDs defined in BR05-02 and BR05-03 | BR05-04 uses unknown or drifted trigger/module/inventory IDs |
 
 ## 3. QA execution notes
 
@@ -37,6 +39,6 @@ Scope: QA acceptance checks for BR05 supporting-module alignment with concrete L
 
 BR05 module-to-surface alignment is acceptable only when:
 
-1. all checks `BR05-QA-ALN-01` through `BR05-QA-ALN-10` pass, and
+1. all checks `BR05-QA-ALN-01` through `BR05-QA-ALN-11` pass, and
 2. protected Lane 2 lines remain untouched, and
 3. no unsupported trust capability is claimed in any bound module.

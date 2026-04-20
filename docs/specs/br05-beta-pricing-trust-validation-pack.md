@@ -16,6 +16,10 @@ This pack must preserve:
 - no legal-authority, no filing implication, no portal mimicry
 - trust cues grounded in actual repo-backed controls only
 
+Operationalization note:
+
+- `docs/specs/br05-beta-measurement-plan-artifact.md` defines the beta event schema, metric set, thresholds, and review cadence for evaluating the triggers in this pack.
+
 Primary anchors:
 
 - `docs/specs/br05-trust-comprehension-baseline-pack.md`
