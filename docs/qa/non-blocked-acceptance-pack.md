@@ -118,6 +118,8 @@ Blocked areas for this module:
 
 Before this packet can be treated as accepted, Product and QA should confirm the checklist in `docs/qa/auditability-checklist.md` still matches the implementation.
 
+For BR05 beta pricing/trust validation and supporting-content alignment, Product and QA should also run `docs/qa/br05-module-surface-alignment-checks.md` whenever module-to-surface mappings change.
+
 ## Packet completion gate
 
 This acceptance pack is satisfied only when all of the following are true:

@@ -195,6 +195,8 @@ Purpose now: approved trust and wording outcomes for user-facing copy, warnings,
 Current baseline artifact:
 
 - `docs/specs/br05-trust-comprehension-baseline-pack.md` captures the frozen Lane 2 trust/comprehension baseline, required boundary/trust-cue expectations, event-linked pricing trigger hypotheses, and known comprehension risks without rewriting protected lines.
+- `docs/specs/br05-supporting-content-system-pack.md` captures modular supporting content blocks, placement mapping, and guarded/must-not-overclaim notes for FAQ/help and trust reinforcement surfaces.
+- `docs/specs/br05-beta-pricing-trust-validation-pack.md` captures beta-facing trigger tests, trust-to-conversion risk mapping, trigger-level falsification criteria, and concrete module-to-surface inventory bindings.
 
 Insert later through:
 
