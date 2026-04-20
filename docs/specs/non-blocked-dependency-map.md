@@ -72,6 +72,12 @@ Current second-wave insertion:
 - BR01 route-out now maps to an explicit stop transition (`STOPPED_PENDING_EXTERNAL_INPUT`) rather than being blurred into ordinary referral progression.
 - `src/modules/br01/persistence.ts` now assembles BR01 `RoutingDecision` records plus BR01 referral flags (`BR01_REFERRAL_REQUIRED`, `BR01_ROUTE_OUT_REQUIRED`) for referral/route-out outcomes.
 
+Current third-wave insertion:
+
+- `src/modules/br01/downstream.ts` now provides central BR01 downstream posture mapping (carry-forward controls plus review/referral readiness posture) so consumers do not re-implement mixed-claim branching ad hoc.
+- `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now accept BR01 routing input and consume BR01 downstream posture for consequential output/handoff behavior.
+- prep-pack and handoff structures now reflect BR01 split/review, referral-stop, and route-out posture through existing frozen trust-surface keys rather than copy rewrites.
+
 Still guarded after this insertion:
 
 - unresolved statutory thresholds and exception doctrine remain out of deterministic scope
