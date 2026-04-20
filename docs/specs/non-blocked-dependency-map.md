@@ -50,6 +50,12 @@ Current safe extension path:
 
 Purpose now: first-pass BR01 scenario-registry routing for arrears-first mixed-claim posture.
 
+Park-ready checkpoint (`P4B-CX-BR01-05A`):
+
+- BR01 is paused at the first-pass stable stopping point.
+- Canonical parking note: `docs/specs/br01-parked-invariants.md`.
+- No behavior broadening is in scope unless a listed reactivation trigger fires.
+
 Current first-wave insertion:
 
 - `src/modules/br01/registry.ts` now holds the BR01 scenario registry for arrears-only, mixed-claim, sensitive, and jurisdiction route-out posture.
