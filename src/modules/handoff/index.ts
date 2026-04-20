@@ -1,4 +1,8 @@
-import type { EntityId } from "../../domain/model.js";
+import type {
+  EntityId,
+  ReferralFlag,
+  RoutingDecision
+} from "../../domain/model.js";
 import type {
   ForumPathState,
   OfficialHandoffStateRecord
@@ -15,7 +19,7 @@ import {
   type Br02DownstreamAssessment
 } from "../br02/downstream.js";
 import {
-  deriveBr01DownstreamPosture,
+  resolveBr01DownstreamPosture,
   type Br01RoutingResult
 } from "../br01/index.js";
 import {
@@ -44,6 +48,8 @@ export interface OfficialHandoffGuidanceInput {
   forumPath: ForumPathState;
   officialHandoff: OfficialHandoffStateRecord;
   carryForwardControls?: CarryForwardControl[];
+  br01RoutingDecision?: RoutingDecision;
+  br01ReferralFlags?: readonly ReferralFlag[];
   br01RoutingResult?: Br01RoutingResult;
   touchpointIds?: readonly string[];
   touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
@@ -85,9 +91,17 @@ export function buildOfficialHandoffGuidanceShell(
   });
   const touchpoints = touchpointResolution.touchpoints;
   const br02DownstreamAssessment = resolveBr02DownstreamAssessment(input);
-  const br01DownstreamPosture = input.br01RoutingResult
-    ? deriveBr01DownstreamPosture(input.br01RoutingResult)
-    : undefined;
+  const br01DownstreamPosture = resolveBr01DownstreamPosture({
+    ...(input.br01RoutingDecision
+      ? { routingDecision: input.br01RoutingDecision }
+      : {}),
+    ...(input.br01ReferralFlags
+      ? { referralFlags: input.br01ReferralFlags }
+      : {}),
+    ...(input.br01RoutingResult
+      ? { routingResult: input.br01RoutingResult }
+      : {})
+  });
   const carryForwardControls = mergeCarryForwardControls(
     input.carryForwardControls ?? [],
     ...(input.timelineContent ? [input.timelineContent.carryForwardControls] : []),

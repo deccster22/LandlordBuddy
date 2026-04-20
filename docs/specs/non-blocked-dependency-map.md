@@ -78,11 +78,17 @@ Current third-wave insertion:
 - `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now accept BR01 routing input and consume BR01 downstream posture for consequential output/handoff behavior.
 - prep-pack and handoff structures now reflect BR01 split/review, referral-stop, and route-out posture through existing frozen trust-surface keys rather than copy rewrites.
 
+Current fourth-wave insertion:
+
+- `src/modules/br01/downstream.ts` now hydrates BR01 downstream posture directly from persisted `RoutingDecision` and `ReferralFlag` artifacts where those artifacts are available.
+- `src/modules/output/index.ts` and `src/modules/handoff/index.ts` now prefer stored BR01 artifacts for downstream consequence selection, with explicit fallback to request-time BR01 routing input only when stored artifacts are absent.
+- Stored-artifact hydration keeps route-out, referral, and split-matter consequences distinct by using persisted routing severity plus BR01 referral reason codes (`BR01_ROUTE_OUT_REQUIRED`, `BR01_REFERRAL_REQUIRED`) at the downstream control seam.
+
 Still guarded after this insertion:
 
 - unresolved statutory thresholds and exception doctrine remain out of deterministic scope
 - mixed combinations outside current registry rows remain explicit guarded slowdown posture
-- downstream consumption of persisted BR01 decisions/flags beyond workflow insertion remains a follow-on seam
+- downstream consumption of persisted BR01 decisions/flags beyond output/handoff selection remains a follow-on seam
 
 Keep unchanged while expanding BR01:
 
