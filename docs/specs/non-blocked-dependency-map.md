@@ -192,6 +192,12 @@ Keep unchanged until then:
 
 Purpose now: approved trust and wording outcomes for user-facing copy, warnings, and framing.
 
+Park-ready checkpoint (`P4B-CX-BR05-05A`):
+
+- BR05 is paused at the first-pass stable stopping point.
+- Canonical parking note: `docs/specs/br05-parked-invariants.md`.
+- No behavior broadening is in scope unless a listed reactivation trigger fires.
+
 Current baseline artifact:
 
 - `docs/specs/br05-trust-comprehension-baseline-pack.md` captures the frozen Lane 2 trust/comprehension baseline, required boundary/trust-cue expectations, event-linked pricing trigger hypotheses, and known comprehension risks without rewriting protected lines.
