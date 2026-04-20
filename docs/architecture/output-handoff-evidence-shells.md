@@ -1,6 +1,6 @@
 # Output, Handoff, and Evidence Shells
 
-These Phase 4A shells keep three dimensions separate on purpose:
+These Phase 4B shells keep three dimensions separate on purpose:
 
 - `forumPath` says which arrears lane the matter belongs to.
 - `outputMode` says what kind of package is being produced.

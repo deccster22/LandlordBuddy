@@ -1,6 +1,6 @@
 # Repo Boundaries
 
-This repo foundation is designed for Phase 4A build planning, not for final doctrine or portal implementation. The goal is to keep deterministic core logic stable while guarded areas remain explicit and reviewable.
+This repo foundation is designed for Phase 4B implementation-fidelity planning, not for final doctrine or portal implementation. The goal is to keep deterministic core logic stable while guarded areas remain explicit and reviewable.
 
 ## Layer Rules
 
@@ -23,7 +23,7 @@ Guarded areas should continue to surface as warnings, slowdown states, referrals
 
 `npm run lint` is the lightweight enforcement layer for this posture. It checks:
 
-- required repo folders for the current Phase 4A skeleton
+- required repo folders for the current Phase 4B implementation-fidelity skeleton
 - restricted imports across `domain`, `workflow`, `modules`, and future app/UI layers
 - runtime `.js` bridge files for `src/**/*.ts`, so the current Node-based shell does not drift away from the TypeScript source
 

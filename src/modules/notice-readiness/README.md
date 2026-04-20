@@ -2,7 +2,7 @@
 
 Insertion points reserved for later extraction:
 
-- move arrears threshold derivation behind an upstream arrears-status adapter once the Phase 4A inputs are stable
+- move arrears threshold derivation behind an upstream arrears-status adapter once the Phase 4B inputs are stable
 - replace service-proof placeholders with doctrine-specific rules when the doctrine is settled
 - expand documentary evidence checks into a richer evidence inventory validator when requirements stabilize
 - delegate mixed-claim routing to a dedicated router when that interaction is settled

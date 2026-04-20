@@ -1,6 +1,6 @@
 # Arrears MVP Architecture Overview
 
-This note describes the current Phase 4A arrears MVP build surface in this repo. It explains what is settled enough to build against, what remains guarded, and where later blocker outputs should attach. It does not authorize filing, portal parity, official submission, or final legal wording.
+This note describes the current Phase 4B arrears MVP build surface in this repo. It explains what is settled enough to build against, what remains guarded, and where later blocker outputs should attach. It does not authorize filing, portal parity, official submission, or final legal wording.
 
 See also:
 
