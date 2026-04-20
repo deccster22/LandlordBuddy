@@ -4,4 +4,5 @@ Use this folder for phase-scoped feature specs before implementation. Keep unres
 
 Current park-state note:
 
+- `docs/specs/br01-parked-invariants.md` records the BR01 first-pass stable stopping point and explicit broaden/reactivation triggers.
 - `docs/specs/br03-parked-invariants.md` records the BR03 locked-invariants stopping point and explicit broaden/reactivation triggers.
