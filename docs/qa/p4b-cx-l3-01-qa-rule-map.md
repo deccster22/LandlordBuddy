@@ -15,6 +15,8 @@ It preserves current posture:
 
 Classification set used in this map: `covered`, `partially covered`, `not yet covered`, `needs product decision`.
 
+Follow-on scenario/state matrix: `docs/qa/p4b-cx-l3-02-scenario-library-and-state-matrix.md`.
+
 ## 1. Deterministic Rule Inventory
 
 | Rule ID | Deterministic expectation | Runtime surface | Existing QA anchors | Coverage |
@@ -80,14 +82,14 @@ Classification set used in this map: `covered`, `partially covered`, `not yet co
 
 | Watchlist ID | Source watchlist item | Converted check entry | Existing QA anchor(s) | Status |
 | --- | --- | --- | --- | --- |
-| `L2-WL-01` | Trust-cue-bound states must not appear without required cue on consequential surfaces. | Assert trust-cue keys for each consequential surface key family (`printable`, `prep-pack`, `handoff`). | `tests/output-trust-binding.test.ts`, `tests/output-handoff.framework.test.ts` | `partially covered` |
+| `L2-WL-01` | Trust-cue-bound states must not appear without required cue on consequential surfaces. | Assert trust-cue keys for each consequential surface key family (`printable`, `prep-pack`, `handoff`). | `tests/output-trust-binding.test.ts`, `tests/output-handoff.framework.test.ts`, `tests/output-trust-cue-parity.test.ts` | `covered` |
 | `L2-WL-02` | Ready/prepared language must not imply filing/submission/finality. | Assert `officialSystemAction: NOT_INCLUDED`, anti-overclaim boundary keys, and external official-step ownership. | `tests/output-handoff.framework.test.ts`, `tests/output-renderer-state.test.ts` | `covered` |
 | `L2-WL-03` | Wrong-channel requires stop + explain + reroute, not ordinary handoff. | Assert wrong-channel produces `referral-stop`, referral next-action, and no copy-ready fallback. | `tests/br03-touchpoint-control.test.ts`, `tests/br03-touchpoint-matrix.test.ts` | `covered` |
 | `BR01-WL-01` | Mixed combinations outside deterministic rows must remain guarded. | Assert unmatched mixed objectives remain guarded/slowdown and do not auto-route as deterministic continue. | `tests/br01-routing.test.ts` | `partially covered` |
-| `BR01-WL-02` | Stored BR01 reason extraction seam (current rationale-suffix fallback) remains explicit until schema is settled. | Add regression check for reason extraction behavior and failure mode when rationale parsing cannot resolve reason. | No direct test currently | `not yet covered` |
+| `BR01-WL-02` | Stored BR01 reason extraction seam (current rationale-suffix fallback) remains explicit until schema is settled. | Regression checks cover route-out reason-suffix parsing and safe fallback when stored suffix content is non-parseable. | `tests/br01-downstream.test.ts` | `covered` |
 | `BR01-WL-03` | Route-out must remain distinct from ordinary referral. | Assert route-out control code and stop-state mapping stay distinct from referral-required code/path. | `tests/br01-routing.test.ts`, `tests/br01-downstream.test.ts` | `covered` |
 | `BR02-WL-01` | Hand service remains guarded/review-led, not auto-sufficient. | Assert guarded slowdown posture for hand service across registry + consumer + downstream. | `tests/br02-registry-scaffold.test.ts`, `tests/br02-consumer.test.ts`, `tests/br02-downstream.test.ts` | `covered` |
-| `BR02-WL-02` | Generic timing stale posture remains non-authoritative and hearing override outranks generic timing. | Assert stale warning/slowdown semantics plus override precedence in consumer/downstream outputs. | `tests/br02-registry-scaffold.test.ts`, `tests/br02-consumer.test.ts`, `tests/br02-downstream.test.ts` | `partially covered` |
+| `BR02-WL-02` | Generic timing stale posture remains non-authoritative and hearing override outranks generic timing. | Assert stale warning/slowdown semantics plus override precedence in consumer/downstream outputs. | `tests/br02-registry-scaffold.test.ts`, `tests/br02-consumer.test.ts`, `tests/br02-downstream.test.ts` | `covered` |
 | `BR02-WL-03` | 7-day step remains required prep structure, not universal deadline truth. | Assert explicit prep-step modeling and anti-universal-deadline posture. | `tests/br02-registry-scaffold.test.ts` | `covered` |
 | `BR03-WL-01` | Live-confirmation cadence/authority remains guarded doctrine (not settled deterministic rule). | Keep registry/override-driven posture and add no-doctrine-hardening checks only after Product settles cadence/authority. | Current posture checks in `tests/br03-touchpoint-control.test.ts` | `needs product decision` |
 | `BR03-WL-02` | Wrong-channel remains explicit control input, not portal-state inference automation. | Assert resolver behavior remains input-driven; no inferred portal automation path. | `tests/br03-touchpoint-control.test.ts`, `tests/br03-touchpoint-matrix.test.ts` | `partially covered` |
@@ -103,15 +105,14 @@ Classification set used in this map: `covered`, `partially covered`, `not yet co
 | `L3-COV-02` | Hard-stop fail-safe inventory | `covered` | `tests/notice-readiness.result.test.ts`, `tests/arrears-shell.test.ts`, `tests/evidence-audit.framework.test.ts`, `tests/br02-*` | Hard-stop posture is explicit and inspectable. |
 | `L3-COV-03` | Warning/slowdown/referral precedence and carry-forward controls | `covered` | `tests/notice-readiness.result.test.ts`, `tests/output-handoff.framework.test.ts`, `tests/br03-touchpoint-*.test.ts` | Control-family separation remains explicit. |
 | `L3-COV-04` | Stale downgrade from BR03 to output/handoff/renderer surfaces | `covered` | `tests/br03-touchpoint-control.test.ts`, `tests/br03-touchpoint-matrix.test.ts` | Distinctions (`stale` vs `live-confirmation` vs `wrong-channel`) remain explicit. |
-| `L3-COV-05` | BR02 stale-state downgrade propagated through downstream output/handoff surfaces | `partially covered` | Stale semantics validated in `tests/br02-registry-scaffold.test.ts`; downstream bridge validated in `tests/br02-downstream.test.ts` | Add targeted cross-seam tests for stale monitor states flowing into output/handoff block/trust keys. |
-| `L3-COV-06` | Consequential-surface trust-cue parity checks | `partially covered` | Spot checks in `tests/output-trust-binding.test.ts` and `tests/output-handoff.framework.test.ts` | Add matrix-level assertion that each trust-cue-bound state is always accompanied by required trust-cue keys. |
-| `L3-COV-07` | BR01 persisted-reason extraction seam stability | `not yet covered` | No dedicated tests for rationale-suffix extraction fallback behavior | Add narrow regression tests before reason-field schema changes. |
+| `L3-COV-05` | BR02 stale-state downgrade propagated through downstream output/handoff surfaces | `covered` | Stale warning and stale slowdown downstream bridge scenarios are asserted in `tests/br02-downstream.test.ts`, with baseline semantics anchored in `tests/br02-registry-scaffold.test.ts` and `tests/br02-consumer.test.ts` | No mismatch found in this pass. |
+| `L3-COV-06` | Consequential-surface trust-cue parity checks | `covered` | Matrix-level trust-cue parity assertions now exist in `tests/output-trust-cue-parity.test.ts`, with existing spot checks retained in `tests/output-trust-binding.test.ts` and `tests/output-handoff.framework.test.ts` | No mismatch found in this pass. |
+| `L3-COV-07` | BR01 persisted-reason extraction seam stability | `covered` | Stored route-out reason-suffix parsing and guarded fallback seams are asserted in `tests/br01-downstream.test.ts` | No mismatch found in this pass. |
 | `L3-COV-08` | BR03 live-confirmation cadence/authority doctrine | `needs product decision` | Parked posture explicitly keeps cadence/authority unresolved (`docs/specs/br03-parked-invariants.md`) | Do not convert to deterministic QA pass/fail until Product settles doctrine. |
 | `L3-COV-09` | BR04 exact retention/hold/release doctrine | `needs product decision` | Placeholder posture remains explicit (`docs/architecture/br04-privacy-lifecycle-scaffold.md`) | Keep checks focused on placeholder integrity and no-blanket-inference guards. |
 
 ## 8. Review Hotspots For Lane 3 Follow-On
 
-1. Add BR02 stale monitor to downstream surface tests so stale warnings/slowdowns are asserted at output/handoff renderer levels, not only in registry/consumer seams.
-2. Add a trust-cue parity matrix test for all consequential surface keys that are trust-cue-bound.
-3. Add a BR01 persisted-reason extraction regression test before any stored reason-field schema migration.
-4. Preserve guarded doctrine as guarded: do not turn BR03 cadence/authority or BR04 retention durations into deterministic checks before Product decisions land.
+1. Expand mixed-interaction scenario coverage where BR02 stale controls and BR03 wrong-channel/live-confirmation controls are both active.
+2. Add additional BR01 stored-rationale parsing edge tests (multi-code ordering variants and malformed non-terminal suffix variants) before any reason-field schema migration.
+3. Preserve guarded doctrine as guarded: do not turn BR03 cadence/authority or BR04 retention durations into deterministic checks before Product decisions land.

@@ -283,3 +283,134 @@ test("threading BR02 consumerAssessment through a notice-readiness baseline does
     baselineGuidance.trustBinding.reviewHandoffState.ownership.nextAction.kind
   );
 });
+
+test("BR02 stale slowdown keeps downstream caution posture explicit across prep-pack and handoff surfaces", () => {
+  const serviceEvent = createBr02ServiceEventRecord({
+    id: "service-stale-slowdown",
+    matterId: "matter-stale-slowdown",
+    renterPartyId: "renter-stale-slowdown",
+    serviceMethod: "REGISTERED_POST",
+    occurredAt: "2026-04-06T10:00:00.000Z"
+  });
+  const evidenceTimingState = buildBr02EvidenceTimingState({
+    id: "timing-stale-slowdown",
+    matterId: "matter-stale-slowdown",
+    renterPartyId: "renter-stale-slowdown",
+    serviceEventId: serviceEvent.id,
+    staleStateCode: "STALE_SLOWDOWN"
+  });
+  const assessment = assessBr02ServiceEvent({
+    thresholdState: "THRESHOLD_MET",
+    serviceEvent,
+    evidenceTimingState
+  });
+  const gate = deriveBr02WorkflowGate({
+    consumerAssessment: assessment.consumerAssessment
+  });
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    br02ConsumerAssessment: assessment.consumerAssessment,
+    touchpointIds: ["vic-arrears-public-rule"]
+  })));
+  const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
+    outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
+    br02ConsumerAssessment: assessment.consumerAssessment,
+    touchpointIds: ["vic-arrears-public-rule"]
+  })));
+
+  assert.equal(gate.status, "REVIEW_LED_CAUTION");
+  assert.equal(gate.workflowState, "ARREARS_FACTS_GUARDED");
+  assert.ok(
+    assessment.consumerAssessment.cautions.some(
+      (issue) => issue.code === "STALE_GENERIC_TIMING_SURFACE"
+    )
+  );
+  assert.ok(
+    prepPack.carryForwardControls.some((control) => (
+      control.code === "STALE_GENERIC_TIMING_SURFACE"
+      && control.severity === "SLOWDOWN"
+    ))
+  );
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("review-hold-points"));
+  assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
+  assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(!prepPack.blockKeys.includes("referral-stop"));
+  assert.equal(
+    prepPack.trustBinding.reviewHandoffState.handoff.posture,
+    "GUARDED_REVIEW_REQUIRED"
+  );
+  assert.ok(guidance.guidance.guidanceBlockKeys.includes("slowdown-review"));
+  assert.ok(!guidance.guidance.guidanceBlockKeys.includes("referral-stop"));
+  assert.ok(
+    guidance.guidance.carryForwardControls.some((control) => (
+      control.code === "STALE_GENERIC_TIMING_SURFACE"
+      && control.severity === "SLOWDOWN"
+    ))
+  );
+});
+
+test("BR02 stale warning keeps warning-led review posture distinct from stale slowdown escalation", () => {
+  const serviceEvent = createBr02ServiceEventRecord({
+    id: "service-stale-warning",
+    matterId: "matter-stale-warning",
+    renterPartyId: "renter-stale-warning",
+    serviceMethod: "REGISTERED_POST",
+    occurredAt: "2026-04-06T10:00:00.000Z"
+  });
+  const evidenceTimingState = buildBr02EvidenceTimingState({
+    id: "timing-stale-warning",
+    matterId: "matter-stale-warning",
+    renterPartyId: "renter-stale-warning",
+    serviceEventId: serviceEvent.id,
+    staleStateCode: "STALE_WARNING"
+  });
+  const assessment = assessBr02ServiceEvent({
+    thresholdState: "THRESHOLD_MET",
+    serviceEvent,
+    evidenceTimingState
+  });
+  const gate = deriveBr02WorkflowGate({
+    consumerAssessment: assessment.consumerAssessment
+  });
+  const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    br02ConsumerAssessment: assessment.consumerAssessment,
+    touchpointIds: ["vic-arrears-public-rule"]
+  })));
+  const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
+    outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
+    br02ConsumerAssessment: assessment.consumerAssessment,
+    touchpointIds: ["vic-arrears-public-rule"]
+  })));
+
+  assert.equal(gate.status, "NEEDS_REVIEW");
+  assert.equal(gate.workflowState, "NOTICE_DRAFTING_GUARDED");
+  assert.ok(
+    assessment.consumerAssessment.warnings.some(
+      (issue) => issue.code === "GENERIC_EVIDENCE_TIMING_STALE_WARNING"
+    )
+  );
+  assert.ok(
+    !assessment.consumerAssessment.cautions.some(
+      (issue) => issue.code === "GENERIC_EVIDENCE_TIMING_STALE_WARNING"
+    )
+  );
+  assert.ok(
+    prepPack.carryForwardControls.some((control) => (
+      control.code === "GENERIC_EVIDENCE_TIMING_STALE_WARNING"
+      && control.severity === "WARNING"
+    ))
+  );
+  assert.ok(prepPack.blockKeys.includes("readiness-summary"));
+  assert.ok(prepPack.blockKeys.includes("review-hold-points"));
+  assert.ok(prepPack.blockKeys.includes("guarded-review-flags"));
+  assert.ok(!prepPack.blockKeys.includes("copy-ready-facts"));
+  assert.ok(!prepPack.blockKeys.includes("referral-stop"));
+  assert.ok(!guidance.guidance.guidanceBlockKeys.includes("slowdown-review"));
+  assert.ok(!guidance.guidance.guidanceBlockKeys.includes("referral-stop"));
+  assert.equal(
+    guidance.trustBinding.reviewHandoffState.handoff.posture,
+    "GUARDED_REVIEW_REQUIRED"
+  );
+});
