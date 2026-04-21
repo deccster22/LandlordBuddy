@@ -126,6 +126,7 @@ For BR05 beta measurement operations, Product and QA should use `docs/specs/br05
 This acceptance pack is satisfied only when all of the following are true:
 
 - the deterministic controls listed in `docs/qa/control-inventory.md` remain testable in the current repo
+- the Lane 3 QA map in `docs/qa/p4b-cx-l3-01-qa-rule-map.md` remains aligned with implemented control behavior and current tests
 - guarded areas are explicitly classified and not omitted
 - blocked items remain listed module by module
 - `npm run verify` passes
