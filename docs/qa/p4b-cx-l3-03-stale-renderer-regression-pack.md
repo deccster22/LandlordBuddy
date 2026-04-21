@@ -5,6 +5,8 @@ Task ID: P4B-CX-L3-03
 
 This pack hardens Lane 3 regression coverage for the highest-risk seams where stale downgrade, touchpoint controls, and consequential renderer/handoff states meet.
 
+Follow-on timeline-blocked combinatorial pass: `docs/qa/p4b-cx-l3-04-timeline-combinatorial-regression-matrix.md`.
+
 Guardrails preserved:
 
 - preparation stays separate from official action
