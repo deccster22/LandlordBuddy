@@ -5,6 +5,8 @@ Task ID: P4B-CX-L3-02
 
 This pack converts the Lane 3 rule map into a first-wave scenario library for normal, edge, and red-flag behavior.
 
+Follow-on regression hardening pack: `docs/qa/p4b-cx-l3-03-stale-renderer-regression-pack.md`.
+
 Guardrails preserved:
 
 - preparation remains separate from official action
@@ -95,6 +97,7 @@ Use this as the first-wave Review C execution bundle.
 
 - Lane 3 rule baseline: `docs/qa/p4b-cx-l3-01-qa-rule-map.md`
 - This scenario/state matrix: `docs/qa/p4b-cx-l3-02-scenario-library-and-state-matrix.md`
+- Focused stale/renderer regression hardening: `docs/qa/p4b-cx-l3-03-stale-renderer-regression-pack.md`
 - Existing acceptance/control anchors:
   - `docs/qa/control-inventory.md`
   - `docs/qa/non-blocked-acceptance-pack.md`

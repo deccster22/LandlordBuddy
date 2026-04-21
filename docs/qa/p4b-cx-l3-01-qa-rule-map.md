@@ -16,6 +16,7 @@ It preserves current posture:
 Classification set used in this map: `covered`, `partially covered`, `not yet covered`, `needs product decision`.
 
 Follow-on scenario/state matrix: `docs/qa/p4b-cx-l3-02-scenario-library-and-state-matrix.md`.
+Follow-on stale/renderer regression pack: `docs/qa/p4b-cx-l3-03-stale-renderer-regression-pack.md`.
 
 ## 1. Deterministic Rule Inventory
 
@@ -104,8 +105,8 @@ Follow-on scenario/state matrix: `docs/qa/p4b-cx-l3-02-scenario-library-and-stat
 | `L3-COV-01` | Deterministic core controls (BR01/BR02/BR03/BR04 + output/handoff boundaries) | `covered` | Core module and lane tests across `tests/br01*`, `tests/br02*`, `tests/br03*`, `tests/br04*`, `tests/output-*`, `tests/arrears-*` | No material mismatch found in this pass. |
 | `L3-COV-02` | Hard-stop fail-safe inventory | `covered` | `tests/notice-readiness.result.test.ts`, `tests/arrears-shell.test.ts`, `tests/evidence-audit.framework.test.ts`, `tests/br02-*` | Hard-stop posture is explicit and inspectable. |
 | `L3-COV-03` | Warning/slowdown/referral precedence and carry-forward controls | `covered` | `tests/notice-readiness.result.test.ts`, `tests/output-handoff.framework.test.ts`, `tests/br03-touchpoint-*.test.ts` | Control-family separation remains explicit. |
-| `L3-COV-04` | Stale downgrade from BR03 to output/handoff/renderer surfaces | `covered` | `tests/br03-touchpoint-control.test.ts`, `tests/br03-touchpoint-matrix.test.ts` | Distinctions (`stale` vs `live-confirmation` vs `wrong-channel`) remain explicit. |
-| `L3-COV-05` | BR02 stale-state downgrade propagated through downstream output/handoff surfaces | `covered` | Stale warning and stale slowdown downstream bridge scenarios are asserted in `tests/br02-downstream.test.ts`, with baseline semantics anchored in `tests/br02-registry-scaffold.test.ts` and `tests/br02-consumer.test.ts` | No mismatch found in this pass. |
+| `L3-COV-04` | Stale downgrade from BR03 to output/handoff/renderer surfaces | `covered` | `tests/br03-touchpoint-control.test.ts`, `tests/br03-touchpoint-matrix.test.ts`, `tests/l3-stale-renderer-regression.test.ts` | Distinctions (`stale` vs `live-confirmation` vs `wrong-channel`) remain explicit, including mixed BR02+BR03 downstream paths. |
+| `L3-COV-05` | BR02 stale-state downgrade propagated through downstream output/handoff surfaces | `covered` | Stale warning and stale slowdown downstream bridge scenarios are asserted in `tests/br02-downstream.test.ts`, with baseline semantics anchored in `tests/br02-registry-scaffold.test.ts` and `tests/br02-consumer.test.ts`; mixed stale + touchpoint downstream paths are asserted in `tests/l3-stale-renderer-regression.test.ts` | No mismatch found in this pass. |
 | `L3-COV-06` | Consequential-surface trust-cue parity checks | `covered` | Matrix-level trust-cue parity assertions now exist in `tests/output-trust-cue-parity.test.ts`, with existing spot checks retained in `tests/output-trust-binding.test.ts` and `tests/output-handoff.framework.test.ts` | No mismatch found in this pass. |
 | `L3-COV-07` | BR01 persisted-reason extraction seam stability | `covered` | Stored route-out reason-suffix parsing and guarded fallback seams are asserted in `tests/br01-downstream.test.ts` | No mismatch found in this pass. |
 | `L3-COV-08` | BR03 live-confirmation cadence/authority doctrine | `needs product decision` | Parked posture explicitly keeps cadence/authority unresolved (`docs/specs/br03-parked-invariants.md`) | Do not convert to deterministic QA pass/fail until Product settles doctrine. |
@@ -113,6 +114,6 @@ Follow-on scenario/state matrix: `docs/qa/p4b-cx-l3-02-scenario-library-and-stat
 
 ## 8. Review Hotspots For Lane 3 Follow-On
 
-1. Expand mixed-interaction scenario coverage where BR02 stale controls and BR03 wrong-channel/live-confirmation controls are both active.
+1. Expand from first-wave mixed-interaction regressions into broader combinatorial coverage (for example, additional timeline-blocked variants combined with BR02 stale + BR03 wrong-channel/live-confirmation controls).
 2. Add additional BR01 stored-rationale parsing edge tests (multi-code ordering variants and malformed non-terminal suffix variants) before any reason-field schema migration.
 3. Preserve guarded doctrine as guarded: do not turn BR03 cadence/authority or BR04 retention durations into deterministic checks before Product decisions land.
