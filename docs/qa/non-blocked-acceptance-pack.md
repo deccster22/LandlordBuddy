@@ -120,6 +120,7 @@ Before this packet can be treated as accepted, Product and QA should confirm the
 
 For BR05 beta pricing/trust validation and supporting-content alignment, Product and QA should also run `docs/qa/br05-module-surface-alignment-checks.md` whenever module-to-surface mappings change.
 For BR05 beta measurement operations, Product and QA should use `docs/specs/br05-beta-measurement-plan-artifact.md` as the current trigger-to-metric decision contract.
+For consolidated Lane 3 Review C posture checks, Product and QA should use `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` as the single entry point into the Lane 3 evidence bundle.
 
 ## Packet completion gate
 
@@ -127,6 +128,7 @@ This acceptance pack is satisfied only when all of the following are true:
 
 - the deterministic controls listed in `docs/qa/control-inventory.md` remain testable in the current repo
 - the Lane 3 QA map in `docs/qa/p4b-cx-l3-01-qa-rule-map.md` remains aligned with implemented control behavior and current tests
+- the consolidated Lane 3 Review C readiness pack (`docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`) remains aligned with `docs/qa/p4b-cx-l3-01-qa-rule-map.md` through `docs/qa/p4b-cx-l3-04-timeline-combinatorial-regression-matrix.md`
 - guarded areas are explicitly classified and not omitted
 - blocked items remain listed module by module
 - `npm run verify` passes

@@ -1,0 +1,24 @@
+# QA Artifacts Index
+
+Use this folder for build-facing QA packs, acceptance checks, and lane-specific regression evidence.
+
+The current Review C entry point for Lane 3 is:
+
+- `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
+
+## Lane 3 Review C Bundle
+
+Read in this order:
+
+1. `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` (consolidated readiness pack)
+2. `docs/qa/p4b-cx-l3-01-qa-rule-map.md` (rule and hard-stop inventory)
+3. `docs/qa/p4b-cx-l3-02-scenario-library-and-state-matrix.md` (first-wave scenario/state matrix)
+4. `docs/qa/p4b-cx-l3-03-stale-renderer-regression-pack.md` (stale/renderer mixed regression)
+5. `docs/qa/p4b-cx-l3-04-timeline-combinatorial-regression-matrix.md` (timeline-blocked mixed matrix)
+
+## Acceptance And Control Baselines
+
+- `docs/qa/non-blocked-acceptance-pack.md`
+- `docs/qa/control-inventory.md`
+- `docs/qa/auditability-checklist.md`
+

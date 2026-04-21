@@ -21,6 +21,7 @@ This map separates what future build contributors can extend now from what remai
 | Evidence and audit shells | Non-blocked plus guarded seams | `src/modules/evidence` and `src/modules/audit` support local validation, visible review flags, event recording, and source-driven BR04 privacy metadata attachment without turning local-only checks into doctrine |
 | BR04 privacy scaffold | Guarded shell | `src/domain/model.ts`, `src/modules/br04/index.ts`, `src/modules/br04/policy-source.ts`, `src/modules/notice-draft/index.ts`, and `src/modules/output/index.ts` attach privacy hooks, source-driven policy refs, scoped hold placeholders, lifecycle actions, privacy audit events, access-boundary placeholders, and current consumer-lane record population without hard-coded durations or release rules |
 | Verification posture | Non-blocked | `tests/` plus `npm run verify` enforce the current boundary and shell posture |
+| Lane 3 Review C evidence packaging | Non-blocked | `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` consolidates first-wave Lane 3 rule, scenario, stale/renderer, and timeline combinatorial QA evidence without settling guarded doctrine |
 
 ## What remains blocked or guarded
 
@@ -221,4 +222,5 @@ Keep unchanged until then:
 
 - Extend deterministic logic only where the repo already has settled inputs and tests.
 - When blocked outputs are missing, preserve the seam as a visible placeholder instead of inventing certainty.
+- For Lane 3 Review C posture checks, start with `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` and then follow its linked source artifacts.
 - If later blocker work lands, thread it through the existing insertion points rather than replacing the one-capture spine or flattening the state model.

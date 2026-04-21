@@ -11,3 +11,8 @@ Current park-state note:
 - `docs/specs/br05-beta-pricing-trust-validation-pack.md` records BR05 beta-facing pricing/trust trigger hypotheses, falsification criteria, trust-to-conversion checks, and concrete module-to-Lane-2 inventory bindings.
 - `docs/specs/br05-beta-measurement-plan-artifact.md` records BR05 beta measurement schema, metric separation, trigger-level thresholds, decision rules, and ownership cadence.
 - `docs/specs/br05-parked-invariants.md` records the BR05 first-pass stable parking point, confidence posture, and explicit reactivation triggers.
+
+Current QA discoverability note:
+
+- `docs/qa/README.md` is the QA index.
+- `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` is the consolidated Lane 3 Review C readiness entry point.
