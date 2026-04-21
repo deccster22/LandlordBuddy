@@ -9,6 +9,7 @@ import {
 } from "../src/domain/model.js";
 import {
   buildBr01RoutingArtifacts,
+  deriveBr01DownstreamPostureFromStoredArtifacts,
   resolveBr01Routing
 } from "../src/modules/br01/index.js";
 import {
@@ -271,4 +272,62 @@ test("request-time BR01 fallback remains available when stored artifacts are abs
       && control.severity === "REFERRAL"
     ))
   );
+});
+
+test("stored rationale reason suffix keeps route-out posture explicit even without a referral flag artifact", () => {
+  const routingResult = resolveBr01Routing({
+    objectiveCapture: {
+      selectedObjectives: ["ARREARS"]
+    },
+    partyJurisdictionSignals: {
+      anyPartyOutsideVictoria: true
+    }
+  });
+  const artifacts = buildPersistedArtifacts({
+    matterId: "matter-stored-route-out-reason-suffix",
+    routingResult
+  });
+  const { guardedReason: _ignored, ...routingDecisionWithoutGuardedReason } = artifacts.routingDecision;
+  const posture = deriveBr01DownstreamPostureFromStoredArtifacts({
+    routingDecision: routingDecisionWithoutGuardedReason
+  });
+  const carryForwardControl = posture.carryForwardControls[0];
+
+  assert.equal(posture.routeOutStopRequired, true);
+  assert.equal(posture.referralStopRequired, false);
+  assert.equal(posture.readinessOutcome, "REFER_OUT");
+  assert.ok(carryForwardControl);
+  assert.equal(carryForwardControl?.code, "BR01_INTERSTATE_PARTY_ROUTE_OUT");
+  assert.equal(carryForwardControl?.severity, "REFERRAL");
+  assert.equal(carryForwardControl?.summary, routingResult.summary);
+});
+
+test("stored rationale without parseable reason suffix falls back to guarded-review control safely", () => {
+  const deterministicRouting = resolveBr01Routing({
+    objectiveCapture: {
+      selectedObjectives: ["ARREARS"]
+    }
+  });
+  const artifacts = buildPersistedArtifacts({
+    matterId: "matter-stored-reason-fallback",
+    routingResult: deterministicRouting
+  });
+  const { guardedReason: _ignored, ...routingDecisionWithoutGuardedReason } = artifacts.routingDecision;
+  const posture = deriveBr01DownstreamPostureFromStoredArtifacts({
+    routingDecision: {
+      ...routingDecisionWithoutGuardedReason,
+      severity: "SLOWDOWN",
+      rationale: "Stored guarded review from migrated artifact (reasons: )"
+    }
+  });
+  const carryForwardControl = posture.carryForwardControls[0];
+
+  assert.equal(posture.routeOutStopRequired, false);
+  assert.equal(posture.referralStopRequired, false);
+  assert.equal(posture.splitMatterReviewRequired, false);
+  assert.equal(posture.readinessOutcome, "REVIEW_REQUIRED");
+  assert.ok(carryForwardControl);
+  assert.equal(carryForwardControl?.code, "BR01_GUARDED_REVIEW_REQUIRED");
+  assert.equal(carryForwardControl?.severity, "SLOWDOWN");
+  assert.equal(carryForwardControl?.summary, "Stored guarded review from migrated artifact");
 });
