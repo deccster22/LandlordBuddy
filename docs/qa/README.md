@@ -2,6 +2,10 @@
 
 Use this folder for build-facing QA packs, acceptance checks, and lane-specific regression evidence.
 
+Lane 1 first-wave status artifact:
+
+- `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`
+
 The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
@@ -21,4 +25,3 @@ Read in this order:
 - `docs/qa/non-blocked-acceptance-pack.md`
 - `docs/qa/control-inventory.md`
 - `docs/qa/auditability-checklist.md`
-
