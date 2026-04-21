@@ -5,6 +5,7 @@ Use this folder for build-facing QA packs, acceptance checks, and lane-specific 
 Lane 1 first-wave status artifact:
 
 - `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`
+- `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`
 
 The current Review C entry point for Lane 3 is:
 
