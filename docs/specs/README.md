@@ -4,6 +4,7 @@ Use this folder for phase-scoped feature specs before implementation. Keep unres
 
 Current park-state note:
 
+- `docs/specs/p4c-mkt-l4-01-first-wave-brand-visual-direction-pack.md` records the first-wave Lane 4 brand and visual-system direction, including primary/fallback identity recommendation, app-tile and wordmark direction, palette/type guidance, in-app usage rules, anti-reference controls, and sample-screen translation constraints.
 - `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md` records the first-wave Lane 1 product journey from entry to official handoff, including primary flow map, screen inventory, state/screen alignment, next-action ownership, explicit exits/returns, and review/warning/handoff placements.
 - `docs/specs/br01-parked-invariants.md` records the BR01 first-pass stable stopping point and explicit broaden/reactivation triggers.
 - `docs/specs/br03-parked-invariants.md` records the BR03 locked-invariants stopping point and explicit broaden/reactivation triggers.
