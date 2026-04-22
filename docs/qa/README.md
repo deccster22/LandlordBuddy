@@ -9,6 +9,7 @@ Focused operating shell semantic-control checklist:
 Lane 1 first-wave status artifact:
 
 - `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`
+- `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`
 
 Lane 6 shadow foundation starter artifacts:
