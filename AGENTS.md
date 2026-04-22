@@ -16,6 +16,10 @@ It is not:
 
 The first MVP wedge is arrears-to-notice-readiness. The first job of the product is to reduce costly procedural failure caused by confusion, bad sequencing, missing evidence, and false confidence.
 
+The current product shape includes a focused operating shell above the hero arrears workflow.
+
+This shell is bounded and does not change legal or trust posture. It must support preparation quality, evidence traceability, and handoff readiness without becoming a generic property-management suite.
+
 ## 2\. Non-negotiable product truths
 
 Always preserve these:
@@ -41,7 +45,7 @@ Never imply:
 
 ## 3\. Current project phase
 
-The project has moved beyond Phase 4A foundation freeze and is operating in Phase 4B core workflow spec and non-blocked build start.
+The project is operating with Phase 4B as the primary build phase and bounded Phase 4C product-experience construction in parallel.
 
 Do not pretend guarded blocker doctrine is settled just because some implementation scaffolds now exist.
 
@@ -144,6 +148,8 @@ Stop and report instead of implementing if the task requires:
 * deciding whether a guarded state should become deterministic
 * renaming or collapsing accepted state families, warning families, or CTA hierarchy
 * creating official-looking behaviour where the current posture is prep-and-handoff
+* expanding the focused operating shell beyond accepted bounded inclusions/exclusions
+* wording shell reminders, bond visibility, or export behaviour in ways that imply compliance certification, legal sufficiency, or official acceptance
 
 ## 9\. Deterministic vs guarded implementation rule
 
@@ -386,7 +392,50 @@ Good Codex prompts include:
 * required verification
 * completion report format
 
-## 24\. Final principle
+## 24\. Focused operating shell wording and review-event rules
+
+### 24.1 Shell positioning rule
+
+Always describe the product as:
+
+* hero arrears-to-notice-readiness wedge first
+* focused operating shell second
+* prep-and-handoff bounded throughout
+
+Never describe the shell as a full property-management suite.
+
+### 24.2 Accepted shell inclusion fence
+
+The shell may include bounded record, reminder, note, and export supports that feed preparation quality and handoff readiness.
+
+Use `docs/specs/focused-operating-shell-baseline.md` as the accepted inclusion/exclusion source.
+
+Do not invent additional shell capabilities without an accepted decision artifact.
+
+### 24.3 Shell exclusion fence
+
+Do not imply or introduce:
+
+* accounting integrations or full accounting suite behaviour
+* tax advice or tax optimisation
+* direct official filing/submission
+* tenant messaging platform behaviour
+* maintenance marketplace behaviour
+* generic PM-suite expansion
+
+### 24.4 Reminder, bond, and export wording constraints
+
+Always preserve:
+
+* reminders are prompts and controls, not compliance clearance
+* bond-paid status is factual visibility only, not legal sufficiency
+* export is structured packaging only, not filing, acceptance, or legal readiness
+
+### 24.5 Review-event trigger
+
+Treat any change to shell scope framing, reminder implication, bond-status implication, export implication, or hero-wedge precedence as a review event, not ordinary copy iteration.
+
+## 25\. Final principle
 
 This repo should behave like a careful cockpit:
 
