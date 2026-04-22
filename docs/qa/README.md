@@ -2,6 +2,10 @@
 
 Use this folder for build-facing QA packs, acceptance checks, and lane-specific regression evidence.
 
+Focused operating shell semantic-control checklist:
+
+- `docs/qa/first-wave-semantic-fidelity-checklist.md`
+
 Lane 1 first-wave status artifact:
 
 - `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`

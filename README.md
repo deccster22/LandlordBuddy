@@ -1,6 +1,10 @@
 # Landlord Buddy
 
-Landlord Buddy is currently a Phase 4B foundation repo for deterministic-plus-guarded arrears workflows. The codebase intentionally stops at reviewable notice-preparation shells and keeps unresolved legal doctrine, portal behavior, and official handoff logic as explicit guarded placeholders.
+Landlord Buddy is currently operating with Phase 4B as the primary build posture and bounded Phase 4C product-experience work in parallel. The product shape is a focused operating shell above the hero arrears-to-notice-readiness workflow, with strict prep-and-handoff boundaries and explicit anti-overclaim controls.
+
+The codebase intentionally stops at reviewable notice-preparation shells and keeps unresolved legal doctrine, portal behavior, and official handoff logic as explicit guarded placeholders.
+
+Primary docs entry point: `docs/index.md`
 
 ## Setup
 

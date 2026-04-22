@@ -1,7 +1,7 @@
 # First-Wave Semantic Fidelity Checklist
 
 ## Purpose
-Use this checklist during implementation and review to confirm that first-wave surfaces preserve accepted semantic controls and do not drift into false certainty, false finality, or UI-level doctrine mutation.
+Use this checklist during implementation and review to confirm that first-wave surfaces preserve accepted semantic controls and do not drift into false certainty, false finality, UI-level doctrine mutation, or shell-level implication creep.
 
 ## A. Lane 2 copy and semantic fidelity
 
@@ -68,6 +68,44 @@ Use this checklist during implementation and review to confirm that first-wave s
 - [ ] generic timing copy does not outrank hearing-specific or official instructions
 - [ ] renderer does not collapse blocked/guarded/external/referral states into generic pending/success
 - [ ] ownership of the next action remains explicit
+
+## D. Focused operating shell implication controls
+
+### Hero wedge precedence
+- [ ] arrears-to-notice-readiness remains explicit as the lead workflow
+- [ ] the shell is clearly secondary/supportive, not the new headline product
+
+### Shell scope fence
+- [ ] shell capabilities match the accepted inclusion list
+- [ ] no generic PM-suite sprawl is introduced
+
+### Reminder implication control
+- [ ] reminder language does not imply compliance certification, legal all-clear, or doctrinal finality
+
+### Bond visibility implication control
+- [ ] bond-paid status is described as factual visibility only
+- [ ] bond status is not presented as legal truth or compliance verdict
+
+### Export implication control
+- [ ] structured export wording does not imply filing, tribunal/court acceptance, or legal sufficiency
+
+### Prep-and-handoff doctrine continuity
+- [ ] shell language keeps official action external
+- [ ] no shell surface implies proxy execution, filing, or official-system parity
+
+### Legal/trust boundary continuity
+- [ ] no legal-advice behavior or official-system implication appears in shell-facing docs or surfaces
+
+### Phase posture honesty
+- [ ] docs and shell-facing notes state 4B primary and 4C parallel
+- [ ] nothing implies alpha readiness
+
+### Lane 2 / Lane 4 protection
+- [ ] no shell alignment change rewrites protected lines
+- [ ] no shell alignment change weakens Lane 4 lifecycle posture
+
+### New-contributor clarity
+- [ ] a fresh contributor can find the shell baseline, shell decision note, posture snapshot, and QA controls from the repo indexes
 
 ## Review result
 - [ ] Pass

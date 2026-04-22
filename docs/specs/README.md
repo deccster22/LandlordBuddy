@@ -4,6 +4,7 @@ Use this folder for phase-scoped feature specs before implementation. Keep unres
 
 Current park-state note:
 
+- `docs/specs/focused-operating-shell-baseline.md` records the accepted focused operating shell direction above the hero arrears workflow, including bounded inclusions/exclusions and anti-overclaim fences.
 - `docs/specs/p4c-mkt-l4-01-first-wave-brand-visual-direction-pack.md` records the first-wave Lane 4 brand and visual-system direction, including primary/fallback identity recommendation, app-tile and wordmark direction, palette/type guidance, in-app usage rules, anti-reference controls, and sample-screen translation constraints.
 - `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md` records the first-wave Lane 1 product journey from entry to official handoff, including primary flow map, screen inventory, state/screen alignment, next-action ownership, explicit exits/returns, and review/warning/handoff placements.
 - `docs/specs/br01-parked-invariants.md` records the BR01 first-pass stable stopping point and explicit broaden/reactivation triggers.
@@ -18,4 +19,5 @@ Current park-state note:
 Current QA discoverability note:
 
 - `docs/qa/README.md` is the QA index.
+- `docs/qa/first-wave-semantic-fidelity-checklist.md` is the shell-era semantic/trust wording control checklist.
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` is the consolidated Lane 3 Review C readiness entry point.
