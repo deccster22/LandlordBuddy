@@ -25,6 +25,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/specs/focused-operating-shell-baseline.md`
 - `docs/specs/p4c-cx-shell-01-focused-operating-shell-hero-workflow-mvp-structure-pack.md`
 - `docs/specs/p4c-cx-l2-01-first-wave-form-question-architecture-pack.md`
+- `docs/specs/p4c-cx-app-01-thin-app-screen-form-contract-pack.md`
 
 ## QA
 
@@ -33,6 +34,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
 - `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
+- `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
 
 ## Decisions
 
