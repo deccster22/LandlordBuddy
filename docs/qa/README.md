@@ -11,6 +11,11 @@ The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
 
+Review C should inspect that pack alongside the current reviewable screen/surface references:
+
+- `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md`
+- `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`
+
 ## Lane 3 Review C Bundle
 
 Read in this order:

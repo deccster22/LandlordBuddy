@@ -16,6 +16,51 @@ It preserves current posture:
 
 This pack is Review C readiness evidence only. It does not claim alpha readiness, doctrine finalization, or Lane 5A completion.
 
+## Legal / Risks / Rules Boundary Note (Review C)
+
+- This pack is sufficient to take into Review C as consolidated QA/regression readiness evidence.
+- It is not a substitute for inspecting the actual Lane 3 reviewable surfaces.
+- Review C should inspect this pack alongside the reviewable UI / wireframe / built surface set.
+
+Current reviewable screen/surface anchors for this pass:
+
+- `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md` (screen inventory + state-to-screen placement)
+- `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md` (4C review hotspots and status context)
+
+## What This Pack Does And Does Not Prove
+
+This pack does prove:
+
+- Lane 3 first-wave QA/regression evidence is consolidated and internally aligned.
+- Current fail-closed, renderer-state, stale/live/wrong-channel distinction, and hearing-override precedence checks are supported by the referenced tests/artifacts.
+- Guarded seams remain explicitly guarded rather than promoted to deterministic doctrine.
+
+This pack does not prove:
+
+- screen-level fidelity on key consequential surfaces
+- final state/CTA/trust placement under real interface conditions
+- that interface behaviour appears as workflow support rather than portal mimicry
+- that guarded surfaces never collapse into generic success without direct screen inspection
+- alpha readiness, doctrine finalization, or Lane 5A completion
+
+## Review C Inspection Conditions
+
+Review C inspection should treat this pack as QA evidence and should also inspect the reviewable UI/wireframe/built surfaces directly.
+
+Inspection conditions:
+
+- inspect actual key consequential screens/panels and overlays, not just QA artifacts
+- confirm state, CTA, and trust-cue placement on those surfaces
+- confirm the interface reads as workflow support rather than portal parody
+- confirm guarded states remain visibly guarded and do not collapse into generic success
+
+## Review C Question Checklist (Compact)
+
+1. Does the UI preserve the semantic fence under real screen conditions?
+2. Do stale, live-confirmation-required, and wrong-channel remain visibly distinct in the interface?
+3. Does hearing-specific override stay clearly controlling without generic timing pretending to be authoritative?
+4. Do consequential surfaces still fail closed rather than drifting into green-path optimism?
+
 ## 1. Consolidated Inputs
 
 Primary Lane 3 QA inputs:
@@ -127,6 +172,8 @@ These seams remain explicit and are not promoted to deterministic truth in this 
 
 ## 4. Review C Prompt Questions: Consolidated Answers
 
+These are consolidated QA-evidence answers and do not replace direct inspection of reviewable UI/wireframe/built surfaces.
+
 1. Can the system still fail closed?
 Yes for current first-wave paths. Hard-stop, slowdown, referral-stop, and sequencing-blocked behavior remain explicit and non-collapsed.
 
@@ -166,4 +213,3 @@ Re-open Lane 3 hardening work when one or more of these occur:
 - final BR04 retention/release authority doctrine
 - any portal-execution or authenticated-flow automation behavior
 - broad scenario expansion beyond current first-wave relevance
-
