@@ -13,6 +13,7 @@ Current park-state note:
 - `docs/specs/br05-beta-pricing-trust-validation-pack.md` records BR05 beta-facing pricing/trust trigger hypotheses, falsification criteria, trust-to-conversion checks, and concrete module-to-Lane-2 inventory bindings.
 - `docs/specs/br05-beta-measurement-plan-artifact.md` records BR05 beta measurement schema, metric separation, trigger-level thresholds, decision rules, and ownership cadence.
 - `docs/specs/br05-parked-invariants.md` records the BR05 first-pass stable parking point, confidence posture, and explicit reactivation triggers.
+- `docs/specs/p4c-doc-l6-01-guarded-seams-register-starter.md` records a starter guarded-seams register so unresolved doctrine stays explicit during Lane 6 shadow passes.
 
 Current QA discoverability note:
 
