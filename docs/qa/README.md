@@ -7,6 +7,14 @@ Lane 1 first-wave status artifact:
 - `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`
 - `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`
 
+Lane 6 shadow foundation starter artifacts:
+
+- `docs/qa/p4c-doc-l6-01-lane-6-shadow-foundation-pack.md` (entry point)
+- `docs/qa/p4c-doc-l6-01-acceptance-and-scenario-crosslink-checkpoint.md`
+- `docs/qa/p4c-doc-l6-01-trust-surface-checklist-starter.md`
+- `docs/qa/p4c-doc-l6-01-alpha-readiness-blockers-starter.md`
+- `docs/qa/p4c-doc-l6-01-4c-f-pre-status-note.md`
+
 The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
