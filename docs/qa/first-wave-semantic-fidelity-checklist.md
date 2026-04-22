@@ -1,28 +1,120 @@
 # First-Wave Semantic Fidelity Checklist
 
-Date: 2026-04-22
-Task ID: P4C-REPO-DOC-02
+## Purpose
+Use this checklist during implementation and review to confirm that first-wave surfaces preserve accepted semantic controls and do not drift into false certainty, false finality, UI-level doctrine mutation, or shell-level implication creep.
 
-Purpose: repo-level checklist for implication-sensitive wording and posture checks as the focused operating shell is documented and extended.
+## A. Lane 2 copy and semantic fidelity
 
-Status meaning:
+### Protected lines
+- [ ] Protected lines match the approved baseline exactly where required
+- [ ] No silent swaps have been made to protected lines
+- [ ] Boundary lines remain short, visible, and close to reliance moments
 
-- `required`: must pass before accepting shell-facing doc/copy structure changes
-- `starter`: check exists and should be used now
+### State-family integrity
+- [ ] `Needs review` is not collapsed into `Guarded`
+- [ ] `Stale` is not collapsed into `Live confirmation required`
+- [ ] `Prepared for handoff` does not imply filed, accepted, or complete
+- [ ] `Referral-first` is not presented as ordinary handoff
+- [ ] `On hold` is not presented as whole-account freeze
 
-| Check ID | Check focus | Pass condition | Anchors | Status |
-| --- | --- | --- | --- | --- |
-| `SFC-01` | Hero wedge precedence | Arrears-to-notice-readiness remains explicit as the lead workflow; shell is clearly secondary/supportive | `docs/specs/focused-operating-shell-baseline.md`, `docs/architecture/current-product-posture.md` | `required` |
-| `SFC-02` | Shell scope fence | Shell capabilities match accepted inclusion list and do not introduce PM-suite sprawl | `docs/specs/focused-operating-shell-baseline.md`, `docs/decisions/ADR-focused-operating-shell-direction.md` | `required` |
-| `SFC-03` | Reminder implication control | Reminder language does not imply compliance certification, legal all-clear, or doctrinal finality | `AGENTS.md`, `docs/specs/focused-operating-shell-baseline.md` | `required` |
-| `SFC-04` | Bond visibility implication control | Bond-paid status is described as factual visibility only | `docs/specs/focused-operating-shell-baseline.md`, `docs/architecture/current-product-posture.md` | `required` |
-| `SFC-05` | Export implication control | Structured export wording does not imply filing, tribunal/court acceptance, or legal sufficiency | `docs/specs/focused-operating-shell-baseline.md`, `docs/architecture/output-handoff-evidence-shells.md` | `required` |
-| `SFC-06` | Prep-and-handoff doctrine continuity | Shell language keeps official action external and never implies proxy execution | `AGENTS.md`, `docs/architecture/output-handoff-evidence-shells.md` | `required` |
-| `SFC-07` | Legal/trust boundary continuity | No legal-advice behavior or official-system parity implication appears in shell-facing docs | `AGENTS.md`, `docs/architecture/repo-boundaries.md` | `required` |
-| `SFC-08` | Phase posture honesty | Docs state 4B primary and 4C parallel; no alpha-readiness implication | `docs/architecture/current-product-posture.md`, `docs/architecture/frozen-lanes-status.md` | `required` |
-| `SFC-09` | Lane 2/Lane 4 protection | No protected-line rewrite or Lane 4 lifecycle weakening appears in shell alignment edits | `docs/governance/P4B Freeze Map.md`, `AGENTS.md` | `required` |
-| `SFC-10` | New-contributor clarity | A fresh contributor can locate baseline, decision, posture, and QA control docs from indexes | `docs/index.md`, `docs/specs/README.md`, `docs/qa/README.md`, `docs/decisions/README.md` | `starter` |
+### Trust-cue binding
+- [ ] Trust-cue-bound states do not appear on consequential surfaces without their required cue
+- [ ] `Prepared for handoff` or `Ready for handoff` has its anti-finality clarifier where required
+- [ ] `External review recommended` has the required trust cue where surfaced
+- [ ] `Referral-first` has a concrete referral reason where surfaced
+- [ ] `On hold` has scoped/reviewable hold truth where consequential
 
-## Usage Rule
+### CTA hierarchy
+- [ ] stale -> correct CTA hierarchy preserved
+- [ ] live confirmation required -> correct CTA hierarchy preserved
+- [ ] wrong-channel -> stop + explain + reroute preserved
+- [ ] referral-first -> help/review CTA preserved, not ordinary handoff
 
-Use this checklist for documentation and architecture alignment changes first. Keep passing checks separate from product readiness claims.
+### Warning-family integrity
+- [ ] service warnings preserve hierarchy meaning
+- [ ] evidence timing warnings preserve dual-step plus override meaning
+- [ ] handoff warnings preserve externality and no-filing meaning
+- [ ] referral/sensitive overlay warnings preserve subtype distinctions and escalation
+
+## B. Lane 4 lifecycle and control fidelity
+
+### Lifecycle truth
+- [ ] delete and de-identify remain distinct
+- [ ] archive/matter-close does not imply delete or de-identify unless truly supported
+- [ ] export/download does not imply removal from system
+- [ ] hold remains scoped and reviewable
+- [ ] configurable timing by class is not presented as fixed universal truth
+
+### Auditability truth
+- [ ] auditability cues map to real logs, handlers, or lifecycle state
+- [ ] no tracked cue appears without substantiating product behavior
+
+### Hold scope
+- [ ] `On hold` does not imply whole-account freeze
+- [ ] consequential surfaces can express meaningful hold scope/reason where needed
+- [ ] hold presentation is consistent with underlying product state
+
+### UI overclaim prevention
+- [ ] privacy/security wording does not outrun implementation truth
+- [ ] lifecycle wording does not promise behavior the system cannot yet perform
+- [ ] deletion language does not imply immediate universal erasure
+- [ ] de-identification language is not collapsed into deletion
+
+## C. Cross-lane semantic integrity
+- [ ] preparation remains separate from official action
+- [ ] handoff remains separate from execution
+- [ ] local validation is not presented as official acceptance
+- [ ] stale-state downgrade behaves like a real control, not cosmetic UX
+- [ ] generic timing copy does not outrank hearing-specific or official instructions
+- [ ] renderer does not collapse blocked/guarded/external/referral states into generic pending/success
+- [ ] ownership of the next action remains explicit
+
+## D. Focused operating shell implication controls
+
+### Hero wedge precedence
+- [ ] arrears-to-notice-readiness remains explicit as the lead workflow
+- [ ] the shell is clearly secondary/supportive, not the new headline product
+
+### Shell scope fence
+- [ ] shell capabilities match the accepted inclusion list
+- [ ] no generic PM-suite sprawl is introduced
+
+### Reminder implication control
+- [ ] reminder language does not imply compliance certification, legal all-clear, or doctrinal finality
+
+### Bond visibility implication control
+- [ ] bond-paid status is described as factual visibility only
+- [ ] bond status is not presented as legal truth or compliance verdict
+
+### Export implication control
+- [ ] structured export wording does not imply filing, tribunal/court acceptance, or legal sufficiency
+
+### Prep-and-handoff doctrine continuity
+- [ ] shell language keeps official action external
+- [ ] no shell surface implies proxy execution, filing, or official-system parity
+
+### Legal/trust boundary continuity
+- [ ] no legal-advice behavior or official-system implication appears in shell-facing docs or surfaces
+
+### Phase posture honesty
+- [ ] docs and shell-facing notes state 4B primary and 4C parallel
+- [ ] nothing implies alpha readiness
+
+### Lane 2 / Lane 4 protection
+- [ ] no shell alignment change rewrites protected lines
+- [ ] no shell alignment change weakens Lane 4 lifecycle posture
+
+### New-contributor clarity
+- [ ] a fresh contributor can find the shell baseline, shell decision note, posture snapshot, and QA controls from the repo indexes
+
+## Review result
+- [ ] Pass
+- [ ] Pass with targeted fixes
+- [ ] Escalate for review event
+
+## Notes
+- affected screens:
+- affected states:
+- affected CTAs:
+- affected trust cues:
+- review hotspots:
