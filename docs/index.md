@@ -8,6 +8,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/architecture/frozen-lanes-status.md`
 - `docs/specs/focused-operating-shell-baseline.md`
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
+- `docs/decisions/canon-shell-delta-note.md`
 
 ## Architecture
 
@@ -46,6 +47,7 @@ Use this page as the top-level routing map for current repository posture and co
 
 - `docs/decisions/README.md` (decision index)
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
+- `docs/decisions/canon-shell-delta-note.md`
 - `docs/decisions/p4c-doc-l6-01-decision-log-starter.md`
 
 ## Governance
@@ -55,4 +57,6 @@ Use this page as the top-level routing map for current repository posture and co
 ## Notes
 
 - Phase posture remains 4B primary with bounded 4C parallel construction.
-- The focused operating shell is bounded and does not change prep-and-handoff doctrine.
+- MVP shape is hero arrears wedge first with a bounded focused operating shell above it.
+- Shell reminders are support controls only and must not imply compliance clearance.
+- Shell records/logs/notes/documents support continuity and evidence traceability, not legal sufficiency or official acceptance.

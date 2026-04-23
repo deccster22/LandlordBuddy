@@ -6,6 +6,12 @@ Focused operating shell semantic-control checklist:
 
 - `docs/qa/first-wave-semantic-fidelity-checklist.md`
 
+Checklist emphasis for this phase:
+
+- preserve hero-wedge precedence and no PM-suite drift
+- enforce reminder inclusion constraints (lawful/mandatory + fact-derived triggers only)
+- keep records/logs/notes/documents as continuity supports, not legal sufficiency claims
+
 Lane 1 first-wave status artifact:
 
 - `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md`

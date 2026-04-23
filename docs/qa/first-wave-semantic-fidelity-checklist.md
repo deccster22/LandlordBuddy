@@ -74,17 +74,25 @@ Use this checklist during implementation and review to confirm that first-wave s
 ### Hero wedge precedence
 - [ ] arrears-to-notice-readiness remains explicit as the lead workflow
 - [ ] the shell is clearly secondary/supportive, not the new headline product
+- [ ] wedge framing remains Victoria-first, residential-only, arrears-first, and procedural-risk-prevention-led
 
 ### Shell scope fence
-- [ ] shell capabilities match the accepted inclusion list
-- [ ] no generic PM-suite sprawl is introduced
+- [ ] shell scope stays bounded to operational context, reminder/logging continuity, evidence/document continuity, and matter launching
+- [ ] no generic PM-suite sprawl or national-expansion posture is introduced
 
 ### Reminder implication control
 - [ ] reminder language does not imply compliance certification, legal all-clear, or doctrinal finality
+- [ ] reminder entries are limited to mandatory or clearly lawful landlord-side obligations/milestones
+- [ ] reminder triggers are derived from captured facts, not inferred legal strategy/path
 
 ### Bond visibility implication control
 - [ ] bond-paid status is described as factual visibility only
 - [ ] bond status is not presented as legal truth or compliance verdict
+
+### Records and continuity implication control
+- [ ] inspection logs, issue registers, notes, rent entries, and document storage are presented as continuity/evidence supports
+- [ ] records continuity surfaces do not imply legal adjudication, tribunal sufficiency, or compliance certification
+- [ ] upload/record presence is not presented as legal readiness or official acceptance
 
 ### Export implication control
 - [ ] structured export wording does not imply filing, tribunal/court acceptance, or legal sufficiency

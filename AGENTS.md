@@ -14,7 +14,9 @@ It is not:
 * a portal clone
 * a generic property management suite
 
-The first MVP wedge is arrears-to-notice-readiness. The first job of the product is to reduce costly procedural failure caused by confusion, bad sequencing, missing evidence, and false confidence.
+The first MVP wedge is arrears-to-notice-readiness. It remains Victoria-first, residential-only, arrears-first, and procedural-risk-prevention-led.
+
+The first job of the product is to reduce costly procedural failure caused by confusion, bad sequencing, missing evidence, and false confidence.
 
 The current product shape includes a focused operating shell above the hero arrears workflow.
 
@@ -417,7 +419,13 @@ Never describe the shell as a full property-management suite.
 
 ### 24.2 Accepted shell inclusion fence
 
-The shell may include bounded record, reminder, note, and export supports that feed preparation quality and handoff readiness.
+The shell may include only bounded:
+
+* operational context
+* reminder and logging continuity
+* evidence and document continuity
+* matter launching into the hero workflow
+* structured handoff packaging
 
 Use `docs/specs/focused-operating-shell-baseline.md` as the accepted inclusion/exclusion source.
 
@@ -433,13 +441,18 @@ Do not imply or introduce:
 * tenant messaging platform behaviour
 * maintenance marketplace behaviour
 * generic PM-suite expansion
+* national expansion complexity
 
 ### 24.4 Reminder, bond, and export wording constraints
 
 Always preserve:
 
 * reminders are prompts and controls, not compliance clearance
+* reminders are included only for mandatory or clearly lawful landlord-side obligations/milestones
+* reminder triggers must be derived reliably from captured facts
+* reminders must not infer legal path selection or strategy
 * bond-paid status is factual visibility only, not legal sufficiency
+* records/logs/notes/rent entries/document storage are continuity supports, not legal adjudication or tribunal sufficiency
 * export is structured packaging only, not filing, acceptance, or legal readiness
 
 ### 24.5 Review-event trigger
