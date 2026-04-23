@@ -19,6 +19,7 @@ Lane 1 first-wave status artifact:
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
 - `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`
+- `docs/qa/p4c-mkt-l4-rs-01g-small-size-app-tile-qa-board.md`
 
 Lane 6 shadow foundation starter artifacts:
 
