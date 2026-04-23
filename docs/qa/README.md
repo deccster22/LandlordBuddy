@@ -30,6 +30,10 @@ Lane 6 shadow sync artifacts (current refresh pass):
 - `docs/qa/p4c-doc-l6-02-alpha-readiness-blockers-refresh.md`
 - `docs/qa/p4c-doc-l6-02-sync-status-note.md`
 
+Lane 6 screen-evidence pass artifacts:
+
+- `docs/qa/p4c-doc-l6-03-screen-evidence-pass.md`
+
 The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`

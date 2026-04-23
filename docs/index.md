@@ -39,6 +39,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md`
 - `docs/qa/p4c-doc-l6-02-acceptance-and-crosslink-sync-checkpoint.md`
 - `docs/qa/p4c-doc-l6-02-sync-status-note.md`
+- `docs/qa/p4c-doc-l6-03-screen-evidence-pass.md`
 
 ## Decisions
 
