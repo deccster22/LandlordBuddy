@@ -14,14 +14,64 @@ This note is the current repository posture snapshot for contributors. It aligns
 
 ## 2. Product shape snapshot
 
+Wedge baseline (unchanged):
+
+- Victoria-first
+- residential-only
+- arrears-first
+- procedural-risk-prevention-led
+
 | Layer | Role now | Must not imply |
 | --- | --- | --- |
 | Hero workflow (arrears wedge) | Lead workflow from arrears intake through notice readiness and external handoff preparation | filing/submission, legal path selection certainty, official-system completion |
-| Focused operating shell | Bounded operating support around records, reminders, matter continuity, lease/bond context, inspections, maintenance register, notes, documents, and structured export | generic PM-suite ambition, accounting/tax suite behavior, compliance certification, official execution |
+| Focused operating shell | Bounded support layer for operational context, reminder/logging continuity, evidence/document continuity, matter launching, and structured handoff packaging | generic PM-suite ambition, accounting/tax suite behavior, compliance certification, official execution, national expansion drift |
 
 The hero arrears workflow remains the lead path. The focused operating shell exists to support preparation quality, continuity, and repeat use, not to replace the wedge or expand beyond accepted scope.
 
-## 3. Current frozen lane posture
+## 3. Shell scope and exclusion fence
+
+The shell inclusion fence is category-bounded:
+
+- operational context
+- reminder/logging continuity
+- evidence/document continuity
+- matter launching into the hero workflow
+- structured packaging for external review/handoff
+
+The shell exclusion fence remains explicit:
+
+- accounting integrations
+- full accounting-suite behavior
+- tax advice or tax optimization
+- maintenance marketplace behavior
+- tenant messaging platform behavior
+- direct official filing/submission
+- generic PM-suite sprawl
+- national expansion complexity
+
+## 4. Shell-specific semantic fences
+
+Reminder inclusion rule:
+
+- include only mandatory or clearly lawful landlord-side obligations/milestones
+- derive triggers from captured facts
+- do not infer legal path/strategy
+- do not imply compliance clearance, legal all-clear, or legal sufficiency
+
+Records and continuity posture:
+
+- inspection logs, issue registers, notes, rent entries, and document storage are chronology/evidence continuity supports
+- they are not legal adjudication, tribunal sufficiency, or compliance certification
+- upload/record presence alone does not equal legal readiness or official acceptance
+
+Additional implication controls:
+
+- bond-paid status is factual visibility only
+- lease renewal / expiry reminders are operational continuity, not legal conclusions
+- structured export is packaging for review/handoff, not filing, acceptance, or legal sufficiency
+- "ready" language must continue to honor existing trust-cue and handoff constraints
+
+## 5. Current frozen lane posture
 
 ### Lane 2
 Lane 2 is closed for authoring.
@@ -35,7 +85,7 @@ Do not let policy wording outrun product state, handlers, logs, or hold-scope tr
 
 For detailed lane state, use `docs/architecture/frozen-lanes-status.md`.
 
-## 4. Control boundaries (unchanged)
+## 6. Control boundaries (unchanged)
 
 The following controls remain mandatory:
 - prep-and-handoff separation
@@ -45,18 +95,10 @@ The following controls remain mandatory:
 - warning families as behavioral controls, not decorative copy
 - trust-cue-bound state discipline on consequential surfaces
 
-## 5. Shell-specific semantic fences
-- reminders are prompts and controls, not compliance clearance
-- bond-paid status is factual visibility only
-- lease renewal / expiry reminders are operational continuity, not legal conclusions
-- inspection, maintenance, notes, and records are chronology/evidence continuity, not legal adjudication
-- structured export is packaging for review/handoff and not filing, acceptance, or legal sufficiency
-- "ready" language must continue to honor existing trust-cue and handoff constraints
-
-## 6. Pattern-extension rule
+## 7. Pattern-extension rule
 For first-wave screens, extend the existing accepted pattern library rather than inventing new semantics from scratch.
 
-## 7. Semantic integrity rule
+## 8. Semantic integrity rule
 Do not silently change:
 - protected lines
 - state labels
@@ -70,12 +112,13 @@ Do not silently change:
 
 These are review events, not routine polish.
 
-## 8. Contributor routing
+## 9. Contributor routing
 
 Use these docs together:
 - shell baseline: `docs/specs/focused-operating-shell-baseline.md`
 - lane and freeze snapshot: `docs/architecture/frozen-lanes-status.md`
 - shell direction ADR: `docs/decisions/ADR-focused-operating-shell-direction.md`
+- shell canon delta note: `docs/decisions/canon-shell-delta-note.md`
 - Lane 2 baseline: `docs/specs/lane-2-first-wave-copy-baseline.md`
 - Lane 4 baseline: `docs/specs/lane-4-lifecycle-control-baseline.md`
 - semantic QA checks: `docs/qa/first-wave-semantic-fidelity-checklist.md`

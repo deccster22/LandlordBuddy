@@ -22,7 +22,7 @@ This note gives a short operating status for frozen and parallel lanes so implem
 | Lane 1 (journey and flow shaping) | Parallel 4C construction, bounded by existing semantics | `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md`, `docs/qa/p4c-cx-l1-01-4c-a-status-pack.md` | Reuse frozen state/warning/CTA families; do not author new doctrine |
 | Lane 2 (semantics/copy/trust controls) | Closed for authoring; implementation fidelity only | `docs/governance/P4B Freeze Map.md`, `docs/specs/lane-2-first-wave-copy-baseline.md`, `AGENTS.md` | Protected-line changes are review events |
 | Lane 3 (QA/readiness evidence) | Active 4B control and regression evidence lane | `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`, `docs/qa/p4b-cx-l3-01-qa-rule-map.md` | Preserve deterministic vs guarded evidence separation |
-| Lane 4 (brand and launch language shape) | Parallel 4C bounded direction work; Lane 4 controls remain fidelity-first | `docs/specs/p4c-mkt-l4-01-first-wave-brand-visual-direction-pack.md`, `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`, `docs/specs/lane-4-lifecycle-control-baseline.md` | Keep anti-overclaim and handoff boundaries explicit |
+| Lane 4 (brand and launch language shape) | Closed for authoring/control drafting; implementation-fidelity only with bounded 4C execution alignment | `docs/specs/p4c-mkt-l4-01-first-wave-brand-visual-direction-pack.md`, `docs/qa/p4c-mkt-l4-01-4c-d-status-pack.md`, `docs/specs/lane-4-lifecycle-control-baseline.md`, `AGENTS.md` | Keep anti-overclaim and handoff boundaries explicit |
 | Lane 6 (docs/architecture shadow alignment) | Light additive shadow lane | `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md`, `docs/qa/p4c-doc-l6-02-sync-status-note.md`, `docs/decisions/p4c-doc-l6-01-decision-log-starter.md` | Improve discoverability and honesty; do not signal readiness |
 | BR01 / BR03 / BR05 parked lanes | Stable parking posture, not fully finished | `docs/specs/br01-parked-invariants.md`, `docs/specs/br03-parked-invariants.md`, `docs/specs/br05-parked-invariants.md` | Keep explicit reactivation triggers and avoid forced expansion |
 | BR04 privacy lifecycle scaffold | Guarded scaffold with policy/source slots | `docs/architecture/br04-privacy-lifecycle-scaffold.md` | Do not convert placeholder lifecycle doctrine into deterministic timers |
@@ -31,12 +31,20 @@ This note gives a short operating status for frozen and parallel lanes so implem
 
 The focused operating shell is accepted as a bounded layer above the hero arrears workflow.
 
+- The wedge remains Victoria-first, residential-only, arrears-first, and procedural-risk-prevention-led.
 - It does not change lane protections.
 - It does not weaken prep-and-handoff boundaries.
 - It does not authorize PM-suite expansion.
 - It does not turn shell surfaces into compliance certification, legal readiness, or official-system status.
 
 Use `docs/specs/focused-operating-shell-baseline.md` for accepted inclusions/exclusions.
+
+Accepted shell fence summary:
+
+- include only operational context, reminder/logging continuity, evidence/document continuity, and matter launching into the hero workflow
+- keep reminder inclusion constrained to mandatory or clearly lawful landlord-side obligations/milestones with fact-derived triggers
+- keep records (inspection logs, issue registers, notes, rent entries, document storage) as continuity/evidence supports only
+- exclude accounting integrations/suites, tax advice/optimization, maintenance marketplace behavior, tenant messaging platform behavior, direct filing/submission, generic PM-suite sprawl, and national expansion complexity
 
 ## 5. Reopen triggers (summary)
 
@@ -62,7 +70,7 @@ Treat these as review events, not routine polish:
 - lifecycle wording that affects reliance
 - hold scope presentation
 - auditability claims
-- shell wording that implies compliance clearance, legal readiness, official-system parity, or PM-suite expansion
+- shell wording that implies compliance clearance, legal readiness, official-system parity, PM-suite expansion, or national-expansion posture
 
 ## 7. Controlling docs
 - `docs/specs/lane-2-first-wave-copy-baseline.md`
@@ -72,4 +80,5 @@ Treat these as review events, not routine polish:
 - `docs/decisions/ADR-L2-first-wave-copy-baseline.md`
 - `docs/decisions/ADR-L4-lifecycle-control-baseline.md`
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
+- `docs/decisions/canon-shell-delta-note.md`
 - `AGENTS.md`

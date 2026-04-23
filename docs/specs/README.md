@@ -4,7 +4,7 @@ Use this folder for phase-scoped feature specs before implementation. Keep unres
 
 Current park-state note:
 
-- `docs/specs/focused-operating-shell-baseline.md` records the accepted focused operating shell direction above the hero arrears workflow, including bounded inclusions/exclusions and anti-overclaim fences.
+- `docs/specs/focused-operating-shell-baseline.md` records the accepted focused shell canon delta: hero wedge unchanged (Victoria-first, residential-only, arrears-first), bounded shell inclusions, explicit shell exclusions, reminder inclusion constraints, and records/evidence continuity posture.
 - `docs/specs/p4c-mkt-l4-01-first-wave-brand-visual-direction-pack.md` records the first-wave Lane 4 brand and visual-system direction, including primary/fallback identity recommendation, app-tile and wordmark direction, palette/type guidance, in-app usage rules, anti-reference controls, and sample-screen translation constraints.
 - `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md` records the first-wave Lane 1 product journey from entry to official handoff, including primary flow map, screen inventory, state/screen alignment, next-action ownership, explicit exits/returns, and review/warning/handoff placements.
 - `docs/specs/p4c-cx-shell-01-focused-operating-shell-hero-workflow-mvp-structure-pack.md` records the first-wave focused shell plus hero structure bridge, including shell feature decisions, launcher boundary mapping, screen-level module/state/warning/trust contracts, and explicit scope discipline.
@@ -19,6 +19,7 @@ Current park-state note:
 - `docs/specs/br05-parked-invariants.md` records the BR05 first-pass stable parking point, confidence posture, and explicit reactivation triggers.
 - `docs/specs/p4c-doc-l6-01-guarded-seams-register-starter.md` records a starter guarded-seams register so unresolved doctrine stays explicit during Lane 6 shadow passes.
 - `docs/specs/p4c-doc-l6-02-guarded-seams-register-update.md` records the Lane 6 shadow seam update for shell/L2/app contract watchpoints and Review C/Lane 4 dependencies.
+- `docs/decisions/canon-shell-delta-note.md` records a short repo-facing summary of durable canon delta implications without duplicating full canon detail.
 
 Current QA discoverability note:
 

@@ -3,6 +3,7 @@
 ## Architecture and posture
 - `/docs/architecture/current-product-posture.md`
 - `/docs/architecture/frozen-lanes-status.md`
+- `/docs/specs/focused-operating-shell-baseline.md`
 
 ## Frozen lane baselines
 - `/docs/specs/lane-2-first-wave-copy-baseline.md`
@@ -14,6 +15,8 @@
 ## Decision notes
 - `/docs/decisions/ADR-L2-first-wave-copy-baseline.md`
 - `/docs/decisions/ADR-L4-lifecycle-control-baseline.md`
+- `/docs/decisions/ADR-focused-operating-shell-direction.md`
+- `/docs/decisions/canon-shell-delta-note.md`
 
 ## Contributor operating rules
 - `/AGENTS.md`
