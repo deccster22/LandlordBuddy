@@ -33,6 +33,7 @@ Lane 6 shadow sync artifacts (current refresh pass):
 Lane 6 screen-evidence pass artifacts:
 
 - `docs/qa/p4c-doc-l6-03-screen-evidence-pass.md`
+- `docs/qa/p4c-doc-l6-04-comparative-rendered-surface-pass.md`
 
 The current Review C entry point for Lane 3 is:
 
