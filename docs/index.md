@@ -17,6 +17,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/architecture/repo-boundaries.md`
 - `docs/architecture/br04-privacy-lifecycle-scaffold.md`
 - `docs/architecture/p4c-doc-l6-01-first-wave-module-map-refresh.md`
+- `docs/architecture/p4c-doc-l6-02-first-wave-module-map-sync.md`
 
 ## Specs
 
@@ -35,6 +36,9 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
+- `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md`
+- `docs/qa/p4c-doc-l6-02-acceptance-and-crosslink-sync-checkpoint.md`
+- `docs/qa/p4c-doc-l6-02-sync-status-note.md`
 
 ## Decisions
 

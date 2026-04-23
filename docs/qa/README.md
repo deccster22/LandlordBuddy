@@ -22,6 +22,14 @@ Lane 6 shadow foundation starter artifacts:
 - `docs/qa/p4c-doc-l6-01-alpha-readiness-blockers-starter.md`
 - `docs/qa/p4c-doc-l6-01-4c-f-pre-status-note.md`
 
+Lane 6 shadow sync artifacts (current refresh pass):
+
+- `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md` (entry point)
+- `docs/qa/p4c-doc-l6-02-acceptance-and-crosslink-sync-checkpoint.md`
+- `docs/qa/p4c-doc-l6-02-trust-surface-checklist-extension.md`
+- `docs/qa/p4c-doc-l6-02-alpha-readiness-blockers-refresh.md`
+- `docs/qa/p4c-doc-l6-02-sync-status-note.md`
+
 The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
