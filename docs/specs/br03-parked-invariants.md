@@ -15,6 +15,7 @@ It is a park-state clarification pass, not a doctrine expansion.
 Current BR03 behavior is locked to:
 
 - touchpoint resolver and registry shell in `src/modules/touchpoints/index.ts`
+- app/shell source-event snapshot producer seam in `src/app/br03TouchpointSnapshotProducer.ts`
 - downstream output threading in `src/modules/output/index.ts`
 - downstream handoff threading in `src/modules/handoff/index.ts`
 - trust/review-state bindings in `src/modules/output/trustBindings.ts`
@@ -61,6 +62,7 @@ These invariants are locked at this parking point:
 - authenticated-handoff-only suppresses ordinary mirror allowances and keeps authenticated surfaces in defer/handoff-only posture
 - stale and live-confirmation-required remain distinct consequence families and may coexist under mixed-touchpoint inputs
 - stale does not collapse into live-confirmation-required or generic warning-only handling
+- source-event snapshot production remains explicit and auditable; missing source events retain registry-default posture with non-parity caveat
 - resolver outputs are the shared source for prep-pack, handoff guidance, renderer state, review-state keys, and carry-forward controls
 - wrong-channel reroute suppresses prep-pack copy-ready fallback and forces referral-stop posture
 
@@ -68,10 +70,10 @@ These invariants are locked at this parking point:
 
 The following remain intentionally guarded while BR03 is parked:
 
-- live-confirmation-required triggers are registry/override-driven; cadence and authority are not promoted to deterministic doctrine
+- live-confirmation-required triggers are registry/source-snapshot-driven; cadence and authority are not promoted to deterministic doctrine
 - wrong-channel detection remains explicit control input, not automated portal-state interpretation
 - authenticated official surfaces remain metadata plus handoff controls only; no product-side authenticated execution is introduced
-- touchpoint posture overrides remain keyed by touchpoint ID; no broader per-instance policy engine is introduced
+- touchpoint posture snapshots remain keyed by touchpoint ID; no broader per-instance policy engine is introduced
 
 ## Explicit broaden/reactivation triggers
 

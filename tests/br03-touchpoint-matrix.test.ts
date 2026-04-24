@@ -8,16 +8,17 @@ import {
 } from "../src/domain/model.js";
 import { generateOutputPackageShell } from "../src/modules/output/index.js";
 import {
+  createTouchpointPostureSnapshot,
   deriveTouchpointConsequenceSurfaceKeys,
   resolveTouchpointControl,
   type TouchpointControlOutputs,
-  type TouchpointPostureOverride
+  type CreateTouchpointPostureSnapshotInput
 } from "../src/modules/touchpoints/index.js";
 
 interface TouchpointMatrixCase {
   name: string;
   touchpointIds: readonly string[];
-  postureOverrides?: readonly TouchpointPostureOverride[];
+  postureSnapshotInputs?: readonly CreateTouchpointPostureSnapshotInput[];
   expectedControlOutputs: TouchpointControlOutputs;
   expectedControlCodes: readonly string[];
 }
@@ -26,7 +27,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
   {
     name: "stale + live-confirmation-required",
     touchpointIds: ["vic-arrears-public-rule", "vic-arrears-freshness-watch"],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-rule",
         freshnessPosture: "STALE"
@@ -53,7 +54,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
   {
     name: "mirror-with-warning + stale",
     touchpointIds: ["vic-arrears-public-form-warning"],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         freshnessPosture: "STALE"
@@ -73,7 +74,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
   {
     name: "mirror-with-warning + live-confirmation-required",
     touchpointIds: ["vic-arrears-public-form-warning"],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
@@ -96,7 +97,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
   {
     name: "wrong-channel + stale",
     touchpointIds: ["vic-arrears-public-form-warning"],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         freshnessPosture: "STALE",
@@ -121,7 +122,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
   {
     name: "wrong-channel + live-confirmation-required",
     touchpointIds: ["vic-arrears-public-form-warning"],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED",
@@ -149,7 +150,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
       "vic-arrears-public-form-warning",
       "vic-arrears-authenticated-handoff"
     ],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         channelPosture: "WRONG_CHANNEL_REROUTE"
@@ -198,7 +199,7 @@ const touchpointMatrixCases: readonly TouchpointMatrixCase[] = [
       "vic-arrears-authenticated-handoff",
       "vic-arrears-freshness-watch"
     ],
-    postureOverrides: [
+    postureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-rule",
         freshnessPosture: "STALE"
@@ -241,11 +242,14 @@ const commonOutputInput = {
 
 test("BR03 matrix keeps mixed-touchpoint precedence explicit at resolver level", () => {
   for (const matrixCase of touchpointMatrixCases) {
+    const postureSnapshots = matrixCase.postureSnapshotInputs?.map((snapshotInput) => (
+      createTouchpointPostureSnapshot(snapshotInput)
+    ));
     const resolution = resolveTouchpointControl({
       forumPath: "VIC_VCAT_RENT_ARREARS",
       touchpointIds: matrixCase.touchpointIds,
-      ...(matrixCase.postureOverrides
-        ? { postureOverrides: matrixCase.postureOverrides }
+      ...(postureSnapshots
+        ? { postureSnapshots }
         : {})
     });
 
@@ -264,12 +268,15 @@ test("BR03 matrix keeps mixed-touchpoint precedence explicit at resolver level",
 
 test("BR03 matrix keeps prep-pack, handoff, renderer, and carry-forward posture aligned", () => {
   for (const matrixCase of touchpointMatrixCases) {
+    const postureSnapshots = matrixCase.postureSnapshotInputs?.map((snapshotInput) => (
+      createTouchpointPostureSnapshot(snapshotInput)
+    ));
     const prepPack = generateOutputPackageShell({
       ...commonOutputInput,
       outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
       touchpointIds: matrixCase.touchpointIds,
-      ...(matrixCase.postureOverrides
-        ? { touchpointPostureOverrides: matrixCase.postureOverrides }
+      ...(postureSnapshots
+        ? { touchpointPostureSnapshots: postureSnapshots }
         : {})
     });
 
@@ -310,8 +317,8 @@ test("BR03 matrix keeps prep-pack, handoff, renderer, and carry-forward posture 
       ...commonOutputInput,
       outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
       touchpointIds: matrixCase.touchpointIds,
-      ...(matrixCase.postureOverrides
-        ? { touchpointPostureOverrides: matrixCase.postureOverrides }
+      ...(postureSnapshots
+        ? { touchpointPostureSnapshots: postureSnapshots }
         : {})
     });
 
@@ -421,3 +428,4 @@ function assertHasControlCodes(input: {
     );
   }
 }
+

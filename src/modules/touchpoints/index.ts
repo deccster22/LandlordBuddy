@@ -28,22 +28,44 @@ export const touchpointChannelPostures = [
 
 export type TouchpointChannelPosture = (typeof touchpointChannelPostures)[number];
 
-export interface TouchpointPostureOverride {
+export const touchpointPostureSnapshotSources = [
+  "TOUCHPOINT_REGISTRY_DEFAULT",
+  "TOUCHPOINT_SOURCE_FEED"
+] as const;
+
+export type TouchpointPostureSnapshotSource = (typeof touchpointPostureSnapshotSources)[number];
+
+export interface TouchpointPostureSnapshot {
+  touchpointId: string;
+  freshnessPosture: TouchpointFreshnessPosture;
+  channelPosture: TouchpointChannelPosture;
+  authenticatedHandoffOnly: boolean;
+  source: TouchpointPostureSnapshotSource;
+  visibleSourceType: VisibleSourceType;
+  summary: string;
+}
+
+export interface CreateTouchpointPostureSnapshotInput {
   touchpointId: string;
   freshnessPosture?: TouchpointFreshnessPosture;
   channelPosture?: TouchpointChannelPosture;
+  authenticatedHandoffOnly?: boolean;
+  source?: TouchpointPostureSnapshotSource;
+  summary?: string;
 }
 
 export interface TouchpointResolutionInput {
   forumPath: ForumPath;
   touchpointIds?: readonly string[];
-  postureOverrides?: readonly TouchpointPostureOverride[];
+  postureSnapshots?: readonly TouchpointPostureSnapshot[];
 }
 
 export interface ResolvedTouchpointPosture {
   touchpoint: TouchpointMetadata;
+  postureSnapshot: TouchpointPostureSnapshot;
   freshnessPosture: TouchpointFreshnessPosture;
   channelPosture: TouchpointChannelPosture;
+  authenticatedHandoffOnly: boolean;
 }
 
 export interface TouchpointControlOutputs {
@@ -194,24 +216,37 @@ export function listTouchpointsForForumPath(forumPath: ForumPath): TouchpointMet
   return touchpointRegistryShell.filter((touchpoint) => touchpoint.forumPath === forumPath);
 }
 
+export function createTouchpointPostureSnapshot(
+  input: CreateTouchpointPostureSnapshotInput
+): TouchpointPostureSnapshot {
+  const touchpoint = lookupTouchpointMetadata(input.touchpointId);
+
+  if (!touchpoint) {
+    throw new Error(`Unknown BR03 touchpoint: ${input.touchpointId}`);
+  }
+
+  return createNormalizedTouchpointPostureSnapshot(touchpoint, input);
+}
+
 export function resolveTouchpointControl(
   input: TouchpointResolutionInput
 ): TouchpointControlResolution {
   const touchpoints = resolveTouchpoints(input.forumPath, input.touchpointIds);
-  const postureOverridesById = new Map(
-    (input.postureOverrides ?? []).map((override) => [override.touchpointId, override] as const)
+  const postureSnapshotsById = new Map(
+    (input.postureSnapshots ?? []).map((snapshot) => [snapshot.touchpointId, snapshot] as const)
   );
   const resolvedPostures = touchpoints.map((touchpoint) => {
-    const postureOverride = postureOverridesById.get(touchpoint.id);
+    const postureSnapshot = normalizeTouchpointPostureSnapshot(
+      touchpoint,
+      postureSnapshotsById.get(touchpoint.id)
+    );
 
     return {
       touchpoint,
-      freshnessPosture: postureOverride?.freshnessPosture
-        ?? touchpoint.defaultFreshnessPosture
-        ?? "CURRENT",
-      channelPosture: postureOverride?.channelPosture
-        ?? touchpoint.defaultChannelPosture
-        ?? "IN_SCOPE_CHANNEL"
+      postureSnapshot,
+      freshnessPosture: postureSnapshot.freshnessPosture,
+      channelPosture: postureSnapshot.channelPosture,
+      authenticatedHandoffOnly: postureSnapshot.authenticatedHandoffOnly
     };
   });
   const controlOutputs = deriveControlOutputs(resolvedPostures);
@@ -267,7 +302,7 @@ function deriveControlOutputs(
         break;
     }
 
-    if (touchpoint.area === "AUTHENTICATED_SURFACE") {
+    if (resolvedPosture.authenticatedHandoffOnly) {
       outputs.authenticatedHandoffOnly = true;
     }
 
@@ -358,6 +393,60 @@ function derivePostureControls(
   }
 
   return controls;
+}
+
+function normalizeTouchpointPostureSnapshot(
+  touchpoint: TouchpointMetadata,
+  snapshot?: TouchpointPostureSnapshot
+): TouchpointPostureSnapshot {
+  if (!snapshot) {
+    return createNormalizedTouchpointPostureSnapshot(touchpoint, {
+      touchpointId: touchpoint.id,
+      source: "TOUCHPOINT_REGISTRY_DEFAULT",
+      summary: `Registry-default posture snapshot for ${touchpoint.id}.`
+    });
+  }
+
+  return createNormalizedTouchpointPostureSnapshot(touchpoint, snapshot);
+}
+
+function createNormalizedTouchpointPostureSnapshot(
+  touchpoint: TouchpointMetadata,
+  input: {
+    touchpointId: string;
+    freshnessPosture?: TouchpointFreshnessPosture;
+    channelPosture?: TouchpointChannelPosture;
+    authenticatedHandoffOnly?: boolean;
+    source?: TouchpointPostureSnapshotSource;
+    visibleSourceType?: VisibleSourceType;
+    summary?: string;
+  }
+): TouchpointPostureSnapshot {
+  const source = input.source ?? "TOUCHPOINT_SOURCE_FEED";
+
+  return {
+    touchpointId: touchpoint.id,
+    freshnessPosture: input.freshnessPosture
+      ?? touchpoint.defaultFreshnessPosture
+      ?? "CURRENT",
+    channelPosture: input.channelPosture
+      ?? touchpoint.defaultChannelPosture
+      ?? "IN_SCOPE_CHANNEL",
+    authenticatedHandoffOnly: input.authenticatedHandoffOnly
+      ?? touchpoint.area === "AUTHENTICATED_SURFACE",
+    source,
+    visibleSourceType: input.visibleSourceType ?? touchpoint.visibleSourceType,
+    summary: input.summary ?? defaultSnapshotSummary(touchpoint, source)
+  };
+}
+
+function defaultSnapshotSummary(
+  touchpoint: TouchpointMetadata,
+  source: TouchpointPostureSnapshotSource
+): string {
+  return source === "TOUCHPOINT_REGISTRY_DEFAULT"
+    ? `Registry-default posture snapshot for ${touchpoint.id}.`
+    : `Source-fed posture snapshot for ${touchpoint.id}.`;
 }
 
 function buildDerivedControl(input: {
