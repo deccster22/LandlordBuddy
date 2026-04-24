@@ -3,29 +3,23 @@ import type {
   EntityId,
   EvidenceTimingInstruction,
   EvidenceTimingState,
+  PaymentPlanRecord,
   ServiceEvent,
   ServiceEventScope,
   ServiceEventStatus,
   ServiceMethod
 } from "../../domain/model.js";
-import {
-  assessBr02ConsumerAssessment,
-  assessBr02EvidenceDeadline,
-  assessBr02NoticeEligibilityTiming,
-  assessBr02ServiceProof,
-  calculateBr02TerminationDate,
-  type Br02ConsumerAssessment,
-  type Br02EvidenceDeadlineResult,
-  type Br02NoticeEligibilityTimingResult,
-  type Br02ServiceProofResult,
-  type Br02TerminationDateResult
-} from "./consumer.js";
+import type { Br02ConsumerAssessment } from "./consumer.js";
 import type {
   Br02FreshnessSnapshot,
   Br02HearingSpecificOverrideInput,
   Br02ServiceAssessment,
   Br02ValidationIssue
 } from "./models.js";
+import {
+  resolveBr02RuntimeBridge,
+  type Br02RuntimeBridgeAssessment
+} from "./runtimeBridge.js";
 import {
   br02DateRuleRegistry,
   br02EvidenceTimingPrecedenceRegistry,
@@ -89,13 +83,13 @@ export interface AssessBr02ServiceEventInput {
   evidenceTimingState?: EvidenceTimingState;
   hearingDateAt?: string;
   hearingNoticeAt?: string;
+  paymentPlan?: PaymentPlanRecord;
 }
 
 export interface Br02ServiceEventAssessment extends Br02ServiceAssessment, Br02ConsumerAssessment {
+  runtimeBridge: Br02RuntimeBridgeAssessment;
   consumerAssessment: Br02ConsumerAssessment;
 }
-
-const blockedSeverities = new Set(["hard-stop", "slowdown"]);
 
 export function lookupBr02DateRule(code: string): Br02DateRuleRegistryEntry | undefined {
   return br02DateRuleRegistry.find((entry) => entry.code === code);
@@ -272,21 +266,24 @@ export function buildBr02EvidenceTimingState(
 export function assessBr02ServiceEvent(
   input: AssessBr02ServiceEventInput
 ): Br02ServiceEventAssessment {
-  const consumerAssessment = assessBr02ConsumerAssessment({
+  const runtimeBridge = resolveBr02RuntimeBridge({
     thresholdState: input.thresholdState,
     serviceEvent: input.serviceEvent,
     ...(input.consentProofs ? { consentProofs: input.consentProofs } : {}),
     ...(input.freshnessSnapshots ? { freshnessSnapshots: input.freshnessSnapshots } : {}),
     ...(input.evidenceTimingState ? { evidenceTimingState: input.evidenceTimingState } : {}),
     ...(input.hearingDateAt ? { hearingDateAt: input.hearingDateAt } : {}),
-    ...(input.hearingNoticeAt ? { hearingNoticeAt: input.hearingNoticeAt } : {})
+    ...(input.hearingNoticeAt ? { hearingNoticeAt: input.hearingNoticeAt } : {}),
+    ...(input.paymentPlan ? { paymentPlan: input.paymentPlan } : {})
   });
+  const consumerAssessment = runtimeBridge.consumerAssessment;
 
   return {
     thresholdGateOpen: consumerAssessment.noticeEligibility.canPrepareNotice,
     serviceMethod: input.serviceEvent.serviceMethod,
     appliedDateRuleCodes: consumerAssessment.appliedRuleCodes,
     preferredDeterministicPath: consumerAssessment.serviceProof.preferredDeterministicPath,
+    runtimeBridge,
     consumerAssessment,
     ...consumerAssessment
   };
@@ -436,3 +433,4 @@ export * from "./audit.js";
 export * from "./qa.js";
 export * from "./consumer.js";
 export * from "./downstream.js";
+export * from "./runtimeBridge.js";
