@@ -26,6 +26,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/specs/non-blocked-dependency-map.md`
 - `docs/specs/focused-operating-shell-baseline.md`
 - `docs/specs/p4c-mkt-l4-rs-01g-final-icon-wordmark-treatment-pass.md`
+- `docs/specs/p4c-mkt-l4-rs-01h-lane-4-final-direction-synthesis-pack.md`
 - `docs/specs/p4c-cx-shell-01-focused-operating-shell-hero-workflow-mvp-structure-pack.md`
 - `docs/specs/p4c-cx-l2-01-first-wave-form-question-architecture-pack.md`
 - `docs/specs/p4c-cx-app-01-thin-app-screen-form-contract-pack.md`
@@ -39,6 +40,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
 - `docs/qa/p4c-mkt-l4-rs-01g-small-size-app-tile-qa-board.md`
+- `docs/qa/p4c-mkt-l4-rs-01h-compact-4c-d-status-pack.md`
 - `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md`
 - `docs/qa/p4c-doc-l6-02-acceptance-and-crosslink-sync-checkpoint.md`
 - `docs/qa/p4c-doc-l6-02-sync-status-note.md`
