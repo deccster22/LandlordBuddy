@@ -12,6 +12,7 @@ import {
   selectOutputShell
 } from "../src/modules/output/index.js";
 import {
+  createTouchpointPostureSnapshot,
   resolveTouchpointControl,
   touchpointClassifications
 } from "../src/modules/touchpoints/index.js";
@@ -79,6 +80,14 @@ test("BR03 touchpoint control resolves defer/authenticated posture as handoff-on
 
   assert.equal(resolution.controlOutputs.deferToLiveOfficialFlow, true);
   assert.equal(resolution.controlOutputs.authenticatedHandoffOnly, true);
+  assert.equal(
+    resolution.resolvedPostures[0]?.postureSnapshot.authenticatedHandoffOnly,
+    true
+  );
+  assert.equal(
+    resolution.resolvedPostures[0]?.postureSnapshot.source,
+    "TOUCHPOINT_REGISTRY_DEFAULT"
+  );
   assert.ok(
     resolution.carryForwardControls.some(
       (control) => control.code === "AUTHENTICATED_TOUCHPOINT_HANDOFF_ONLY"
@@ -91,16 +100,17 @@ test("BR03 touchpoint control resolves stale freshness posture without collapsin
   const resolution = resolveTouchpointControl({
     forumPath: "VIC_VCAT_RENT_ARREARS",
     touchpointIds: ["vic-arrears-freshness-watch"],
-    postureOverrides: [
-      {
+    postureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "STALE"
-      }
+      })
     ]
   });
 
   assert.equal(resolution.controlOutputs.stale, true);
   assert.equal(resolution.controlOutputs.liveConfirmationRequired, false);
+  assert.equal(resolution.resolvedPostures[0]?.postureSnapshot.source, "TOUCHPOINT_SOURCE_FEED");
   assert.ok(
     resolution.carryForwardControls.some(
       (control) => control.code === "TOUCHPOINT_STALE"
@@ -113,11 +123,11 @@ test("BR03 touchpoint control resolves live-confirmation posture as slowdown con
   const resolution = resolveTouchpointControl({
     forumPath: "VIC_VCAT_RENT_ARREARS",
     touchpointIds: ["vic-arrears-freshness-watch"],
-    postureOverrides: [
-      {
+    postureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
-      }
+      })
     ]
   });
 
@@ -135,11 +145,11 @@ test("BR03 touchpoint control resolves wrong-channel posture as reroute referral
   const resolution = resolveTouchpointControl({
     forumPath: "VIC_VCAT_RENT_ARREARS",
     touchpointIds: ["vic-arrears-public-form-warning"],
-    postureOverrides: [
-      {
+    postureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-public-form-warning",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
 
@@ -147,6 +157,10 @@ test("BR03 touchpoint control resolves wrong-channel posture as reroute referral
   assert.equal(resolution.controlOutputs.deferToLiveOfficialFlow, true);
   assert.equal(resolution.controlOutputs.stablePublicMirrorAllowed, false);
   assert.equal(resolution.controlOutputs.publicMirrorAllowedWithWarning, false);
+  assert.equal(
+    resolution.resolvedPostures[0]?.postureSnapshot.source,
+    "TOUCHPOINT_SOURCE_FEED"
+  );
   assert.ok(
     resolution.carryForwardControls.some(
       (control) => control.code === "TOUCHPOINT_WRONG_CHANNEL_REROUTE"
@@ -167,29 +181,29 @@ test("BR03 control outputs drive handoff guidance stale, live confirmation, and 
 
   const staleGuidance = buildOfficialHandoffGuidanceShell({
     ...commonInput,
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "STALE"
-      }
+      })
     ]
   });
   const liveGuidance = buildOfficialHandoffGuidanceShell({
     ...commonInput,
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
-      }
+      })
     ]
   });
   const wrongChannelGuidance = buildOfficialHandoffGuidanceShell({
     ...commonInput,
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
 
@@ -222,20 +236,20 @@ test("BR03 stale and live-confirmation posture stay distinct in prep-pack downst
 
   const stalePrepPack = generateOutputPackageShell({
     ...commonInput,
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "STALE"
-      }
+      })
     ]
   });
   const livePrepPack = generateOutputPackageShell({
     ...commonInput,
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
-      }
+      })
     ]
   });
 
@@ -263,11 +277,11 @@ test("BR03 wrong-channel reroute forces prep-pack referral posture and suppresse
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
     officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
     touchpointIds: ["vic-arrears-public-form-warning"],
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-public-form-warning",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
 
@@ -303,11 +317,11 @@ test("BR03 wrong-channel reroute and authenticated handoff-only posture remain e
       "vic-arrears-authenticated-handoff",
       "vic-arrears-freshness-watch"
     ],
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
 
@@ -325,6 +339,49 @@ test("BR03 wrong-channel reroute and authenticated handoff-only posture remain e
       (control) => control.code === "AUTHENTICATED_TOUCHPOINT_HANDOFF_ONLY"
         && control.severity === "SLOWDOWN"
     )
+  );
+});
+
+test("BR03 source-fed snapshots keep downstream prep-pack semantics aligned with registry-default posture", () => {
+  const baseOutputPackage = generateOutputPackageShell({
+    matterId: "matter-1",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    touchpointIds: ["vic-arrears-authenticated-handoff"]
+  });
+  const sourceFedOutputPackage = generateOutputPackageShell({
+    matterId: "matter-1",
+    forumPath: createForumPathState({
+      path: "VIC_VCAT_RENT_ARREARS"
+    }),
+    outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
+    officialHandoff: createOfficialHandoffStateRecord("READY_TO_HAND_OFF"),
+    touchpointIds: ["vic-arrears-authenticated-handoff"],
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
+        touchpointId: "vic-arrears-authenticated-handoff"
+      })
+    ]
+  });
+
+  if (
+    baseOutputPackage.kind !== "PREP_PACK_COPY_READY"
+    || sourceFedOutputPackage.kind !== "PREP_PACK_COPY_READY"
+  ) {
+    throw new Error("Expected PREP_PACK_COPY_READY output shells.");
+  }
+
+  assert.deepEqual(
+    sourceFedOutputPackage.touchpointControlOutputs,
+    baseOutputPackage.touchpointControlOutputs
+  );
+  assert.deepEqual(sourceFedOutputPackage.blockKeys, baseOutputPackage.blockKeys);
+  assert.equal(
+    sourceFedOutputPackage.trustBinding.reviewHandoffState.handoff.posture,
+    baseOutputPackage.trustBinding.reviewHandoffState.handoff.posture
   );
 });
 

@@ -21,7 +21,10 @@ import {
   type PrepPackOutputPackageShell
 } from "../src/modules/output/index.js";
 import { buildTimelineEngineShell } from "../src/modules/timeline/index.js";
-import type { TouchpointPostureOverride } from "../src/modules/touchpoints/index.js";
+import {
+  createTouchpointPostureSnapshot,
+  type CreateTouchpointPostureSnapshotInput
+} from "../src/modules/touchpoints/index.js";
 
 interface Br02AssessmentInput {
   seed: string;
@@ -33,7 +36,7 @@ interface L3TimelineMatrixCase {
   name: string;
   br02: Br02AssessmentInput;
   touchpointIds: readonly string[];
-  touchpointPostureOverrides: readonly TouchpointPostureOverride[];
+  touchpointPostureSnapshotInputs: readonly CreateTouchpointPostureSnapshotInput[];
   expectedTouchpointControls: {
     stale: boolean;
     liveConfirmationRequired: boolean;
@@ -68,7 +71,7 @@ const matrixCases: readonly L3TimelineMatrixCase[] = [
       withHearingOverride: false
     },
     touchpointIds: ["vic-arrears-freshness-watch"],
-    touchpointPostureOverrides: [
+    touchpointPostureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-freshness-watch",
         channelPosture: "WRONG_CHANNEL_REROUTE"
@@ -89,7 +92,7 @@ const matrixCases: readonly L3TimelineMatrixCase[] = [
       withHearingOverride: false
     },
     touchpointIds: ["vic-arrears-freshness-watch"],
-    touchpointPostureOverrides: [
+    touchpointPostureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
@@ -110,7 +113,7 @@ const matrixCases: readonly L3TimelineMatrixCase[] = [
       withHearingOverride: true
     },
     touchpointIds: ["vic-arrears-public-form-warning"],
-    touchpointPostureOverrides: [
+    touchpointPostureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-public-form-warning",
         channelPosture: "WRONG_CHANNEL_REROUTE"
@@ -131,7 +134,7 @@ const matrixCases: readonly L3TimelineMatrixCase[] = [
       withHearingOverride: true
     },
     touchpointIds: ["vic-arrears-freshness-watch"],
-    touchpointPostureOverrides: [
+    touchpointPostureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
@@ -156,7 +159,7 @@ const matrixCases: readonly L3TimelineMatrixCase[] = [
       "vic-arrears-authenticated-handoff",
       "vic-arrears-public-form-warning"
     ],
-    touchpointPostureOverrides: [
+    touchpointPostureSnapshotInputs: [
       {
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "STALE"
@@ -281,11 +284,14 @@ test("L3-04 matrix keeps timeline-blocked sequencing fail-closed under mixed BR0
 
   for (const matrixCase of matrixCases) {
     const assessment = buildBr02Assessment(matrixCase.br02);
+    const touchpointPostureSnapshots = matrixCase.touchpointPostureSnapshotInputs.map(
+      (snapshotInput) => createTouchpointPostureSnapshot(snapshotInput)
+    );
     const commonSelectionInput = buildOutputSelectionInput({
       timeline,
       br02ConsumerAssessment: assessment.consumerAssessment,
       touchpointIds: matrixCase.touchpointIds,
-      touchpointPostureOverrides: matrixCase.touchpointPostureOverrides
+      touchpointPostureSnapshots
     });
     const prepPack = expectPrepPack(generateOutputPackageShell({
       ...commonSelectionInput,

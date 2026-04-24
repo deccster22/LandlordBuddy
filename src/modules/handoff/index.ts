@@ -40,7 +40,7 @@ import {
   resolveTouchpointControl,
   type TouchpointControlOutputs,
   type TouchpointMetadata,
-  type TouchpointPostureOverride
+  type TouchpointPostureSnapshot
 } from "../touchpoints/index.js";
 
 export interface OfficialHandoffGuidanceInput {
@@ -52,7 +52,7 @@ export interface OfficialHandoffGuidanceInput {
   br01ReferralFlags?: readonly ReferralFlag[];
   br01RoutingResult?: Br01RoutingResult;
   touchpointIds?: readonly string[];
-  touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
+  touchpointPostureSnapshots?: readonly TouchpointPostureSnapshot[];
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
@@ -85,8 +85,8 @@ export function buildOfficialHandoffGuidanceShell(
   const touchpointResolution = resolveTouchpointControl({
     forumPath: input.forumPath.path,
     ...(input.touchpointIds ? { touchpointIds: input.touchpointIds } : {}),
-    ...(input.touchpointPostureOverrides
-      ? { postureOverrides: input.touchpointPostureOverrides }
+    ...(input.touchpointPostureSnapshots
+      ? { postureSnapshots: input.touchpointPostureSnapshots }
       : {})
   });
   const touchpoints = touchpointResolution.touchpoints;

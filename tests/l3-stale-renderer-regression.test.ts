@@ -17,6 +17,7 @@ import {
   type OutputSelectionInput,
   type PrepPackOutputPackageShell
 } from "../src/modules/output/index.js";
+import { createTouchpointPostureSnapshot } from "../src/modules/touchpoints/index.js";
 
 interface Br02StaleAssessmentInput {
   seed: string;
@@ -105,11 +106,11 @@ test("L3-03 stale slowdown plus wrong-channel reroute stays fail-closed across p
   const commonOutputInput = buildOutputSelectionInput({
     br02ConsumerAssessment: assessment.consumerAssessment,
     touchpointIds: ["vic-arrears-freshness-watch"],
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
   const prepPack = expectPrepPack(generateOutputPackageShell({
@@ -177,11 +178,11 @@ test("L3-03 stale warning plus live-confirmation keeps slowdown review explicit 
   const commonOutputInput = buildOutputSelectionInput({
     br02ConsumerAssessment: assessment.consumerAssessment,
     touchpointIds: ["vic-arrears-freshness-watch"],
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
-      }
+      })
     ]
   });
   const prepPack = expectPrepPack(generateOutputPackageShell({
@@ -252,15 +253,15 @@ test("L3-03 mixed guarded families preserve hearing-override precedence and stil
   const commonOutputInput = buildOutputSelectionInput({
     br02ConsumerAssessment: assessment.consumerAssessment,
     touchpointIds: ["vic-arrears-freshness-watch", "vic-arrears-public-form-warning"],
-    touchpointPostureOverrides: [
-      {
+    touchpointPostureSnapshots: [
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-freshness-watch",
         freshnessPosture: "LIVE_CONFIRMATION_REQUIRED"
-      },
-      {
+      }),
+      createTouchpointPostureSnapshot({
         touchpointId: "vic-arrears-public-form-warning",
         channelPosture: "WRONG_CHANNEL_REROUTE"
-      }
+      })
     ]
   });
   const prepPack = expectPrepPack(generateOutputPackageShell({

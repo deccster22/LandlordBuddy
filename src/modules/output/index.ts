@@ -53,7 +53,7 @@ import {
   resolveTouchpointControl,
   type TouchpointControlOutputs,
   type TouchpointMetadata,
-  type TouchpointPostureOverride
+  type TouchpointPostureSnapshot
 } from "../touchpoints/index.js";
 import {
   buildBr04PrivacyHooksFromSource,
@@ -70,7 +70,7 @@ export interface OutputSelectionInput {
   br01ReferralFlags?: readonly ReferralFlag[];
   br01RoutingResult?: Br01RoutingResult;
   touchpointIds?: readonly string[];
-  touchpointPostureOverrides?: readonly TouchpointPostureOverride[];
+  touchpointPostureSnapshots?: readonly TouchpointPostureSnapshot[];
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
   timeline?: TimelineShell;
@@ -142,8 +142,8 @@ export function selectOutputShell(input: OutputSelectionInput): OutputSelection 
   const touchpointResolution = resolveTouchpointControl({
     forumPath: input.forumPath.path,
     ...(input.touchpointIds ? { touchpointIds: input.touchpointIds } : {}),
-    ...(input.touchpointPostureOverrides
-      ? { postureOverrides: input.touchpointPostureOverrides }
+    ...(input.touchpointPostureSnapshots
+      ? { postureSnapshots: input.touchpointPostureSnapshots }
       : {})
   });
   const touchpoints = touchpointResolution.touchpoints;
@@ -284,8 +284,8 @@ export function generateOutputPackageShell(
         officialHandoff: selection.officialHandoff,
         carryForwardControls: selection.carryForwardControls,
         touchpointIds: selection.touchpoints.map((touchpoint) => touchpoint.id),
-        ...(input.touchpointPostureOverrides
-          ? { touchpointPostureOverrides: input.touchpointPostureOverrides }
+        ...(input.touchpointPostureSnapshots
+          ? { touchpointPostureSnapshots: input.touchpointPostureSnapshots }
           : {}),
         ...(selection.timelineContent
           ? { timelineContent: selection.timelineContent }
