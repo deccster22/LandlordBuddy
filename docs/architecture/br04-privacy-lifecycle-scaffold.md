@@ -8,6 +8,9 @@ This note describes the current BR04 implementation scaffold in Phase 4B. It now
 - `Matter`, `EvidenceItem`, `NoticeDraft`, and `OutputPackage` now carry `privacyHooks`, so privacy lifecycle linkage is explicit on the current matter/evidence/document spine.
 - `src/modules/br04/policy-source.ts` now provides the dedicated BR04 policy-source registry for data classes, retention policy refs, access scopes, role boundaries, and unresolved-doctrine placeholders.
 - `src/modules/br04/index.ts` now provides build-facing helper constructors plus assembly and resolution helpers that map the policy source into current domain hook shapes.
+- `src/modules/br04/index.ts` now also exposes a runtime scaffold layer for class-control registry wiring, lifecycle runtime records, hold/release command execution, and deletion-vs-deidentification route planning.
+- The runtime scaffold remains config-driven: it carries per-class `durationModelKey` posture and extension-point keys, but does not encode fixed retention durations or universal keep/delete shortcuts.
+- The runtime scaffold now includes explicit RBAC and audit hook interfaces (`createBr04RoleAccessResolver`, `createInMemoryBr04LifecycleAuditHook`) so lifecycle and hold actions remain reviewable and auditable without claiming a complete privacy engine.
 - `src/modules/evidence/index.ts` now attaches source-driven BR04 data-class, retention-policy, and access-scope refs to evidence records while still deriving only a guarded lifecycle state from local evidence posture.
 - `src/modules/notice-draft/index.ts` now provides a notice-draft record factory that attaches source-driven BR04 data-class, retention-policy, and access-scope refs without changing the existing `privacyHooks` shape.
 - `src/modules/output/index.ts` now provides an output-package record factory that attaches source-driven BR04 data-class, retention-policy, and access-scope refs without changing the existing `privacyHooks` shape.
@@ -37,6 +40,8 @@ This note describes the current BR04 implementation scaffold in Phase 4B. It now
 - BR04 hook assembly now refuses to attach hooks that lack scoped retention refs, explicit data-class linkage, or explicit access-scope linkage, so no universal keep/delete fallback can slip in through the source-driven path.
 - Default target-level attachment remains usable only while a target has one policy and one scope candidate. If later BR04 work introduces multiple candidates for the same target, callers must select `policyKeys` and `accessScopeIds` or fail loudly instead of silently attaching every match.
 - Hook overrides may restate already selected source-linked policy refs or access scopes, but they can no longer widen attachment beyond the validated selection or retarget another lane silently.
+- Lifecycle planning now resolves class-specific control records before routing any request, and explicitly falls back to review-led de-identification when deletion is hold-suppressed.
+- Hold lifecycle commands now require explicit release confirmation signals before a hold can be treated as released in downstream planning.
 
 ## Guarded or blocked details that remain unresolved
 
