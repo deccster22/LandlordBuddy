@@ -930,4 +930,843 @@ function deriveLifecycleState(
   return "REVIEW_NEEDED";
 }
 
+export const br04LifecycleRouteKinds = [
+  "DELETION_REQUEST",
+  "DEIDENTIFICATION_ACTION"
+] as const;
+
+export type Br04LifecycleRouteKind = (typeof br04LifecycleRouteKinds)[number];
+
+export interface Br04LifecycleClassControl {
+  id: EntityId;
+  appliesTo: PrivacyLifecycleHookTarget;
+  dataClassId: EntityId;
+  retentionPolicyRefId: EntityId;
+  policyKey: string;
+  policyStatus: RetentionPolicyRef["policyStatus"];
+  durationStatus: Br04PolicySource["retentionPolicies"][number]["durationStatus"];
+  durationModelKey: Br04PolicySource["retentionPolicies"][number]["durationModelKey"];
+  noUniversalLifecycleRule: true;
+  retentionPosture: "CLASS_BASED_CONFIG";
+  holdPosture: "SCOPED_HOLD_REVIEW";
+  releasePosture: "EXPLICIT_RELEASE_CONTROL";
+  deletionPosture: "REVIEW_REQUEST";
+  deidentificationPosture: "REVIEW_PLACEHOLDER";
+  accessScopeIds: EntityId[];
+  extensionPointKeys: string[];
+}
+
+export interface ResolveBr04LifecycleClassControlInput {
+  source?: Br04PolicySource | undefined;
+  appliesTo: PrivacyLifecycleHookTarget;
+  dataClassId: EntityId;
+  policyKey?: string | undefined;
+}
+
+export interface CreateBr04LifecycleRuntimeRecordInput {
+  source?: Br04PolicySource | undefined;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  dataClassId: EntityId;
+  policyKey?: string | undefined;
+  lifecycleState?: PrivacyLifecycleState | undefined;
+  holdFlags?: readonly HoldFlag[] | undefined;
+  releasedHoldFlagIds?: readonly EntityId[] | undefined;
+  accessScopeIds?: readonly EntityId[] | undefined;
+}
+
+export interface Br04LifecycleRuntimeRecord {
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  dataClassId: EntityId;
+  lifecycleState: PrivacyLifecycleState;
+  classControlId: EntityId;
+  retentionPolicyRefId: EntityId;
+  policyKey: string;
+  durationStatus: Br04LifecycleClassControl["durationStatus"];
+  durationModelKey: Br04LifecycleClassControl["durationModelKey"];
+  noUniversalLifecycleRule: true;
+  activeHoldFlagIds: EntityId[];
+  releasedHoldFlagIds: EntityId[];
+  accessScopeIds: EntityId[];
+  extensionPointKeys: string[];
+  readyForDeletionReview: boolean;
+}
+
+export interface Br04RoleAccessResolver {
+  resolve(input: {
+    role: PrivacyRole;
+    operation: PrivacyOperation;
+    accessScopeId?: EntityId | undefined;
+  }): Br04RoleAccessDecision;
+}
+
+export interface Br04RoleAccessDecision {
+  role: PrivacyRole;
+  operation: PrivacyOperation;
+  outcome: "ALLOWED" | "REVIEW_REQUIRED" | "BLOCKED";
+  reason: string;
+  boundaryId?: EntityId;
+}
+
+export interface Br04LifecycleAuditHook {
+  emit(event: PrivacyAuditEvent): void;
+}
+
+export interface Br04LifecycleAuditCollector extends Br04LifecycleAuditHook {
+  list(): PrivacyAuditEvent[];
+}
+
+export interface PlanBr04LifecycleActionInput {
+  id: EntityId;
+  source?: Br04PolicySource | undefined;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  dataClassId: EntityId;
+  policyKey?: string | undefined;
+  requestedAction: "REQUEST_DELETION" | "REQUEST_DEIDENTIFICATION";
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  holdFlags?: readonly HoldFlag[] | undefined;
+  releasedHoldFlagIds?: readonly EntityId[] | undefined;
+  accessScopeId?: EntityId | undefined;
+  roleAccessResolver?: Br04RoleAccessResolver | undefined;
+  auditHook?: Br04LifecycleAuditHook | undefined;
+  lifecycleActionId?: EntityId | undefined;
+  actionRecordId?: EntityId | undefined;
+  auditEventId?: EntityId | undefined;
+  sourceReferenceIds?: EntityId[] | undefined;
+}
+
+export interface Br04LifecycleActionPlan {
+  route: Br04LifecycleRouteKind;
+  suppressedByHold: boolean;
+  runtimeRecord: Br04LifecycleRuntimeRecord;
+  classControl: Br04LifecycleClassControl;
+  accessDecision: Br04RoleAccessDecision;
+  lifecycleAction: LifecycleAction;
+  deletionRequest?: DeletionRequest;
+  deidentificationAction?: DeidentificationAction;
+  auditEvent: PrivacyAuditEvent;
+}
+
+export const br04HoldCommandTypes = [
+  "APPLY_HOLD",
+  "REQUEST_HOLD_RELEASE",
+  "CONFIRM_HOLD_RELEASE"
+] as const;
+
+export type Br04HoldCommandType = (typeof br04HoldCommandTypes)[number];
+
+export interface Br04HoldCommand {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  dataClassId: EntityId;
+  policyKey?: string;
+  command: Br04HoldCommandType;
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  holdFlagId?: EntityId;
+  releaseApprovedByRole?: PrivacyRole;
+  notes: string[];
+  sourceReferenceIds: EntityId[];
+}
+
+export interface CreateBr04HoldCommandInput {
+  id: EntityId;
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  dataClassId: EntityId;
+  policyKey?: string | undefined;
+  command: Br04HoldCommandType;
+  requestedAt: DateTimeString;
+  requestedByRole: PrivacyRole;
+  holdFlagId?: EntityId | undefined;
+  releaseApprovedByRole?: PrivacyRole | undefined;
+  notes?: string[] | undefined;
+  sourceReferenceIds?: EntityId[] | undefined;
+}
+
+export interface ExecuteBr04HoldCommandInput {
+  command: Br04HoldCommand;
+  source?: Br04PolicySource | undefined;
+  scope?: PreservationScope | undefined;
+  reason?: HoldReason | undefined;
+  holdFlag?: HoldFlag | undefined;
+  accessScopeId?: EntityId | undefined;
+  roleAccessResolver?: Br04RoleAccessResolver | undefined;
+  auditHook?: Br04LifecycleAuditHook | undefined;
+  lifecycleActionId?: EntityId | undefined;
+  auditEventId?: EntityId | undefined;
+}
+
+export interface Br04HoldCommandResult {
+  command: Br04HoldCommand;
+  classControl: Br04LifecycleClassControl;
+  accessDecision: Br04RoleAccessDecision;
+  holdFlag?: HoldFlag;
+  lifecycleAction: LifecycleAction;
+  nextLifecycleState: PrivacyLifecycleState;
+  releasedHoldFlagIds: EntityId[];
+  auditEvent: PrivacyAuditEvent;
+}
+
+export function buildBr04LifecycleClassControlRegistry(
+  source: Br04PolicySource = loadBr04PolicySource()
+): Br04LifecycleClassControl[] {
+  const policyAssembly = assembleBr04PolicyRegistry(source);
+  const dataClassById = new Map(
+    policyAssembly.dataClasses.map((entry) => [entry.id, entry] as const)
+  );
+  const retentionPolicyById = new Map(
+    policyAssembly.retentionPolicyRefs.map((entry) => [entry.id, entry] as const)
+  );
+  const extensionPointKeys = source.doctrinePlaceholders
+    .filter((placeholder) => placeholder.status === "CONFIGURE_LATER")
+    .map((placeholder) => placeholder.key);
+
+  return source.retentionPolicies.map((policyEntry) => {
+    const dataClass = dataClassById.get(policyEntry.dataClassId);
+    const retentionPolicyRef = retentionPolicyById.get(policyEntry.id);
+
+    if (!dataClass || !retentionPolicyRef) {
+      throw new Error(
+        `BR04 lifecycle class control cannot resolve policy ${policyEntry.id} to a valid data-class and policy-ref pair.`
+      );
+    }
+
+    const accessScopeIds = policyAssembly.accessScopes
+      .filter((scope) => scope.subjectType === policyEntry.appliesTo)
+      .map((scope) => scope.id);
+
+    if (accessScopeIds.length === 0) {
+      throw new Error(
+        `BR04 lifecycle class control ${policyEntry.id} requires at least one access scope for ${policyEntry.appliesTo}.`
+      );
+    }
+
+    return {
+      id: `BR04-CLASS-CONTROL-${policyEntry.id}`,
+      appliesTo: dataClass.appliesTo,
+      dataClassId: dataClass.id,
+      retentionPolicyRefId: retentionPolicyRef.id,
+      policyKey: retentionPolicyRef.policyKey,
+      policyStatus: retentionPolicyRef.policyStatus,
+      durationStatus: policyEntry.durationStatus,
+      durationModelKey: policyEntry.durationModelKey,
+      noUniversalLifecycleRule: policyEntry.noUniversalLifecycleRule,
+      retentionPosture: "CLASS_BASED_CONFIG",
+      holdPosture: "SCOPED_HOLD_REVIEW",
+      releasePosture: "EXPLICIT_RELEASE_CONTROL",
+      deletionPosture: "REVIEW_REQUEST",
+      deidentificationPosture: "REVIEW_PLACEHOLDER",
+      accessScopeIds,
+      extensionPointKeys
+    };
+  });
+}
+
+export function resolveBr04LifecycleClassControl(
+  input: ResolveBr04LifecycleClassControlInput
+): Br04LifecycleClassControl {
+  const controls = buildBr04LifecycleClassControlRegistry(input.source).filter(
+    (control) => (
+      control.appliesTo === input.appliesTo
+      && control.dataClassId === input.dataClassId
+    )
+  );
+
+  if (input.policyKey) {
+    const control = controls.find(
+      (candidate) => candidate.policyKey === input.policyKey
+    );
+
+    if (!control) {
+      throw new Error(
+        `BR04 lifecycle class control for ${input.appliesTo}/${input.dataClassId} cannot resolve policyKey ${input.policyKey}.`
+      );
+    }
+
+    return control;
+  }
+
+  if (controls.length === 0) {
+    throw new Error(
+      `BR04 lifecycle class control requires a class-based policy for ${input.appliesTo}/${input.dataClassId}.`
+    );
+  }
+
+  if (controls.length > 1) {
+    throw new Error(
+      `BR04 lifecycle class control for ${input.appliesTo}/${input.dataClassId} is ambiguous; explicit policyKey selection is required.`
+    );
+  }
+
+  const control = controls[0];
+
+  if (!control) {
+    throw new Error(
+      `BR04 lifecycle class control lookup failed for ${input.appliesTo}/${input.dataClassId}.`
+    );
+  }
+
+  return control;
+}
+
+export function createBr04LifecycleRuntimeRecord(
+  input: CreateBr04LifecycleRuntimeRecordInput
+): Br04LifecycleRuntimeRecord {
+  const classControl = resolveBr04LifecycleClassControl({
+    source: input.source,
+    appliesTo: input.subjectType,
+    dataClassId: input.dataClassId,
+    policyKey: input.policyKey
+  });
+  const releasedHoldFlagIds = uniqueEntityIds(input.releasedHoldFlagIds ?? []);
+  const activeHoldFlags = resolveBr04ActiveScopedHoldFlags({
+    matterId: input.matterId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    holdFlags: input.holdFlags ?? [],
+    releasedHoldFlagIds
+  });
+  const accessScopeIds = input.accessScopeIds
+    ? resolveBr04AccessScopes({
+        source: input.source,
+        ids: [...input.accessScopeIds],
+        subjectType: input.subjectType
+      }).map((scope) => scope.id)
+    : [...classControl.accessScopeIds];
+  const lifecycleState = activeHoldFlags.length > 0
+    ? "HOLD_AFFECTED"
+    : (input.lifecycleState ?? "NORMAL_LIFECYCLE");
+
+  return {
+    matterId: input.matterId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    dataClassId: input.dataClassId,
+    lifecycleState,
+    classControlId: classControl.id,
+    retentionPolicyRefId: classControl.retentionPolicyRefId,
+    policyKey: classControl.policyKey,
+    durationStatus: classControl.durationStatus,
+    durationModelKey: classControl.durationModelKey,
+    noUniversalLifecycleRule: classControl.noUniversalLifecycleRule,
+    activeHoldFlagIds: activeHoldFlags.map((holdFlag) => holdFlag.id),
+    releasedHoldFlagIds,
+    accessScopeIds,
+    extensionPointKeys: [...classControl.extensionPointKeys],
+    readyForDeletionReview: activeHoldFlags.length === 0
+  };
+}
+
+export function createBr04RoleAccessResolver(
+  source: Br04PolicySource = loadBr04PolicySource()
+): Br04RoleAccessResolver {
+  const roleBoundaries = resolveBr04PrivacyRoleBoundaries(source);
+
+  return {
+    resolve(input) {
+      const candidateBoundaries = roleBoundaries.filter(
+        (boundary) => boundary.role === input.role
+      );
+
+      if (candidateBoundaries.length === 0) {
+        throw new Error(`BR04 role resolver has no boundary for role ${input.role}.`);
+      }
+
+      if (
+        input.accessScopeId
+        && !candidateBoundaries.some(
+          (boundary) => boundary.accessScopeIds.includes(input.accessScopeId ?? "")
+        )
+      ) {
+        return {
+          role: input.role,
+          operation: input.operation,
+          outcome: "BLOCKED",
+          reason: `Role ${input.role} is not mapped to access scope ${input.accessScopeId}.`
+        };
+      }
+
+      const blockedBoundary = candidateBoundaries.find(
+        (boundary) => boundary.blockedOperations.includes(input.operation)
+      );
+
+      if (blockedBoundary) {
+        return {
+          role: input.role,
+          operation: input.operation,
+          outcome: "BLOCKED",
+          reason: `Role ${input.role} blocks operation ${input.operation} by boundary policy.`,
+          boundaryId: blockedBoundary.id
+        };
+      }
+
+      const allowedBoundary = candidateBoundaries.find(
+        (boundary) => boundary.allowedOperations.includes(input.operation)
+      );
+
+      if (allowedBoundary) {
+        return {
+          role: input.role,
+          operation: input.operation,
+          outcome: "ALLOWED",
+          reason: `Role ${input.role} can run ${input.operation} under boundary ${allowedBoundary.id}.`,
+          boundaryId: allowedBoundary.id
+        };
+      }
+
+      const reviewBoundary = candidateBoundaries.find(
+        (boundary) => boundary.reviewRequiredOperations.includes(input.operation)
+      );
+
+      if (reviewBoundary) {
+        return {
+          role: input.role,
+          operation: input.operation,
+          outcome: "REVIEW_REQUIRED",
+          reason: `Role ${input.role} can request ${input.operation}, but review is required by boundary policy.`,
+          boundaryId: reviewBoundary.id
+        };
+      }
+
+      return {
+        role: input.role,
+        operation: input.operation,
+        outcome: "BLOCKED",
+        reason: `Role ${input.role} has no explicit BR04 mapping for operation ${input.operation}.`
+      };
+    }
+  };
+}
+
+export function createInMemoryBr04LifecycleAuditHook(
+  initial: PrivacyAuditEvent[] = []
+): Br04LifecycleAuditCollector {
+  const events = [...initial];
+
+  return {
+    emit(event) {
+      events.push(event);
+    },
+    list() {
+      return [...events];
+    }
+  };
+}
+
+export function planBr04LifecycleAction(
+  input: PlanBr04LifecycleActionInput
+): Br04LifecycleActionPlan {
+  const classControl = resolveBr04LifecycleClassControl({
+    source: input.source,
+    appliesTo: input.subjectType,
+    dataClassId: input.dataClassId,
+    policyKey: input.policyKey
+  });
+  const runtimeRecord = createBr04LifecycleRuntimeRecord({
+    source: input.source,
+    matterId: input.matterId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    dataClassId: input.dataClassId,
+    policyKey: input.policyKey,
+    holdFlags: input.holdFlags,
+    releasedHoldFlagIds: input.releasedHoldFlagIds
+  });
+  const accessScopeId = input.accessScopeId ?? runtimeRecord.accessScopeIds[0];
+  const roleAccessResolver = input.roleAccessResolver
+    ?? createBr04RoleAccessResolver(input.source);
+  const accessDecision = roleAccessResolver.resolve({
+    role: input.requestedByRole,
+    operation: input.requestedAction,
+    ...(accessScopeId ? { accessScopeId } : {})
+  });
+
+  if (accessDecision.outcome === "BLOCKED") {
+    throw new Error(
+      `BR04 lifecycle planner blocked ${input.requestedAction} for ${input.requestedByRole}: ${accessDecision.reason}`
+    );
+  }
+
+  const suppressedByHold = (
+    input.requestedAction === "REQUEST_DELETION"
+    && runtimeRecord.activeHoldFlagIds.length > 0
+  );
+  const route: Br04LifecycleRouteKind = (
+    input.requestedAction === "REQUEST_DEIDENTIFICATION" || suppressedByHold
+  )
+    ? "DEIDENTIFICATION_ACTION"
+    : "DELETION_REQUEST";
+  const routeOperation = route === "DELETION_REQUEST"
+    ? "REQUEST_DELETION"
+    : "REQUEST_DEIDENTIFICATION";
+  const lifecycleAction = createLifecycleAction({
+    id: input.lifecycleActionId ?? `${input.id}:lifecycle`,
+    matterId: input.matterId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    action: routeOperation,
+    lifecycleState: route === "DELETION_REQUEST"
+      ? "DELETION_REQUESTED"
+      : (runtimeRecord.activeHoldFlagIds.length > 0 ? "HOLD_AFFECTED" : "REVIEW_NEEDED"),
+    requestedAt: input.requestedAt,
+    requestedByRole: input.requestedByRole,
+    reviewRequired: (
+      route === "DEIDENTIFICATION_ACTION"
+      || suppressedByHold
+      || accessDecision.outcome === "REVIEW_REQUIRED"
+    ),
+    retentionPolicyRefId: classControl.retentionPolicyRefId,
+    ...(runtimeRecord.activeHoldFlagIds[0]
+      ? { holdFlagId: runtimeRecord.activeHoldFlagIds[0] }
+      : {}),
+    notes: [
+      `Class control ${classControl.id} routed action as ${route}.`,
+      `Duration model remains ${classControl.durationModelKey} (${classControl.durationStatus}).`
+    ],
+    sourceReferenceIds: input.sourceReferenceIds ?? []
+  });
+  const actionRecordId = input.actionRecordId ?? `${input.id}:route`;
+  const deletionRequest = route === "DELETION_REQUEST"
+    ? createDeletionRequest({
+        id: actionRecordId,
+        matterId: input.matterId,
+        subjectType: input.subjectType,
+        subjectId: input.subjectId,
+        requestedAt: input.requestedAt,
+        requestedByRole: input.requestedByRole,
+        blockedByHoldFlagIds: runtimeRecord.activeHoldFlagIds,
+        notes: [
+          "Deletion remains class-scoped and review-led.",
+          "No universal duration has been resolved in this scaffold."
+        ],
+        sourceReferenceIds: input.sourceReferenceIds ?? []
+      })
+    : undefined;
+  const deidentificationAction = route === "DEIDENTIFICATION_ACTION"
+    ? createDeidentificationAction({
+        id: actionRecordId,
+        matterId: input.matterId,
+        subjectType: input.subjectType,
+        subjectId: input.subjectId,
+        requestedAt: input.requestedAt,
+        requestedByRole: input.requestedByRole,
+        lifecycleState: runtimeRecord.activeHoldFlagIds.length > 0
+          ? "HOLD_AFFECTED"
+          : "REVIEW_NEEDED",
+        blockedByHoldFlagIds: runtimeRecord.activeHoldFlagIds,
+        notes: suppressedByHold
+          ? [
+              "Deletion route is suppressed while scoped hold remains active.",
+              "De-identification remains a placeholder review route while hold controls remain unresolved."
+            ]
+          : [
+              "De-identification remains placeholder-only until later BR04 extraction."
+            ],
+        sourceReferenceIds: input.sourceReferenceIds ?? []
+      })
+    : undefined;
+  const auditOutcome = (
+    suppressedByHold || accessDecision.outcome === "REVIEW_REQUIRED"
+  )
+    ? "REVIEW_REQUIRED"
+    : "RECORDED";
+  const auditEvent = createPrivacyAuditEvent({
+    id: input.auditEventId ?? `${input.id}:audit`,
+    at: input.requestedAt,
+    actor: input.requestedByRole,
+    actorType: "OPERATOR",
+    matterId: input.matterId,
+    controlArea: "LIFECYCLE",
+    action: route === "DELETION_REQUEST"
+      ? "DELETION_REQUEST_PLANNED"
+      : (suppressedByHold
+          ? "DELETION_SUPPRESSED_ROUTE_DEIDENTIFICATION"
+          : "DEIDENTIFICATION_REQUEST_PLANNED"),
+    severity: auditOutcome === "RECORDED" ? "INFO" : "WARNING",
+    outcome: auditOutcome,
+    subjectType: route === "DELETION_REQUEST"
+      ? "DELETION_REQUEST"
+      : "DEIDENTIFICATION_ACTION",
+    subjectId: actionRecordId,
+    lifecycleState: lifecycleAction.lifecycleState,
+    deterministic: route === "DELETION_REQUEST" && accessDecision.outcome === "ALLOWED",
+    accessRole: input.requestedByRole,
+    ...(accessScopeId ? { accessScopeId } : {}),
+    policyKeys: [classControl.policyKey],
+    holdFlagIds: runtimeRecord.activeHoldFlagIds,
+    detail: (
+      route === "DELETION_REQUEST"
+        ? "Lifecycle planner produced a review-led deletion request route."
+        : "Lifecycle planner produced a review-led de-identification route."
+    ),
+    metadata: {
+      suppressedByHold,
+      classControlId: classControl.id,
+      durationModelKey: classControl.durationModelKey
+    },
+    sourceReferenceIds: input.sourceReferenceIds ?? []
+  });
+
+  if (input.auditHook) {
+    input.auditHook.emit(auditEvent);
+  }
+
+  return {
+    route,
+    suppressedByHold,
+    runtimeRecord,
+    classControl,
+    accessDecision,
+    lifecycleAction,
+    ...(deletionRequest ? { deletionRequest } : {}),
+    ...(deidentificationAction ? { deidentificationAction } : {}),
+    auditEvent
+  };
+}
+
+export function createBr04HoldCommand(
+  input: CreateBr04HoldCommandInput
+): Br04HoldCommand {
+  return {
+    id: input.id,
+    matterId: input.matterId,
+    subjectType: input.subjectType,
+    subjectId: input.subjectId,
+    dataClassId: input.dataClassId,
+    ...(input.policyKey ? { policyKey: input.policyKey } : {}),
+    command: input.command,
+    requestedAt: input.requestedAt,
+    requestedByRole: input.requestedByRole,
+    ...(input.holdFlagId ? { holdFlagId: input.holdFlagId } : {}),
+    ...(input.releaseApprovedByRole
+      ? { releaseApprovedByRole: input.releaseApprovedByRole }
+      : {}),
+    notes: input.notes ?? [],
+    sourceReferenceIds: input.sourceReferenceIds ?? []
+  };
+}
+
+export function executeBr04HoldCommand(
+  input: ExecuteBr04HoldCommandInput
+): Br04HoldCommandResult {
+  const classControl = resolveBr04LifecycleClassControl({
+    source: input.source,
+    appliesTo: input.command.subjectType,
+    dataClassId: input.command.dataClassId,
+    policyKey: input.command.policyKey
+  });
+  const commandOperation = toBr04HoldCommandOperation(input.command.command);
+  const accessScopeId = input.accessScopeId ?? classControl.accessScopeIds[0];
+  const roleAccessResolver = input.roleAccessResolver
+    ?? createBr04RoleAccessResolver(input.source);
+  const accessDecision = roleAccessResolver.resolve({
+    role: input.command.requestedByRole,
+    operation: commandOperation,
+    ...(accessScopeId ? { accessScopeId } : {})
+  });
+
+  if (accessDecision.outcome === "BLOCKED") {
+    throw new Error(
+      `BR04 hold command ${input.command.command} is blocked for ${input.command.requestedByRole}: ${accessDecision.reason}`
+    );
+  }
+
+  let holdFlag: HoldFlag | undefined;
+  let nextLifecycleState: PrivacyLifecycleState = "HOLD_AFFECTED";
+  let releasedHoldFlagIds: EntityId[] = [];
+  let action: LifecycleAction["action"] = commandOperation;
+  let reviewRequired = accessDecision.outcome === "REVIEW_REQUIRED";
+
+  if (input.command.command === "APPLY_HOLD") {
+    if (!input.scope || !input.reason) {
+      throw new Error(
+        "BR04 APPLY_HOLD requires explicit scope and hold reason inputs."
+      );
+    }
+
+    holdFlag = createScopedHoldFlag({
+      id: input.command.holdFlagId ?? `${input.command.id}:hold`,
+      matterId: input.command.matterId,
+      scope: input.scope,
+      reason: input.reason,
+      status: "ACTIVE",
+      appliedAt: input.command.requestedAt,
+      notes: input.command.notes.length > 0
+        ? input.command.notes
+        : [
+            "Hold command remains scoped and reviewable.",
+            "Trigger taxonomy remains a later BR04 extraction point."
+          ]
+    });
+    reviewRequired = true;
+  } else if (input.command.command === "REQUEST_HOLD_RELEASE") {
+    if (!input.holdFlag) {
+      throw new Error(
+        "BR04 REQUEST_HOLD_RELEASE requires an existing hold flag."
+      );
+    }
+
+    holdFlag = {
+      ...input.holdFlag,
+      status: "RELEASE_REVIEW_REQUIRED",
+      releaseRequestedAt: input.command.requestedAt,
+      releaseAuthorityKey: input.holdFlag.releaseAuthorityKey ?? "REVIEW_REQUIRED",
+      notes: [
+        ...(input.holdFlag.notes ?? []),
+        ...(input.command.notes.length > 0
+          ? input.command.notes
+          : ["Release request captured and pending controlled review."])
+      ]
+    };
+    reviewRequired = true;
+  } else {
+    if (!input.holdFlag) {
+      throw new Error(
+        "BR04 CONFIRM_HOLD_RELEASE requires an existing hold flag."
+      );
+    }
+
+    if (input.holdFlag.status !== "RELEASE_REVIEW_REQUIRED") {
+      throw new Error(
+        `BR04 CONFIRM_HOLD_RELEASE requires hold flag ${input.holdFlag.id} to be RELEASE_REVIEW_REQUIRED.`
+      );
+    }
+
+    if (!input.command.releaseApprovedByRole) {
+      throw new Error(
+        "BR04 CONFIRM_HOLD_RELEASE requires explicit releaseApprovedByRole."
+      );
+    }
+
+    holdFlag = {
+      ...input.holdFlag,
+      notes: [
+        ...(input.holdFlag.notes ?? []),
+        ...(input.command.notes.length > 0
+          ? input.command.notes
+          : [
+              `Release confirmation recorded by ${input.command.releaseApprovedByRole}.`,
+              "Lifecycle transitions remain review-led until release doctrine is settled."
+            ])
+      ]
+    };
+    nextLifecycleState = "REVIEW_NEEDED";
+    releasedHoldFlagIds = [input.holdFlag.id];
+    action = "REVIEW_LIFECYCLE";
+    reviewRequired = accessDecision.outcome === "REVIEW_REQUIRED";
+  }
+
+  const lifecycleAction = createLifecycleAction({
+    id: input.lifecycleActionId ?? `${input.command.id}:lifecycle`,
+    matterId: input.command.matterId,
+    subjectType: input.command.subjectType,
+    subjectId: input.command.subjectId,
+    action,
+    lifecycleState: nextLifecycleState,
+    requestedAt: input.command.requestedAt,
+    requestedByRole: input.command.requestedByRole,
+    reviewRequired,
+    retentionPolicyRefId: classControl.retentionPolicyRefId,
+    ...(holdFlag ? { holdFlagId: holdFlag.id } : {}),
+    notes: [
+      `Hold command ${input.command.command} executed under ${classControl.id}.`,
+      `Release posture remains ${classControl.releasePosture}.`
+    ],
+    sourceReferenceIds: input.command.sourceReferenceIds
+  });
+  const auditOutcome = input.command.command === "CONFIRM_HOLD_RELEASE"
+    && accessDecision.outcome === "ALLOWED"
+    ? "RECORDED"
+    : "REVIEW_REQUIRED";
+  const auditEvent = createPrivacyAuditEvent({
+    id: input.auditEventId ?? `${input.command.id}:audit`,
+    at: input.command.requestedAt,
+    actor: input.command.requestedByRole,
+    actorType: "OPERATOR",
+    matterId: input.command.matterId,
+    controlArea: "HOLD",
+    action: input.command.command,
+    severity: auditOutcome === "RECORDED" ? "INFO" : "WARNING",
+    outcome: auditOutcome,
+    subjectType: "HOLD_FLAG",
+    subjectId: holdFlag?.id ?? input.command.holdFlagId ?? input.command.subjectId,
+    lifecycleState: nextLifecycleState,
+    deterministic: input.command.command === "CONFIRM_HOLD_RELEASE",
+    accessRole: input.command.requestedByRole,
+    ...(accessScopeId ? { accessScopeId } : {}),
+    policyKeys: [classControl.policyKey],
+    holdFlagIds: holdFlag ? [holdFlag.id] : [],
+    detail: `Hold command ${input.command.command} remains scoped and audit-linked.`,
+    metadata: {
+      releaseControlledTransition: input.command.command === "CONFIRM_HOLD_RELEASE"
+    },
+    sourceReferenceIds: input.command.sourceReferenceIds
+  });
+
+  if (input.auditHook) {
+    input.auditHook.emit(auditEvent);
+  }
+
+  return {
+    command: input.command,
+    classControl,
+    accessDecision,
+    ...(holdFlag ? { holdFlag } : {}),
+    lifecycleAction,
+    nextLifecycleState,
+    releasedHoldFlagIds,
+    auditEvent
+  };
+}
+
+function resolveBr04ActiveScopedHoldFlags(input: {
+  matterId: EntityId;
+  subjectType: PrivacyLifecycleHookTarget;
+  subjectId: EntityId;
+  holdFlags: readonly HoldFlag[];
+  releasedHoldFlagIds: readonly EntityId[];
+}): HoldFlag[] {
+  const releasedHoldFlagIds = new Set(input.releasedHoldFlagIds);
+
+  return input.holdFlags.filter((holdFlag) => (
+    holdFlag.matterId === input.matterId
+    && holdFlag.scope.subjectType === input.subjectType
+    && holdFlag.scope.subjectId === input.subjectId
+    && !releasedHoldFlagIds.has(holdFlag.id)
+    && isBr04HoldFlagActive(holdFlag)
+  ));
+}
+
+function isBr04HoldFlagActive(holdFlag: HoldFlag): boolean {
+  return (
+    holdFlag.status === "ACTIVE"
+    || holdFlag.status === "REVIEW_REQUIRED"
+    || holdFlag.status === "RELEASE_REVIEW_REQUIRED"
+  );
+}
+
+function toBr04HoldCommandOperation(
+  command: Br04HoldCommandType
+): Exclude<PrivacyOperation, "VIEW_AUDIT_LOG"> {
+  if (command === "APPLY_HOLD") {
+    return "APPLY_HOLD";
+  }
+
+  if (command === "REQUEST_HOLD_RELEASE") {
+    return "REQUEST_HOLD_RELEASE";
+  }
+
+  return "REVIEW_LIFECYCLE";
+}
+
 export * from "./policy-source.js";
