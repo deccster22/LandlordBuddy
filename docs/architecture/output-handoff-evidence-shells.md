@@ -16,6 +16,8 @@ The `src/modules/notice-draft` shell now has a record-construction path for `Not
 
 The `src/modules/output` shell now has a record-construction path for `OutputPackage` entities in addition to its existing package-shell generators. That record path attaches source-driven BR04 data-class, retention-policy, and access-scope refs while keeping output generation prep-and-handoff only.
 
+`src/app/outputPackageLifecycleOrchestration.ts` now provides one narrow BR04 consumer adapter for output-package lifecycle orchestration. It composes output-package record construction with BR04 lifecycle planning, scoped hold/release command execution, RBAC checks, and audit capture; returns a replayable orchestration record; and stays explicitly scaffold-level rather than claiming final privacy-engine completion.
+
 The `src/modules/audit` shell now has a privacy-audit record-construction path that resolves source-driven BR04 policy keys plus a single event-level access-scope link onto the current `PrivacyAuditEvent` shape. It remains an auditability surface only and does not imply settled lifecycle automation or disposal authority.
 
 Generic proof-linkage review remains a dedicated guarded insertion point separate from hand-service doctrine. This keeps proof-linkage review visible without implying that the repo has settled broader service-proof sufficiency.
