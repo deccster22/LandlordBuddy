@@ -9,3 +9,4 @@ Current contract reference:
 Current implementation seam:
 
 - `src/app/br03TouchpointSnapshotProducer.ts` converts persisted `OUT-04` touchpoint posture source events into BR03 `touchpointPostureSnapshots` with explicit registry-default fallback for missing source events.
+- `src/app/outputHandoffCheckpointHydration.ts` wires persisted `OUT-04` source events through the snapshot producer into output/handoff composition checkpoint hydration.

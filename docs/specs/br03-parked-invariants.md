@@ -16,6 +16,7 @@ Current BR03 behavior is locked to:
 
 - touchpoint resolver and registry shell in `src/modules/touchpoints/index.ts`
 - app/shell source-event snapshot producer seam in `src/app/br03TouchpointSnapshotProducer.ts`
+- app output/handoff checkpoint hydration seam in `src/app/outputHandoffCheckpointHydration.ts`
 - downstream output threading in `src/modules/output/index.ts`
 - downstream handoff threading in `src/modules/handoff/index.ts`
 - trust/review-state bindings in `src/modules/output/trustBindings.ts`
