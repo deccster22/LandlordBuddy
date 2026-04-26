@@ -289,7 +289,7 @@ test("L3-04 matrix keeps timeline-blocked sequencing fail-closed under mixed BR0
     );
     const commonSelectionInput = buildOutputSelectionInput({
       timeline,
-      br02ConsumerAssessment: assessment.consumerAssessment,
+      ...assessment.runtimeBridgeThreading.downstreamInputs,
       touchpointIds: matrixCase.touchpointIds,
       touchpointPostureSnapshots
     });
@@ -302,6 +302,7 @@ test("L3-04 matrix keeps timeline-blocked sequencing fail-closed under mixed BR0
       outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE")
     }));
 
+    assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true, matrixCase.name);
     assert.equal(prepPack.rendererState.primaryState, "REVIEW_REQUIRED", matrixCase.name);
     assert.notEqual(prepPack.rendererState.primaryState, "READY_FOR_REVIEW", matrixCase.name);
     assert.equal(prepPack.rendererState.progression.blockedBySequencing, true, matrixCase.name);

@@ -104,7 +104,7 @@ test("L3-03 stale slowdown plus wrong-channel reroute stays fail-closed across p
     staleStateCode: "STALE_SLOWDOWN"
   });
   const commonOutputInput = buildOutputSelectionInput({
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-freshness-watch"],
     touchpointPostureSnapshots: [
       createTouchpointPostureSnapshot({
@@ -122,6 +122,7 @@ test("L3-03 stale slowdown plus wrong-channel reroute stays fail-closed across p
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE")
   }));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(assessment.consumerAssessment.disposition, "REVIEW_LED_CAUTION");
   assert.ok(
     assessment.consumerAssessment.cautions.some(
@@ -176,7 +177,7 @@ test("L3-03 stale warning plus live-confirmation keeps slowdown review explicit 
     staleStateCode: "STALE_WARNING"
   });
   const commonOutputInput = buildOutputSelectionInput({
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-freshness-watch"],
     touchpointPostureSnapshots: [
       createTouchpointPostureSnapshot({
@@ -194,6 +195,7 @@ test("L3-03 stale warning plus live-confirmation keeps slowdown review explicit 
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE")
   }));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(assessment.consumerAssessment.disposition, "NEEDS_REVIEW");
   assert.ok(
     assessment.consumerAssessment.warnings.some(
@@ -251,7 +253,7 @@ test("L3-03 mixed guarded families preserve hearing-override precedence and stil
     withHearingOverride: true
   });
   const commonOutputInput = buildOutputSelectionInput({
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-freshness-watch", "vic-arrears-public-form-warning"],
     touchpointPostureSnapshots: [
       createTouchpointPostureSnapshot({
@@ -273,6 +275,7 @@ test("L3-03 mixed guarded families preserve hearing-override precedence and stil
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE")
   }));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(
     assessment.evidenceDeadline?.controllingDeadlineSource,
     "HEARING_OVERRIDE"
