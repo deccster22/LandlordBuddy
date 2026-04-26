@@ -20,6 +20,8 @@ The `src/modules/output` shell now has a record-construction path for `OutputPac
 
 `src/app/outputPackageLifecycleOrchestrationPersistence.ts` now adds a thin provider-agnostic persistence adapter for those orchestration records. It supports stable-key save/load, fail-loud handling for missing or malformed records, and replay via the existing orchestration replay helper so resumability and auditability can carry across sessions without implying storage-platform readiness.
 
+`src/app/outputHandoffCheckpointHydration.ts` now wires that lifecycle-record persistence seam into the app-layer output/handoff checkpoint hydration path. Resume flow support stays adapter-level: derive stable key from resume locator, load persisted record, replay via existing helper, return controlled `NO_RECORD` when absent, and fail loudly on malformed payloads. Output/handoff trust bindings remain unchanged by this resume wiring.
+
 The `src/modules/audit` shell now has a privacy-audit record-construction path that resolves source-driven BR04 policy keys plus a single event-level access-scope link onto the current `PrivacyAuditEvent` shape. It remains an auditability surface only and does not imply settled lifecycle automation or disposal authority.
 
 Generic proof-linkage review remains a dedicated guarded insertion point separate from hand-service doctrine. This keeps proof-linkage review visible without implying that the repo has settled broader service-proof sufficiency.
