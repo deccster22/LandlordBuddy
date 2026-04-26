@@ -47,6 +47,11 @@ The current Review C entry point for Lane 3 is:
 
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
 
+Phase 4B Review A checkpoint artifacts:
+
+- `docs/qa/p4b-cx-review-a-01-execution-check-pack.md`
+- `docs/qa/p4b-cx-review-a-01-compact-status-note.md`
+
 Review C should inspect that pack alongside the current reviewable screen/surface references:
 
 - `docs/specs/p4c-cx-l1-01-first-wave-product-journey-pack.md`
