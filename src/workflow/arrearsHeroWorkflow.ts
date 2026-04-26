@@ -6,6 +6,7 @@ import {
   type ResolveBr01RoutingInput
 } from "../modules/br01/index.js";
 import type { Br02ConsumerAssessment } from "../modules/br02/consumer.js";
+import type { Br02RuntimeBridgeAssessment } from "../modules/br02/runtimeBridge.js";
 import {
   deriveBr02DownstreamAssessment,
   type Br02DownstreamAssessment
@@ -367,10 +368,12 @@ export interface Br02WorkflowGate {
 }
 
 export function deriveBr02WorkflowGate(input: {
-  consumerAssessment: Br02ConsumerAssessment;
+  consumerAssessment?: Br02ConsumerAssessment;
+  runtimeBridge?: Br02RuntimeBridgeAssessment;
 }): Br02WorkflowGate {
   const downstreamAssessment = deriveBr02DownstreamAssessment({
-    consumerAssessment: input.consumerAssessment
+    ...(input.consumerAssessment ? { consumerAssessment: input.consumerAssessment } : {}),
+    ...(input.runtimeBridge ? { runtimeBridge: input.runtimeBridge } : {})
   });
 
   return {

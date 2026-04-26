@@ -16,7 +16,8 @@ import {
   type CarryForwardControl
 } from "../../domain/posture.js";
 import type {
-  Br02ConsumerAssessment
+  Br02ConsumerAssessment,
+  Br02RuntimeBridgeAssessment
 } from "../br02/index.js";
 import {
   deriveBr02DownstreamAssessment,
@@ -73,6 +74,7 @@ export interface OutputSelectionInput {
   touchpointPostureSnapshots?: readonly TouchpointPostureSnapshot[];
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
+  br02RuntimeBridge?: Br02RuntimeBridgeAssessment;
   timeline?: TimelineShell;
 }
 
@@ -202,6 +204,7 @@ export function generateOutputPackageShell(
 ): OutputPackageShell {
   const selection = selectOutputShell(input);
   const br02ConsumerAssessment = input.br02ConsumerAssessment;
+  const br02RuntimeBridge = input.br02RuntimeBridge;
   const base = {
     matterId: selection.matterId,
     forumPath: selection.forumPath,
@@ -295,6 +298,9 @@ export function generateOutputPackageShell(
           : {}),
         ...(br02ConsumerAssessment
           ? { br02ConsumerAssessment }
+          : {}),
+        ...(br02RuntimeBridge
+          ? { br02RuntimeBridge }
           : {}),
         ...(input.br01RoutingDecision
           ? { br01RoutingDecision: input.br01RoutingDecision }
@@ -620,14 +626,16 @@ function resolveBr02DownstreamAssessment(
   input: OutputSelectionInput
 ): Br02DownstreamAssessment | undefined {
   const br02ConsumerAssessment = input.br02ConsumerAssessment;
+  const br02RuntimeBridge = input.br02RuntimeBridge;
 
-  // Preserve the existing notice-readiness baseline when it is present; only use the nested BR02 consumer bundle for downstream BR02 bridging.
-  if (input.noticeReadiness || !br02ConsumerAssessment) {
+  // Preserve the existing notice-readiness baseline when it is present; only use BR02 downstream bridges when that baseline is absent.
+  if (input.noticeReadiness || (!br02ConsumerAssessment && !br02RuntimeBridge)) {
     return undefined;
   }
 
   return deriveBr02DownstreamAssessment({
-    consumerAssessment: br02ConsumerAssessment
+    ...(br02ConsumerAssessment ? { consumerAssessment: br02ConsumerAssessment } : {}),
+    ...(br02RuntimeBridge ? { runtimeBridge: br02RuntimeBridge } : {})
   });
 }
 
