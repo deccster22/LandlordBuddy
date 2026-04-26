@@ -12,7 +12,8 @@ import {
   type CarryForwardControl
 } from "../../domain/posture.js";
 import type {
-  Br02ConsumerAssessment
+  Br02ConsumerAssessment,
+  Br02RuntimeBridgeAssessment
 } from "../br02/index.js";
 import {
   deriveBr02DownstreamAssessment,
@@ -56,6 +57,7 @@ export interface OfficialHandoffGuidanceInput {
   readinessOutcome?: NoticeReadinessOutcome;
   noticeReadiness?: NoticeReadinessResult;
   br02ConsumerAssessment?: Br02ConsumerAssessment;
+  br02RuntimeBridge?: Br02RuntimeBridgeAssessment;
   timelineContent?: OutputPackageTimelineContent;
 }
 
@@ -158,14 +160,20 @@ function resolveBr02DownstreamAssessment(
   input: OfficialHandoffGuidanceInput
 ): Br02DownstreamAssessment | undefined {
   const br02ConsumerAssessment = input.br02ConsumerAssessment;
+  const br02RuntimeBridge = input.br02RuntimeBridge;
 
-  // Preserve the existing notice-readiness or explicit readiness outcome when present; only use the nested BR02 consumer bundle for downstream BR02 bridging.
-  if (input.noticeReadiness || input.readinessOutcome || !br02ConsumerAssessment) {
+  // Preserve the existing notice-readiness or explicit readiness outcome when present; only use BR02 downstream bridges when those baselines are absent.
+  if (
+    input.noticeReadiness
+    || input.readinessOutcome
+    || (!br02ConsumerAssessment && !br02RuntimeBridge)
+  ) {
     return undefined;
   }
 
   return deriveBr02DownstreamAssessment({
-    consumerAssessment: br02ConsumerAssessment
+    ...(br02ConsumerAssessment ? { consumerAssessment: br02ConsumerAssessment } : {}),
+    ...(br02RuntimeBridge ? { runtimeBridge: br02RuntimeBridge } : {})
   });
 }
 

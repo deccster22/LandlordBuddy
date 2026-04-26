@@ -434,3 +434,4 @@ export * from "./qa.js";
 export * from "./consumer.js";
 export * from "./downstream.js";
 export * from "./runtimeBridge.js";
+export * from "./runtimeBridgeConsumerAdapter.js";

@@ -9,6 +9,11 @@ import type {
   Br02ConsumerAssessment,
   Br02ValidationIssue
 } from "./consumer.js";
+import type { Br02RuntimeBridgeAssessment } from "./runtimeBridge.js";
+import {
+  adaptBr02RuntimeBridgeToConsumerShape,
+  type Br02RuntimeBridgeConsumerAdapterResult
+} from "./runtimeBridgeConsumerAdapter.js";
 import type { OutputPackageReadinessContent } from "../output/readinessAdapter.js";
 
 export const br02DownstreamStatuses = [
@@ -20,8 +25,19 @@ export const br02DownstreamStatuses = [
 
 export type Br02DownstreamStatus = (typeof br02DownstreamStatuses)[number];
 
+type Br02DownstreamConsumerShape = Pick<
+  Br02ConsumerAssessment,
+  "disposition"
+  | "issues"
+  | "hardStops"
+  | "warnings"
+  | "cautions"
+  | "summary"
+>;
+
 export interface AssessBr02DownstreamInput {
-  consumerAssessment: Br02ConsumerAssessment;
+  consumerAssessment?: Br02ConsumerAssessment;
+  runtimeBridge?: Br02RuntimeBridgeAssessment;
 }
 
 export interface Br02DownstreamAssessment {
@@ -45,7 +61,7 @@ export interface Br02DownstreamAssessment {
 export function deriveBr02DownstreamAssessment(
   input: AssessBr02DownstreamInput
 ): Br02DownstreamAssessment {
-  const { consumerAssessment } = input;
+  const consumerAssessment = resolveDownstreamConsumerShape(input);
   const status = consumerAssessment.disposition;
   const carryForwardControls = buildBr02CarryForwardControls(consumerAssessment.issues);
   const readinessOutcome = mapDownstreamStatusToReadinessOutcome(status);
@@ -74,6 +90,24 @@ export function deriveBr02DownstreamAssessment(
     readinessContent,
     summary: consumerAssessment.summary
   };
+}
+
+function resolveDownstreamConsumerShape(
+  input: AssessBr02DownstreamInput
+): Br02DownstreamConsumerShape | Br02RuntimeBridgeConsumerAdapterResult {
+  if (input.consumerAssessment) {
+    return input.consumerAssessment;
+  }
+
+  if (input.runtimeBridge) {
+    return adaptBr02RuntimeBridgeToConsumerShape({
+      runtimeBridge: input.runtimeBridge
+    });
+  }
+
+  throw new Error(
+    "deriveBr02DownstreamAssessment requires either consumerAssessment or runtimeBridge input."
+  );
 }
 
 function buildBr02CarryForwardControls(
