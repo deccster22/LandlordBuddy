@@ -21,6 +21,10 @@ import {
   type Br02RuntimeBridgeAssessment
 } from "./runtimeBridge.js";
 import {
+  deriveBr02RuntimeBridgeThreadingDecision,
+  type Br02RuntimeBridgeThreadingDecision
+} from "./runtimeBridgeThreading.js";
+import {
   br02DateRuleRegistry,
   br02EvidenceTimingPrecedenceRegistry,
   br02FreshnessMonitorRegistry,
@@ -89,6 +93,7 @@ export interface AssessBr02ServiceEventInput {
 export interface Br02ServiceEventAssessment extends Br02ServiceAssessment, Br02ConsumerAssessment {
   runtimeBridge: Br02RuntimeBridgeAssessment;
   consumerAssessment: Br02ConsumerAssessment;
+  runtimeBridgeThreading: Br02RuntimeBridgeThreadingDecision;
 }
 
 export function lookupBr02DateRule(code: string): Br02DateRuleRegistryEntry | undefined {
@@ -277,6 +282,10 @@ export function assessBr02ServiceEvent(
     ...(input.paymentPlan ? { paymentPlan: input.paymentPlan } : {})
   });
   const consumerAssessment = runtimeBridge.consumerAssessment;
+  const runtimeBridgeThreading = deriveBr02RuntimeBridgeThreadingDecision({
+    consumerAssessment,
+    runtimeBridge
+  });
 
   return {
     thresholdGateOpen: consumerAssessment.noticeEligibility.canPrepareNotice,
@@ -285,8 +294,25 @@ export function assessBr02ServiceEvent(
     preferredDeterministicPath: consumerAssessment.serviceProof.preferredDeterministicPath,
     runtimeBridge,
     consumerAssessment,
+    runtimeBridgeThreading,
     ...consumerAssessment
   };
+}
+
+export function deriveBr02RuntimeBridgeThreadingForAssessment(input: {
+  assessment: Pick<Br02ServiceEventAssessment, "consumerAssessment" | "runtimeBridge">;
+  paymentPlanConservativeSignoffAccepted?: boolean;
+}): Br02RuntimeBridgeThreadingDecision {
+  return deriveBr02RuntimeBridgeThreadingDecision({
+    consumerAssessment: input.assessment.consumerAssessment,
+    runtimeBridge: input.assessment.runtimeBridge,
+    ...(typeof input.paymentPlanConservativeSignoffAccepted === "boolean"
+      ? {
+          paymentPlanConservativeSignoffAccepted:
+            input.paymentPlanConservativeSignoffAccepted
+        }
+      : {})
+  });
 }
 
 function defaultProofStatus(posture: Br02ServiceMethodRegistryEntry["posture"] | undefined): ServiceEvent["proofStatus"] {
@@ -435,3 +461,4 @@ export * from "./consumer.js";
 export * from "./downstream.js";
 export * from "./runtimeBridge.js";
 export * from "./runtimeBridgeConsumerAdapter.js";
+export * from "./runtimeBridgeThreading.js";

@@ -74,6 +74,17 @@ function expectHandoffGuidance(
   return outputPackage;
 }
 
+function buildThreadedWorkflowGateInput(
+  assessment: ReturnType<typeof assessBr02ServiceEvent>
+) {
+  return {
+    consumerAssessment: assessment.runtimeBridgeThreading.downstreamInputs.br02ConsumerAssessment,
+    ...(assessment.runtimeBridgeThreading.downstreamInputs.br02RuntimeBridge
+      ? { runtimeBridge: assessment.runtimeBridgeThreading.downstreamInputs.br02RuntimeBridge }
+      : {})
+  };
+}
+
 test("BR02 downstream workflow gate blocks no-early-notice hard stops", () => {
   const assessment = assessBr02ServiceEvent({
     thresholdState: "BELOW_THRESHOLD",
@@ -85,13 +96,12 @@ test("BR02 downstream workflow gate blocks no-early-notice hard stops", () => {
       occurredAt: "2026-04-06T10:00:00.000Z"
     })
   });
-  const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment
-  });
+  const gate = deriveBr02WorkflowGate(buildThreadedWorkflowGateInput(assessment));
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
-    br02ConsumerAssessment: assessment.consumerAssessment
+    ...assessment.runtimeBridgeThreading.downstreamInputs
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(gate.status, "HARD_STOP");
   assert.equal(gate.readinessOutcome, "BLOCKED");
   assert.equal(gate.workflowState, "STOPPED_PENDING_EXTERNAL_INPUT");
@@ -119,9 +129,10 @@ test("BR02 downstream handoff keeps email-consent gaps review-led", () => {
   });
   const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
-    br02ConsumerAssessment: assessment.consumerAssessment
+    ...assessment.runtimeBridgeThreading.downstreamInputs
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(assessment.consumerAssessment.disposition, "HARD_STOP");
   assert.ok(guidance.guidance.guidanceBlockKeys.includes("slowdown-review"));
   assert.equal(guidance.trustBinding.reviewHandoffState.readiness.outcome, "BLOCKED");
@@ -143,14 +154,13 @@ test("BR02 downstream handoff keeps hand-service caution review-led", () => {
       occurredAt: "2026-04-06T10:00:00.000Z"
     })
   });
-  const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment
-  });
+  const gate = deriveBr02WorkflowGate(buildThreadedWorkflowGateInput(assessment));
   const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
-    br02ConsumerAssessment: assessment.consumerAssessment
+    ...assessment.runtimeBridgeThreading.downstreamInputs
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(gate.status, "REVIEW_LED_CAUTION");
   assert.equal(gate.readinessOutcome, "REVIEW_REQUIRED");
   assert.equal(gate.workflowState, "ARREARS_FACTS_GUARDED");
@@ -197,14 +207,13 @@ test("hearing-specific timing can tighten BR02 downstream readiness through the 
     evidenceTimingState,
     hearingNoticeAt: "2026-04-07T10:00:00.000Z"
   });
-  const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment
-  });
+  const gate = deriveBr02WorkflowGate(buildThreadedWorkflowGateInput(assessment));
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
-    br02ConsumerAssessment: assessment.consumerAssessment
+    ...assessment.runtimeBridgeThreading.downstreamInputs
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(gate.status, "NEEDS_REVIEW");
   assert.equal(gate.readinessOutcome, "REVIEW_REQUIRED");
   assert.equal(gate.workflowState, "NOTICE_DRAFTING_GUARDED");
@@ -255,7 +264,7 @@ test("threading BR02 consumerAssessment through a notice-readiness baseline does
   const threadedPrepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
     noticeReadiness,
-    br02ConsumerAssessment: br02ServiceEventAssessment.consumerAssessment
+    ...br02ServiceEventAssessment.runtimeBridgeThreading.downstreamInputs
   })));
   const baselineGuidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
@@ -264,9 +273,10 @@ test("threading BR02 consumerAssessment through a notice-readiness baseline does
   const threadedGuidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
     noticeReadiness,
-    br02ConsumerAssessment: br02ServiceEventAssessment.consumerAssessment
+    ...br02ServiceEventAssessment.runtimeBridgeThreading.downstreamInputs
   })));
 
+  assert.equal(br02ServiceEventAssessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.deepEqual(threadedPrepPack.blockKeys, baselinePrepPack.blockKeys);
   assert.deepEqual(threadedPrepPack.trustBinding.boundaryStatementKeys, baselinePrepPack.trustBinding.boundaryStatementKeys);
   assert.deepEqual(threadedPrepPack.trustBinding.trustCueKeys, baselinePrepPack.trustBinding.trustCueKeys);
@@ -304,20 +314,19 @@ test("BR02 stale slowdown keeps downstream caution posture explicit across prep-
     serviceEvent,
     evidenceTimingState
   });
-  const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment
-  });
+  const gate = deriveBr02WorkflowGate(buildThreadedWorkflowGateInput(assessment));
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-public-rule"]
   })));
   const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-public-rule"]
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(gate.status, "REVIEW_LED_CAUTION");
   assert.equal(gate.workflowState, "ARREARS_FACTS_GUARDED");
   assert.ok(
@@ -370,20 +379,19 @@ test("BR02 stale warning keeps warning-led review posture distinct from stale sl
     serviceEvent,
     evidenceTimingState
   });
-  const gate = deriveBr02WorkflowGate({
-    consumerAssessment: assessment.consumerAssessment
-  });
+  const gate = deriveBr02WorkflowGate(buildThreadedWorkflowGateInput(assessment));
   const prepPack = expectPrepPack(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("PREP_PACK_COPY_READY"),
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-public-rule"]
   })));
   const guidance = expectHandoffGuidance(generateOutputPackageShell(buildOutputSelectionInput({
     outputMode: createOutputModeState("OFFICIAL_HANDOFF_GUIDANCE"),
-    br02ConsumerAssessment: assessment.consumerAssessment,
+    ...assessment.runtimeBridgeThreading.downstreamInputs,
     touchpointIds: ["vic-arrears-public-rule"]
   })));
 
+  assert.equal(assessment.runtimeBridgeThreading.runtimeBridgeThreaded, true);
   assert.equal(gate.status, "NEEDS_REVIEW");
   assert.equal(gate.workflowState, "NOTICE_DRAFTING_GUARDED");
   assert.ok(
