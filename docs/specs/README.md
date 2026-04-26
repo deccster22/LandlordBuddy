@@ -29,3 +29,4 @@ Current QA discoverability note:
 - `docs/qa/README.md` is the QA index.
 - `docs/qa/first-wave-semantic-fidelity-checklist.md` is the shell-era semantic/trust wording control checklist.
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` is the consolidated Lane 3 Review C readiness entry point.
+- `docs/qa/p4b-cx-review-a-01-execution-check-pack.md` is the Phase 4B Review A execution-check entry point for BR02/BR03/BR04 checkpoint status.

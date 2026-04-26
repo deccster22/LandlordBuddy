@@ -36,6 +36,8 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/README.md` (QA index)
 - `docs/qa/first-wave-semantic-fidelity-checklist.md`
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
+- `docs/qa/p4b-cx-review-a-01-execution-check-pack.md`
+- `docs/qa/p4b-cx-review-a-01-compact-status-note.md`
 - `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
