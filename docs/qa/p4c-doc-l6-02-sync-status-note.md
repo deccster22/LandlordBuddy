@@ -31,3 +31,5 @@ Objective completed: `yes` for requested shadow-sync documentation scope.
 ## 4. Recommended Next Task
 
 Recommended next task: run a narrow screen-evidence Lane 6 pass that marks which trust-checklist extension rows are now backed by rendered-surface evidence and which remain hold-dependent.
+
+Post-Review-A Gate A sync reference: `docs/qa/p4b-repo-doc-03-lane-6-gate-a-sync-note.md`.

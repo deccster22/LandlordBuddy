@@ -38,3 +38,16 @@ Primary anchor: `docs/specs/p4c-doc-l6-01-guarded-seams-register-starter.md`.
 ## Register Rule
 
 No seam in this update should be promoted to deterministic or readiness-signaling status without explicit trigger satisfaction and recorded evidence.
+
+## Post-Gate-A Alignment (2026-04-27)
+
+Gate A accepted Review A as checkpoint-cleared with gates retained for current 4B checkpoint use.
+
+Status alignment after that decision:
+
+- BR04 checkpoint posture is upgraded to `cleared with gate` via addendum alignment, while `GS-06` remains guarded.
+- BR02 payment-plan conservative default adoption remains held pending Product + Legal / Risks / Rules decision.
+- BR03 cadence/authority (`GS-04`) and wrong-channel breadth (`GS-05`) remain guarded.
+- `GS-16`, `GS-17`, and `GS-18` remain open watchpoints; Review A checkpoint clearance does not close readiness holds.
+
+Lane 6 sync anchor: `docs/qa/p4b-repo-doc-03-lane-6-gate-a-sync-note.md`.

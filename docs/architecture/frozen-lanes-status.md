@@ -8,6 +8,7 @@ This note gives a short operating status for frozen and parallel lanes so implem
 - Phase 4B remains the primary build and semantic-control phase.
 - Phase 4C is parallel construction work for product experience and launch-facing surfaces.
 - Do not read this snapshot as a phase handover or alpha-readiness signal.
+- Gate A accepts Review A as checkpoint-cleared with gates retained; BR02 payment-plan default adoption, BR03 live-official parity/cadence doctrine, and BR04 full lifecycle doctrine remain gated.
 
 ## 2. What this means in practice
 - Use accepted lane baselines as implementation constraints.

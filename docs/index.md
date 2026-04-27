@@ -9,6 +9,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/specs/focused-operating-shell-baseline.md`
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
 - `docs/decisions/canon-shell-delta-note.md`
+- `docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
 
 ## Architecture
 
@@ -38,6 +39,8 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md`
 - `docs/qa/p4b-cx-review-a-01-execution-check-pack.md`
 - `docs/qa/p4b-cx-review-a-01-compact-status-note.md`
+- `docs/qa/p4b-cx-review-a-01-br04-addendum.md`
+- `docs/qa/p4b-repo-doc-03-lane-6-gate-a-sync-note.md`
 - `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
@@ -55,6 +58,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
 - `docs/decisions/canon-shell-delta-note.md`
 - `docs/decisions/p4c-doc-l6-01-decision-log-starter.md`
+- `docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
 
 ## Governance
 
