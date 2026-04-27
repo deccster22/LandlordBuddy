@@ -5,6 +5,7 @@ This folder is reserved for the eventual app shell once platform choice is expli
 Current contract reference:
 
 - `docs/specs/p4c-cx-app-01-thin-app-screen-form-contract-pack.md` defines the first-wave thin app screen/form contracts, launcher/resume routing, interruption handling, and persistence/resume expectations without changing runtime doctrine.
+- `docs/specs/p4b-cx-app-route-01-launcher-current-matter-lifecycle-resume-routing-contract-pack.md` defines the narrow launcher/current-matter lifecycle-resume routing contract (inputs, outcomes, fail-safe behavior, and non-claim boundaries) before execution routing is implemented.
 - `docs/qa/p4b-cx-app-status-01-post-br04-10-checkpoint-note.md` records the compact post-`P4B-CX-BR04-10` app-layer checkpoint posture, gates, and next-step options without opening execution-routing behavior.
 
 Current implementation seam:
