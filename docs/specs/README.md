@@ -30,3 +30,5 @@ Current QA discoverability note:
 - `docs/qa/first-wave-semantic-fidelity-checklist.md` is the shell-era semantic/trust wording control checklist.
 - `docs/qa/p4b-cx-l3-05a-review-c-readiness-pack.md` is the consolidated Lane 3 Review C readiness entry point.
 - `docs/qa/p4b-cx-review-a-01-execution-check-pack.md` is the Phase 4B Review A execution-check entry point for BR02/BR03/BR04 checkpoint status.
+- `docs/qa/p4b-cx-review-a-01-br04-addendum.md` records the BR04 post-pack checkpoint upgrade posture (`cleared with gate`) while retaining doctrine and readiness gates.
+- `docs/qa/p4b-repo-doc-03-lane-6-gate-a-sync-note.md` records the Lane 6 blocker/seam alignment to the accepted Gate A / Review A outcome.

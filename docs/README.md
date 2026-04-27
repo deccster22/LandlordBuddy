@@ -17,6 +17,7 @@
 - `/docs/decisions/ADR-L4-lifecycle-control-baseline.md`
 - `/docs/decisions/ADR-focused-operating-shell-direction.md`
 - `/docs/decisions/canon-shell-delta-note.md`
+- `/docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
 
 ## Contributor operating rules
 - `/AGENTS.md`

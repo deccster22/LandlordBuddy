@@ -11,6 +11,8 @@ This note is the current repository posture snapshot for contributors. It aligns
   - UI/UX
   - branding / app tile / launch-surface work
 - This posture does not imply alpha readiness.
+- Gate A accepts Review A as checkpoint-cleared with gates retained for current 4B checkpoint use.
+- That checkpoint signal does not imply Review C completion, full BR04 privacy-engine completion, BR02 payment-plan default adoption, official portal parity, or product-side official submission/filing/acceptance behavior.
 
 ## 2. Product shape snapshot
 
