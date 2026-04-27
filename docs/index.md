@@ -31,6 +31,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/specs/p4c-cx-shell-01-focused-operating-shell-hero-workflow-mvp-structure-pack.md`
 - `docs/specs/p4c-cx-l2-01-first-wave-form-question-architecture-pack.md`
 - `docs/specs/p4c-cx-app-01-thin-app-screen-form-contract-pack.md`
+- `docs/specs/p4b-cx-app-route-01-launcher-current-matter-lifecycle-resume-routing-contract-pack.md`
 
 ## QA
 
