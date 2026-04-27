@@ -25,6 +25,10 @@ import {
   type OutputPackageLifecycleOrchestrationRecordLocator,
   type OutputPackageLifecycleOrchestrationRecordStore
 } from "./outputPackageLifecycleOrchestrationPersistence.js";
+import {
+  deriveLauncherCurrentMatterLifecycleResumeRoutingSignal,
+  type LauncherCurrentMatterLifecycleResumeRoutingSignal
+} from "./launcherCurrentMatterLifecycleResumeAdapter.js";
 
 export interface OutputPackageLifecycleResumeCheckpointInput {
   store: OutputPackageLifecycleOrchestrationRecordStore;
@@ -70,24 +74,28 @@ export interface HydratedOutputCheckpointResult {
   outputSelectionInput: OutputSelectionInput;
   touchpointSnapshotProduction: Br03TouchpointSnapshotProductionResult;
   outputPackageLifecycleResume?: OutputPackageLifecycleResumeCheckpointResult;
+  launcherCurrentMatterLifecycleResumeRouting?: LauncherCurrentMatterLifecycleResumeRoutingSignal;
 }
 
 export interface HydratedOfficialHandoffCheckpointResult {
   officialHandoffInput: OfficialHandoffGuidanceInput;
   touchpointSnapshotProduction: Br03TouchpointSnapshotProductionResult;
   outputPackageLifecycleResume?: OutputPackageLifecycleResumeCheckpointResult;
+  launcherCurrentMatterLifecycleResumeRouting?: LauncherCurrentMatterLifecycleResumeRoutingSignal;
 }
 
 export interface HydratedOutputCompositionResult {
   outputPackage: OutputPackageShell;
   touchpointSnapshotProduction: Br03TouchpointSnapshotProductionResult;
   outputPackageLifecycleResume?: OutputPackageLifecycleResumeCheckpointResult;
+  launcherCurrentMatterLifecycleResumeRouting?: LauncherCurrentMatterLifecycleResumeRoutingSignal;
 }
 
 export interface HydratedOfficialHandoffCompositionResult {
   guidance: OfficialHandoffGuidanceShell;
   touchpointSnapshotProduction: Br03TouchpointSnapshotProductionResult;
   outputPackageLifecycleResume?: OutputPackageLifecycleResumeCheckpointResult;
+  launcherCurrentMatterLifecycleResumeRouting?: LauncherCurrentMatterLifecycleResumeRoutingSignal;
 }
 
 export function resumeOutputPackageLifecycleOrchestrationForCheckpoint(
@@ -151,6 +159,9 @@ export function hydrateOutputCheckpointForComposition(
       outputPackageLifecycleResumeCheckpoint
     )
     : undefined;
+  const launcherCurrentMatterLifecycleResumeRouting = outputPackageLifecycleResume
+    ? deriveLauncherCurrentMatterLifecycleResumeRoutingSignal(outputPackageLifecycleResume)
+    : undefined;
 
   return {
     outputSelectionInput: {
@@ -160,6 +171,9 @@ export function hydrateOutputCheckpointForComposition(
     touchpointSnapshotProduction,
     ...(outputPackageLifecycleResume
       ? { outputPackageLifecycleResume }
+      : {}),
+    ...(launcherCurrentMatterLifecycleResumeRouting
+      ? { launcherCurrentMatterLifecycleResumeRouting }
       : {})
   };
 }
@@ -186,6 +200,9 @@ export function hydrateOfficialHandoffCheckpointForComposition(
       outputPackageLifecycleResumeCheckpoint
     )
     : undefined;
+  const launcherCurrentMatterLifecycleResumeRouting = outputPackageLifecycleResume
+    ? deriveLauncherCurrentMatterLifecycleResumeRoutingSignal(outputPackageLifecycleResume)
+    : undefined;
 
   return {
     officialHandoffInput: {
@@ -195,6 +212,9 @@ export function hydrateOfficialHandoffCheckpointForComposition(
     touchpointSnapshotProduction,
     ...(outputPackageLifecycleResume
       ? { outputPackageLifecycleResume }
+      : {}),
+    ...(launcherCurrentMatterLifecycleResumeRouting
+      ? { launcherCurrentMatterLifecycleResumeRouting }
       : {})
   };
 }
@@ -209,6 +229,12 @@ export function composeOutputPackageFromHydratedCheckpoint(
     touchpointSnapshotProduction: hydrated.touchpointSnapshotProduction,
     ...(hydrated.outputPackageLifecycleResume
       ? { outputPackageLifecycleResume: hydrated.outputPackageLifecycleResume }
+      : {}),
+    ...(hydrated.launcherCurrentMatterLifecycleResumeRouting
+      ? {
+          launcherCurrentMatterLifecycleResumeRouting:
+            hydrated.launcherCurrentMatterLifecycleResumeRouting
+        }
       : {})
   };
 }
@@ -223,6 +249,12 @@ export function composeOfficialHandoffGuidanceFromHydratedCheckpoint(
     touchpointSnapshotProduction: hydrated.touchpointSnapshotProduction,
     ...(hydrated.outputPackageLifecycleResume
       ? { outputPackageLifecycleResume: hydrated.outputPackageLifecycleResume }
+      : {}),
+    ...(hydrated.launcherCurrentMatterLifecycleResumeRouting
+      ? {
+          launcherCurrentMatterLifecycleResumeRouting:
+            hydrated.launcherCurrentMatterLifecycleResumeRouting
+        }
       : {})
   };
 }
