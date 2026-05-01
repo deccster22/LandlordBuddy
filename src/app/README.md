@@ -9,6 +9,7 @@ Current contract reference:
 - `docs/specs/p4b-cx-app-route-07-launcher-current-matter-execution-directive-contract-pack.md` defines the narrow internal execution-directive contract for consuming launcher/current-matter transition orchestration outputs without introducing UI/status/CTA semantics.
 - `docs/qa/p4b-cx-app-status-01-post-br04-10-checkpoint-note.md` records the compact post-`P4B-CX-BR04-10` app-layer checkpoint posture, gates, and next-step options without opening execution-routing behavior.
 - `docs/qa/p4b-cx-app-route-status-01-post-route-06-checkpoint-note.md` records the compact post-`APP-ROUTE-06` launcher/current-matter internal routing chain posture, gates, protected states, and next-step options.
+- `docs/qa/p4b-cx-app-route-status-02-post-route-08-checkpoint-note.md` records the compact post-`APP-ROUTE-08` launcher/current-matter routing/directive posture, protected states, and next handling-action seam options without implying UI/status/CTA readiness.
 
 Current implementation seam:
 
