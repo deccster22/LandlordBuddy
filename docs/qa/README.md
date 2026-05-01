@@ -55,6 +55,7 @@ Phase 4B Review A checkpoint artifacts:
 - `docs/qa/p4b-repo-doc-03-lane-6-gate-a-sync-note.md`
 - `docs/qa/p4b-cx-app-status-01-post-br04-10-checkpoint-note.md`
 - `docs/qa/p4b-cx-app-route-status-01-post-route-06-checkpoint-note.md`
+- `docs/qa/p4b-cx-app-route-status-02-post-route-08-checkpoint-note.md`
 
 Checkpoint pair rule: treat the execution-check pack plus BR04 addendum as the authoritative Review A pair for repo posture.
 
