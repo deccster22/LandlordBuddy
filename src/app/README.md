@@ -15,6 +15,7 @@ Current contract reference:
 - `docs/qa/p4b-cx-app-route-status-03-post-route-10-checkpoint-note.md` records the compact post-`APP-ROUTE-10` launcher/current-matter routing/directive/handling posture, protected states, and next sequencing options without implying UI/status/CTA readiness.
 - `docs/qa/p4b-cx-app-align-01-routing-spine-shell-current-matter-surface-alignment.md` records the post-`APP-ROUTE-10` alignment between internal launcher/current-matter routing depth and 4C shell/current-matter surface contracts, including allowed future non-visual consumers and UI-gating caveats.
 - `docs/qa/p4b-cx-app-align-02-future-consumption-backlog-map.md` records the future-consumption backlog map for non-visual consumers of the launcher/current-matter routing spine, including candidate classifications, gate dependencies, and explicit do-not-build-yet boundaries.
+- `docs/qa/p4b-cx-app-align-06-watchpoint-logging-adoption-boundary-checkpoint-note.md` records the post-`APP-ALIGN-05` watchpoint-logging adoption boundary, including one-path sink-injected posture, explicit no-sink/no-global behavior, protected-state coverage, minimisation posture, and gated expansion options.
 
 Current implementation seam:
 
