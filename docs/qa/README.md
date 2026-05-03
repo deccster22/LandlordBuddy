@@ -59,6 +59,7 @@ Phase 4B Review A checkpoint artifacts:
 - `docs/qa/p4b-cx-app-route-status-03-post-route-10-checkpoint-note.md`
 - `docs/qa/p4b-cx-app-align-01-routing-spine-shell-current-matter-surface-alignment.md`
 - `docs/qa/p4b-cx-app-align-02-future-consumption-backlog-map.md`
+- `docs/qa/p4b-cx-app-align-06-watchpoint-logging-adoption-boundary-checkpoint-note.md`
 
 Checkpoint pair rule: treat the execution-check pack plus BR04 addendum as the authoritative Review A pair for repo posture.
 
