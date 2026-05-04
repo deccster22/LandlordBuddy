@@ -10,6 +10,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/decisions/ADR-focused-operating-shell-direction.md`
 - `docs/decisions/canon-shell-delta-note.md`
 - `docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
+- `docs/decisions/p4c-mkt-l4-icon-current-preference-note.md`
 
 ## Project Sources
 
@@ -38,8 +39,8 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/specs/README.md` (spec index)
 - `docs/specs/non-blocked-dependency-map.md`
 - `docs/specs/focused-operating-shell-baseline.md`
-- `docs/specs/p4c-mkt-l4-rs-01g-final-icon-wordmark-treatment-pass.md`
-- `docs/specs/p4c-mkt-l4-rs-01h-lane-4-final-direction-synthesis-pack.md`
+- `docs/specs/p4c-mkt-l4-rs-01g-final-icon-wordmark-treatment-pass.md` (historical Route Spine test, not current icon preference)
+- `docs/specs/p4c-mkt-l4-rs-01h-lane-4-final-direction-synthesis-pack.md` (historical Route Spine synthesis, superseded for current icon preference)
 - `docs/specs/p4c-cx-shell-01-focused-operating-shell-hero-workflow-mvp-structure-pack.md`
 - `docs/specs/p4c-cx-l2-01-first-wave-form-question-architecture-pack.md`
 - `docs/specs/p4c-cx-app-01-thin-app-screen-form-contract-pack.md`
@@ -58,7 +59,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/qa/p4c-cx-shell-01-compact-shell-status-pack.md`
 - `docs/qa/p4c-cx-l2-01-4c-b-status-pack.md`
 - `docs/qa/p4c-cx-app-01-compact-app-contract-status-pack.md`
-- `docs/qa/p4c-mkt-l4-rs-01g-small-size-app-tile-qa-board.md`
+- `docs/qa/p4c-mkt-l4-rs-01g-small-size-app-tile-qa-board.md` (historical Route Spine QA only)
 - `docs/qa/p4c-mkt-l4-rs-01h-compact-4c-d-status-pack.md`
 - `docs/qa/p4c-doc-l6-02-lane-6-shadow-sync-pack.md`
 - `docs/qa/p4c-doc-l6-02-acceptance-and-crosslink-sync-checkpoint.md`
@@ -73,6 +74,7 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/decisions/canon-shell-delta-note.md`
 - `docs/decisions/p4c-doc-l6-01-decision-log-starter.md`
 - `docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
+- `docs/decisions/p4c-mkt-l4-icon-current-preference-note.md`
 
 ## Governance
 
@@ -84,4 +86,5 @@ Use this page as the top-level routing map for current repository posture and co
 - MVP shape is hero arrears wedge first with a bounded focused operating shell above it.
 - Shell reminders are support controls only and must not imply compliance clearance.
 - Shell records/logs/notes/documents support continuity and evidence traceability, not legal sufficiency or official acceptance.
+- Current working app icon/logo preference is `Document + House` / `House + Document`; Route Spine artifacts are historical test evidence only unless a later accepted decision explicitly reopens that direction.
 - `docs/project-sources/` contains repo-native extracts of important ChatGPT Project source documents for contributor traceability. It does not replace official legal sources or accepted repo posture docs.
