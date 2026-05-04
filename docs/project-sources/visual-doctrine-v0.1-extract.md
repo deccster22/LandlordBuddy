@@ -29,6 +29,12 @@ It must not look like:
 
 Controlling metaphor: stable operating shell with focused procedural workbench.
 
+## Current icon preference correction
+
+As of 2026-05-04, the current working app icon/logo preference is `Document + House` / `House + Document` compound mark.
+
+Route Spine materials in the repo are historical test evidence only unless a later accepted decision explicitly reopens that direction.
+
 ## Core visual principles
 
 ### 1. Property signal is necessary but must be abstracted
@@ -40,8 +46,6 @@ Rule: house, roof, doorway, or property cue may be used only as an abstracted mo
 ### 2. Administration first, property second
 
 Core value is notices, records, evidence, workflow checks, and official handoff. App icon/logo exploration should prioritise document/record/notice geometry with a subtle property cue, not a route-only symbol.
-
-Note: later repo Lane 4 work appears to have run a narrow final pass that recommended Route Spine as a primary icon candidate for launcher-size durability. Treat that as a later implementation-facing decision requiring reconciliation with this doctrine rather than silently erasing the doctrine.
 
 ### 3. UI is procedural risk-control layer
 
@@ -61,7 +65,7 @@ Matter mode: serious, controlled, clear, and consequence-aware.
 
 ## Logo and app tile doctrine
 
-Current source-document leading direction: Document + House compound mark, likely but not locked.
+Current leading direction: Document + House compound mark, likely but not locked.
 
 Required properties:
 
@@ -255,4 +259,4 @@ Do not visually freeze LandlordBuddy until all exist:
 
 ## Repo audit watchpoint
 
-This source doctrine and later repo Lane 4 docs may conflict around the icon primary direction. The doctrine says Document + House was the leading hypothesis; later repo docs appear to select Route Spine after a small-size pass. Treat that as a normal design evolution, but preserve the decision trail so the final Lane 4 synthesis explains why launcher durability overrode the earlier category-signal hypothesis.
+Route Spine repo artifacts should be read as historical test evidence. The current working preference remains Document + House / House + Document until a later accepted decision says otherwise.
