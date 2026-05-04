@@ -11,6 +11,18 @@ Use this page as the top-level routing map for current repository posture and co
 - `docs/decisions/canon-shell-delta-note.md`
 - `docs/decisions/p4b-repo-doc-03-gate-a-review-a-checkpoint-sync.md`
 
+## Project Sources
+
+- `docs/project-sources/README.md` (project-source manifest)
+- `docs/project-sources/founder-operating-governance-source-pack.md`
+- `docs/project-sources/master-canon-v1.3-operational-extract.md`
+- `docs/project-sources/gate-a-decision-doc-v1.0.md`
+- `docs/project-sources/phase-4c-operating-pack-extract.md`
+- `docs/project-sources/operating-shell-decision-stack.md`
+- `docs/project-sources/visual-doctrine-v0.1-extract.md`
+- `docs/project-sources/research-digest-v6-register-update-note.md`
+- `docs/project-sources/repo-audit-2026-05-04.md`
+
 ## Architecture
 
 - `docs/architecture/arrears-mvp-architecture.md`
@@ -72,3 +84,4 @@ Use this page as the top-level routing map for current repository posture and co
 - MVP shape is hero arrears wedge first with a bounded focused operating shell above it.
 - Shell reminders are support controls only and must not imply compliance clearance.
 - Shell records/logs/notes/documents support continuity and evidence traceability, not legal sufficiency or official acceptance.
+- `docs/project-sources/` contains repo-native extracts of important ChatGPT Project source documents for contributor traceability. It does not replace official legal sources or accepted repo posture docs.
