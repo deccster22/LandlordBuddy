@@ -85,13 +85,14 @@ Confirmed:
 - Gate A source was already reflected by repo decision docs but now also exists as a project-source snapshot.
 - Visual Doctrine v0.1 was not previously present as a project-source snapshot and is now represented in `visual-doctrine-v0.1-extract.md`.
 - Digest v6 is captured here as a register/update note, not fully transcribed.
+- Current app icon/logo working preference is `Document + House` / `House + Document`; this correction is captured in `docs/decisions/p4c-mkt-l4-icon-current-preference-note.md`.
 
 Needs validation / follow-up:
 
 - The tracker spreadsheet is a binary XLSX. It was not updated in this connector pass.
 - Digest/register should be refreshed outside this branch if the working source of truth must remain the project XLSX/DOCX/PDF files rather than repo Markdown snapshots.
 - Some older digest entries include now-superseded retention language such as broad lease-end-plus-six-years. Current canon v1.3 supersedes this with class-based, hold-aware retention logic.
-- Visual doctrine source says Document + House was the leading app icon hypothesis; later repo Lane 4 work appears to choose Route Spine for small-size durability. This needs explicit final synthesis trace rather than silent contradiction.
+- House/Doc icon variants still need the same practical small-size and crowded-launcher validation standard that was applied to earlier Route Spine testing.
 
 ## Recommended tracker updates
 
@@ -100,9 +101,9 @@ When the tracker is next edited, add or verify entries for:
 | Register | Suggested entry |
 | --- | --- |
 | Research Log | `REPO-SYNC-2026-05-04` repo audit and project-source snapshot sync |
-| Decision Register | confirm repo source-layer creation as documentation/audit decision, not product doctrine change |
+| Decision Register | confirm repo source-layer creation as documentation/audit decision, not product doctrine change; record current House/Doc icon preference correction if not already captured |
 | Risk Register | risk of project-source/repo drift if binary source docs are not mirrored or periodically reconciled |
-| Open Questions | whether tracker XLSX remains canonical control panel or whether repo-native register mirrors are needed |
+| Open Questions | whether tracker XLSX remains canonical control panel or whether repo-native register mirrors are needed; House/Doc small-size validation remains pending |
 | Promotion Log | Master Canon v1.3, Gate A, 4C, shell, visual doctrine extracts promoted into repo project-source layer |
 
 ## Recommended digest entry
@@ -113,7 +114,7 @@ Title: Repo audit and project-source snapshot sync
 
 Status: Operationalised / Needs tracker update
 
-Executive summary: The LandlordBuddy repo had strong implementation-facing docs but lacked a visible project-source layer for the founder brief, operating principles, master canon, Gate A decision, 4C operating pack, visual doctrine, operating shell decision stack, and digest/register state. This branch adds repo-native Markdown extracts and a manifest without changing product doctrine. The tracker spreadsheet and full digest still need a separate register refresh if the binary project files remain the control-panel source of truth.
+Executive summary: The LandlordBuddy repo had strong implementation-facing docs but lacked a visible project-source layer for the founder brief, operating principles, master canon, Gate A decision, 4C operating pack, visual doctrine, operating shell decision stack, and digest/register state. This branch adds repo-native Markdown extracts and a manifest without changing product doctrine. A correction has also been added confirming House/Doc as the current icon/logo working preference, with older Route Spine artifacts retained as historical test evidence only. The tracker spreadsheet and full digest still need a separate register refresh if the binary project files remain the control-panel source of truth.
 
 Storage decision: Capture in Research Digest and Promotion Log; do not promote to Master Canon except as a documentation/audit hygiene note.
 
