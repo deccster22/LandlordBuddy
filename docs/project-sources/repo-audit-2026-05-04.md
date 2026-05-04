@@ -11,7 +11,7 @@ Check the LandlordBuddy repo against recent project-source decisions and progres
 
 ## Repo health summary
 
-Status: Mostly healthy, with missing source-layer issue now addressed.
+Status: mostly healthy, with missing source-layer issue addressed.
 
 The repo already had strong implementation-facing posture docs before this sync:
 
@@ -39,6 +39,7 @@ The main gap was that the underlying project source pack was not present in repo
 | `docs/project-sources/visual-doctrine-v0.1-extract.md` | visual doctrine, semantic colour, shell/matter UI, freeze criteria |
 | `docs/project-sources/research-digest-v6-register-update-note.md` | digest/register source summary and tracker update note |
 | `docs/project-sources/repo-audit-2026-05-04.md` | this audit note |
+| `docs/decisions/p4c-mkt-l4-icon-current-preference-note.md` | current House/Doc icon preference correction |
 
 ## Alignment checks
 
@@ -52,33 +53,23 @@ Repo current posture already says 4B remains primary, 4C runs in parallel, Gate 
 
 Status: Confirmed / aligned.
 
-Repo already contains shell baseline and shell delta docs that match the source stack:
-
-- wedge remains Victoria-first, residential-only, arrears-first
-- shell is bounded operational context, reminder/logging continuity, evidence/document continuity, and matter launching
-- shell does not allow accounting, tax, marketplace, tenant messaging, direct official filing, PM-suite sprawl, or national expansion complexity
+Repo shell docs match the source stack: wedge remains Victoria-first, residential-only, arrears-first; shell is bounded operational context, reminder/logging continuity, evidence/document continuity, and matter launching; shell does not allow accounting, tax, marketplace, tenant messaging, direct official filing, PM-suite sprawl, or national expansion complexity.
 
 ### Gate A / Review A
 
 Status: Confirmed / aligned.
 
-Repo decision doc already reflects the official Gate A source:
-
-- BR02 runtimeBridge cleared with gate
-- BR02 payment-plan conservative default adoption held
-- BR03 source-fed touchpoint/hydration cleared with gate
-- BR04 lifecycle/privacy upgraded to cleared with gate for current 4B checkpoint
-- no alpha-readiness or official-parity overclaim
+Repo decision doc already reflects the official Gate A source: BR02 runtimeBridge cleared with gate; BR02 payment-plan conservative default adoption held; BR03 source-fed touchpoint/hydration cleared with gate; BR04 lifecycle/privacy upgraded to cleared with gate for current 4B checkpoint; no alpha-readiness or official-parity overclaim.
 
 ### Master Canon v1.3
 
-Status: Source-layer gap addressed.
+Status: source-layer gap addressed.
 
 Before this branch, repo had canon shell delta but not a visible source snapshot of Master Canon v1.3. This branch adds an operational extract. It does not rewrite full canon into the repo and does not change product doctrine.
 
 ### Digest and tracker
 
-Status: Partially addressed / needs follow-up.
+Status: partially addressed / needs follow-up.
 
 Digest v6 is represented as a register update note and important content inventory. The full PDF digest was not transcribed, and the tracker XLSX was not updated because this GitHub connector pass is UTF-8-file oriented and not suitable for binary spreadsheet editing.
 
@@ -88,17 +79,13 @@ Needed follow-up:
 - update the digest source file if the project source pack must remain synchronised outside repo
 - consider a repo-native lightweight register mirror if future Codex tasks need searchable register data
 
-### Visual doctrine vs later Lane 4 outputs
+### Icon direction
 
-Status: Needs explicit reconciliation in final Lane 4 synthesis.
+Status: correction applied.
 
-Visual Doctrine v0.1 says the current leading logo/app-tile hypothesis was Document + House, with Route Spine demoted to control/UI motif. Later repo Lane 4 work appears to recommend Route Spine as primary after a launcher-size durability pass.
+Current working preference is `Document + House` / `House + Document` compound mark.
 
-This may be a valid evolution, not a defect. But it should be explicit:
-
-- Document + House had stronger category signal in doctrine.
-- Route Spine later won small-size launcher durability.
-- Final synthesis should explain whether small-size durability now outranks category signal, and what compensating property/tenancy signal appears in wordmark, onboarding, shell UI, or store metadata.
+Earlier repo Lane 4 artifacts record a limited Route Spine launcher-size pass. Those files are now treated as historical test evidence, not the current working icon preference. The current correction is captured in `docs/decisions/p4c-mkt-l4-icon-current-preference-note.md` and indexed from `docs/index.md`.
 
 ## Material gaps remaining
 
@@ -107,7 +94,7 @@ This may be a valid evolution, not a defect. But it should be explicit:
 | Binary source docs not committed directly | Known limitation | Keep Markdown extracts; optionally upload binaries manually if desired |
 | Tracker XLSX not updated | Needs Validation | run spreadsheet update using proper spreadsheet tooling |
 | Full Research Digest v6 not transcribed | Needs Validation | decide whether repo needs full digest mirror or summary only |
-| Icon-direction contradiction | Needs Validation | resolve in Lane 4 final direction synthesis / visual decision log |
+| House/Doc icon validation | Needs Validation | run 16/20/24/32/48/64px and crowded-launcher proof before freeze |
 | Repo source freshness process | Needs Validation | decide cadence for source-pack refresh after major project decisions |
 
 ## Product decision hygiene
@@ -128,5 +115,5 @@ Revisit trigger: if source extracts conflict with future canon, if binary source
 
 1. Merge this PR if the source-layer approach is accepted.
 2. Update tracker XLSX and digest/register control records with `REPO-SYNC-2026-05-04`.
-3. Add a short Lane 4 reconciliation note if Route Spine remains final despite Visual Doctrine's Document + House lead.
+3. Run a House/Doc icon validation pass using the same small-size/crowded-launcher standard that was applied to Route Spine.
 4. Decide whether future major Project-source docs should be mirrored into `docs/project-sources/` as Markdown extracts as a normal admin step.
