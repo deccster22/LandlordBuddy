@@ -17,6 +17,7 @@ Current contract reference:
 - `docs/qa/p4b-cx-app-align-02-future-consumption-backlog-map.md` records the future-consumption backlog map for non-visual consumers of the launcher/current-matter routing spine, including candidate classifications, gate dependencies, and explicit do-not-build-yet boundaries.
 - `docs/qa/p4b-cx-app-align-06-watchpoint-logging-adoption-boundary-checkpoint-note.md` records the post-`APP-ALIGN-05` watchpoint-logging adoption boundary, including one-path sink-injected posture, explicit no-sink/no-global behavior, protected-state coverage, minimisation posture, and gated expansion options.
 - `docs/qa/p4b-cx-app-align-07-watchpoint-logging-expansion-backlog-map.md` records the adoption-gated watchpoint-logging expansion backlog, including candidate classifications, sink-topology gates, review ownership, protected-state requirements, and do-not-build-yet boundaries before any second path or sink expansion.
+- `docs/qa/p4b-cx-app-align-09-watchpoint-regression-diagnostics-coverage-boundary-checkpoint-note.md` records the post-`APP-ALIGN-08` diagnostics coverage boundary, including protected-state checks, forbidden event/payload checks, one-path adoption restatement, and explicit non-proof boundaries before any `WLB-01` consideration.
 
 Current implementation seam:
 
