@@ -18,6 +18,7 @@ Current contract reference:
 - `docs/qa/p4b-cx-app-align-06-watchpoint-logging-adoption-boundary-checkpoint-note.md` records the post-`APP-ALIGN-05` watchpoint-logging adoption boundary, including one-path sink-injected posture, explicit no-sink/no-global behavior, protected-state coverage, minimisation posture, and gated expansion options.
 - `docs/qa/p4b-cx-app-align-07-watchpoint-logging-expansion-backlog-map.md` records the adoption-gated watchpoint-logging expansion backlog, including candidate classifications, sink-topology gates, review ownership, protected-state requirements, and do-not-build-yet boundaries before any second path or sink expansion.
 - `docs/qa/p4b-cx-app-align-09-watchpoint-regression-diagnostics-coverage-boundary-checkpoint-note.md` records the post-`APP-ALIGN-08` diagnostics coverage boundary, including protected-state checks, forbidden event/payload checks, one-path adoption restatement, and explicit non-proof boundaries before any `WLB-01` consideration.
+- `docs/qa/p4b-cx-app-posture-01-route-watchpoint-posture-sync-note.md` records the consolidated route/watchpoint posture sync through `APP-ALIGN-09`, including what is safe for current internal use, what remains disallowed, and the `WLB-01` sequencing recommendation.
 
 Current implementation seam:
 
