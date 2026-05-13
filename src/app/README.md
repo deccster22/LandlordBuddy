@@ -21,6 +21,7 @@ Current contract reference:
 - `docs/qa/p4b-cx-app-align-09-watchpoint-regression-diagnostics-coverage-boundary-checkpoint-note.md` records the post-`APP-ALIGN-08` diagnostics coverage boundary, including protected-state checks, forbidden event/payload checks, one-path adoption restatement, and explicit non-proof boundaries before any `WLB-01` consideration.
 - `docs/qa/p4b-cx-app-posture-01-route-watchpoint-posture-sync-note.md` records the consolidated route/watchpoint posture sync through `APP-ALIGN-09`, including what is safe for current internal use, what remains disallowed, and the `WLB-01` sequencing recommendation.
 - `docs/qa/p4c-cx-app-consume-01-shell-current-matter-consumption-readiness-catch-up-pack.md` records the 4C shell/current-matter consumption-readiness catch-up mapping from internal route/watchpoint outputs to candidate consumers, including readiness classifications, surface gates, visual-dependency gating, protected-state preservation, and the current `WLB-01` hold recommendation.
+- `docs/qa/p4c-cx-app-consume-04-scrc-01-runtime-adoption-boundary-checkpoint-note.md` records the post-implementation `SCRC-01` runtime adoption boundary, including internal-only planner outcomes, explicit authorization-deny flags for rendered/UI/status/CTA/watchpoint expansion use, protected-state carry behavior, future consumption/surface gates, and reaffirmed `WLB-01` held status.
 
 Current implementation seam:
 
