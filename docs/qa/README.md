@@ -64,6 +64,10 @@ Phase 4B Review A checkpoint artifacts:
 - `docs/qa/p4b-cx-app-align-09-watchpoint-regression-diagnostics-coverage-boundary-checkpoint-note.md`
 - `docs/qa/p4b-cx-app-posture-01-route-watchpoint-posture-sync-note.md`
 
+Phase 4C app consumption-readiness catch-up artifact:
+
+- `docs/qa/p4c-cx-app-consume-01-shell-current-matter-consumption-readiness-catch-up-pack.md`
+
 Checkpoint pair rule: treat the execution-check pack plus BR04 addendum as the authoritative Review A pair for repo posture.
 
 Review C should inspect that pack alongside the current reviewable screen/surface references:
