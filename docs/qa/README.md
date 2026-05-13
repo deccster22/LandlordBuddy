@@ -68,6 +68,7 @@ Phase 4C app consumption-readiness catch-up artifact:
 
 - `docs/qa/p4c-cx-app-consume-01-shell-current-matter-consumption-readiness-catch-up-pack.md`
 - `docs/qa/p4c-cx-app-consume-04-scrc-01-runtime-adoption-boundary-checkpoint-note.md`
+- `docs/qa/p4c-cx-surface-contract-01-lane-3-lane-4-review-c-surface-contract-catch-up-checkpoint.md`
 
 Checkpoint pair rule: treat the execution-check pack plus BR04 addendum as the authoritative Review A pair for repo posture.
 

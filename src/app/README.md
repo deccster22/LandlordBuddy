@@ -22,6 +22,7 @@ Current contract reference:
 - `docs/qa/p4b-cx-app-posture-01-route-watchpoint-posture-sync-note.md` records the consolidated route/watchpoint posture sync through `APP-ALIGN-09`, including what is safe for current internal use, what remains disallowed, and the `WLB-01` sequencing recommendation.
 - `docs/qa/p4c-cx-app-consume-01-shell-current-matter-consumption-readiness-catch-up-pack.md` records the 4C shell/current-matter consumption-readiness catch-up mapping from internal route/watchpoint outputs to candidate consumers, including readiness classifications, surface gates, visual-dependency gating, protected-state preservation, and the current `WLB-01` hold recommendation.
 - `docs/qa/p4c-cx-app-consume-04-scrc-01-runtime-adoption-boundary-checkpoint-note.md` records the post-implementation `SCRC-01` runtime adoption boundary, including internal-only planner outcomes, explicit authorization-deny flags for rendered/UI/status/CTA/watchpoint expansion use, protected-state carry behavior, future consumption/surface gates, and reaffirmed `WLB-01` held status.
+- `docs/qa/p4c-cx-surface-contract-01-lane-3-lane-4-review-c-surface-contract-catch-up-checkpoint.md` records the Lane 3 / Lane 4 / Review C surface-contract catch-up checkpoint for `SCRC-01` consumption boundaries, including surface candidate classifications, lifecycle-state caution mappings, rendered-use gate dependencies, and explicit `WLB-01` hold continuity.
 
 Current implementation seam:
 
